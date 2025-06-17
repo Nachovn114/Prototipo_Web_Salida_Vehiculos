@@ -1,24 +1,29 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Upload, CheckCircle, AlertCircle, Search } from 'lucide-react';
+import { FileText, Upload, CheckCircle, AlertCircle, Search, Eye, XCircle, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const DocumentVerification: React.FC = () => {
   const [documents, setDocuments] = useState([
-    { id: 1, name: 'Permiso de Circulación', status: 'verified', expiryDate: '2024-12-15' },
-    { id: 2, name: 'Revisión Técnica', status: 'pending', expiryDate: '2024-08-20' },
-    { id: 3, name: 'Seguro Obligatorio', status: 'verified', expiryDate: '2024-11-30' },
-    { id: 4, name: 'Cédula de Identidad', status: 'verified', expiryDate: '2028-05-15' }
+    { id: 1, name: 'Permiso de Circulación', status: 'verified', expiryDate: '2024-12-15', file: null },
+    { id: 2, name: 'Revisión Técnica', status: 'pending', expiryDate: '2024-08-20', file: null },
+    { id: 3, name: 'Seguro Obligatorio', status: 'verified', expiryDate: '2024-11-30', file: null },
+    { id: 4, name: 'Cédula de Identidad', status: 'verified', expiryDate: '2028-05-15', file: null }
   ]);
-
   const [searchQuery, setSearchQuery] = useState('');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
 
-  const handleDocumentUpload = () => {
+  const handleDocumentUpload = (id: number, file: File) => {
+    const url = URL.createObjectURL(file);
+    setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, file, status: 'pending' } : doc));
+    setPreviewUrl(url);
+    setSelectedDocId(id);
     toast.success('Documento cargado correctamente');
   };
 
@@ -29,6 +34,12 @@ export const DocumentVerification: React.FC = () => {
       )
     );
     toast.success('Documento verificado');
+  };
+
+  const handleRemoveFile = (id: number) => {
+    setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, file: null, status: 'pending' } : doc));
+    setPreviewUrl(null);
+    setSelectedDocId(null);
   };
 
   const getStatusBadge = (status: string) => {
@@ -64,6 +75,17 @@ export const DocumentVerification: React.FC = () => {
     return diffDays <= 30;
   };
 
+  const handleFileInputClick = (id: number) => {
+    setSelectedDocId(id);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && selectedDocId) {
+      handleDocumentUpload(selectedDocId, e.target.files[0]);
+    }
+  };
+
   return (
     <Card className="modern-card">
       <CardHeader>
@@ -87,31 +109,19 @@ export const DocumentVerification: React.FC = () => {
           />
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button variant="outline" onClick={handleDocumentUpload} className="w-full">
-            <Upload className="h-4 w-4 mr-2" />
-            Cargar Documento
-          </Button>
-          <Button variant="outline" className="w-full">
-            <FileText className="h-4 w-4 mr-2" />
-            Escanear QR
-          </Button>
-        </div>
-
         {/* Document List */}
         <div className="space-y-4">
           <h4 className="font-semibold text-sm text-gray-700">Documentos del Vehículo</h4>
-          
           <div className="space-y-3">
-            {documents.map((doc) => (
+            {documents.filter(doc => doc.name.toLowerCase().includes(searchQuery.toLowerCase())).map((doc) => (
               <div key={doc.id} className="p-4 border rounded-lg bg-gray-50">
                 <div className="flex items-center justify-between mb-2">
-                  <h5 className="font-medium text-sm">{doc.name}</h5>
+                  <h5 className="font-medium text-sm flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-blue-500" /> {doc.name}
+                  </h5>
                   {getStatusBadge(doc.status)}
                 </div>
-                
-                <div className="flex items-center justify-between text-xs text-gray-600">
+                <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
                   <span>Vence: {doc.expiryDate}</span>
                   {isDocumentExpiringSoon(doc.expiryDate) && (
                     <Badge variant="destructive" className="text-xs">
@@ -119,14 +129,45 @@ export const DocumentVerification: React.FC = () => {
                     </Badge>
                   )}
                 </div>
-                
-                {doc.status === 'pending' && (
+                <div className="flex gap-2 items-center mb-2">
+                  <Button variant="outline" size="sm" onClick={() => handleFileInputClick(doc.id)}>
+                    <Upload className="h-4 w-4 mr-1" />
+                    {doc.file ? 'Reemplazar' : 'Cargar'} Documento
+                  </Button>
+                  {doc.file && (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => setPreviewUrl(URL.createObjectURL(doc.file!))}>
+                        <Eye className="h-4 w-4 mr-1" /> Ver
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => handleRemoveFile(doc.id)}>
+                        <XCircle className="h-4 w-4 mr-1" /> Quitar
+                      </Button>
+                    </>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,application/pdf"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </div>
+                {doc.file && previewUrl && selectedDocId === doc.id && (
+                  <div className="mt-2">
+                    {doc.file.type.startsWith('image/') ? (
+                      <img src={previewUrl} alt="Previsualización" className="max-h-48 rounded shadow" />
+                    ) : (
+                      <iframe src={previewUrl} title="PDF" className="w-full h-48 rounded shadow bg-white" />
+                    )}
+                  </div>
+                )}
+                {doc.status === 'pending' && doc.file && (
                   <Button
                     size="sm"
                     onClick={() => handleVerifyDocument(doc.id)}
                     className="mt-2 w-full"
                   >
-                    Verificar Documento
+                    <CheckCircle className="h-4 w-4 mr-1" /> Verificar Documento
                   </Button>
                 )}
               </div>
@@ -137,7 +178,6 @@ export const DocumentVerification: React.FC = () => {
         {/* Digital Verification */}
         <div className="space-y-4">
           <h4 className="font-semibold text-sm text-gray-700">Verificación Digital</h4>
-          
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center space-x-3">
               <CheckCircle className="h-5 w-5 text-blue-600" />
@@ -151,7 +191,6 @@ export const DocumentVerification: React.FC = () => {
               </div>
             </div>
           </div>
-          
           <div className="grid grid-cols-2 gap-3">
             <Button variant="outline" size="sm">
               Verificar RUT
@@ -172,7 +211,7 @@ export const DocumentVerification: React.FC = () => {
               </span>
             </div>
             <Badge className="bg-green-100 text-green-800">
-              75% Verificado
+              {Math.round((documents.filter(d => d.status === 'verified').length / documents.length) * 100)}% Verificado
             </Badge>
           </div>
         </div>

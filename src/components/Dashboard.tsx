@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Car, Clock, CheckCircle, AlertTriangle, TrendingUp, Users, FileText, Bell, ArrowRightCircle } from 'lucide-react';
+import { Car, CheckCircle, AlertTriangle, TrendingUp, FileText, Bell, Server, Globe } from 'lucide-react';
 
 const userRole = localStorage.getItem('userRole') || 'inspector';
 const userName = {
@@ -16,38 +16,40 @@ export const Dashboard: React.FC = () => {
   // Datos simulados
   const stats = [
     {
-      title: 'Solicitudes Pendientes',
-      value: 5,
+      title: 'Solicitudes Hoy',
+      value: 18,
       icon: FileText,
       color: 'text-blue-600',
-      badge: 'Nuevo',
     },
     {
-      title: 'Inspecciones en Curso',
+      title: 'Rechazadas Hoy',
       value: 2,
-      icon: Car,
-      color: 'text-amber-600',
-    },
-    {
-      title: 'Documentos por Revisar',
-      value: 3,
-      icon: FileText,
-      color: 'text-indigo-600',
-    },
-    {
-      title: 'Alertas Críticas',
-      value: 1,
       icon: AlertTriangle,
       color: 'text-red-600',
-      badge: '¡Atención!',
+    },
+    {
+      title: 'Promedio de Salida',
+      value: '14 min',
+      icon: Car,
+      color: 'text-emerald-600',
+    },
+    {
+      title: 'En Inspección',
+      value: 3,
+      icon: CheckCircle,
+      color: 'text-amber-600',
     },
   ];
 
   const notificaciones = [
+    { tipo: 'alerta', mensaje: 'Sistema argentino no responde', fecha: 'Hoy 10:12' },
     { tipo: 'info', mensaje: 'Nuevo protocolo de revisión implementado.', fecha: 'Hoy 09:15' },
-    { tipo: 'alerta', mensaje: 'Documento vencido detectado en inspección.', fecha: 'Ayer 18:22' },
-    { tipo: 'sistema', mensaje: 'Sincronización exitosa con sistema argentino.', fecha: 'Ayer 12:10' },
+    { tipo: 'sistema', mensaje: 'Sincronización exitosa con SII.', fecha: 'Ayer 18:22' },
   ];
+
+  // Estado de sincronización
+  const syncArgentina = false; // Simula caída
+  const syncSII = true; // Simula OK
 
   return (
     <div className="space-y-8">
@@ -70,7 +72,7 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Tarjetas de resumen */}
+      {/* Indicadores en tiempo real */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, idx) => (
           <Card key={idx} className="shadow-md">
@@ -78,7 +80,6 @@ export const Dashboard: React.FC = () => {
               <div className={`rounded-full p-2 bg-blue-50 ${stat.color}`}>
                 <stat.icon className="h-6 w-6" />
               </div>
-              {stat.badge && <Badge className="bg-red-500 text-white animate-pulse">{stat.badge}</Badge>}
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-blue-900">{stat.value}</div>
@@ -88,7 +89,58 @@ export const Dashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Gráfico de flujo vehicular (simulado) */}
+      {/* Estado de sincronización */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Server className="h-5 w-5 text-blue-600" />
+              <span>Sincronización con Sistemas Externos</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                <span>Argentina</span>
+                <Badge className={syncArgentina ? 'bg-green-500' : 'bg-red-500'}>
+                  {syncArgentina ? 'Conectado' : 'Caído'}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <Server className="h-4 w-4" />
+                <span>SII</span>
+                <Badge className={syncSII ? 'bg-green-500' : 'bg-red-500'}>
+                  {syncSII ? 'Conectado' : 'Caído'}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Panel de alertas */}
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Bell className="h-5 w-5 text-blue-600" />
+              <span>Alertas del Sistema</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="divide-y divide-blue-50">
+              {notificaciones.map((n, i) => (
+                <li key={i} className="py-2 flex items-center gap-3">
+                  {n.tipo === 'alerta' ? <AlertTriangle className="h-4 w-4 text-red-500" /> : n.tipo === 'sistema' ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : <FileText className="h-4 w-4 text-blue-500" />}
+                  <span className="text-sm text-gray-700 flex-1">{n.mensaje}</span>
+                  <span className="text-xs text-gray-400">{n.fecha}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Mini gráfico de flujo vehicular (simulado) */}
       <Card className="shadow-md">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -117,27 +169,6 @@ export const Dashboard: React.FC = () => {
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Notificaciones recientes */}
-      <Card className="shadow-md">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Bell className="h-5 w-5 text-blue-600" />
-            <span>Notificaciones Recientes</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="divide-y divide-blue-50">
-            {notificaciones.map((n, i) => (
-              <li key={i} className="py-2 flex items-center gap-3">
-                {n.tipo === 'alerta' ? <AlertTriangle className="h-4 w-4 text-red-500" /> : n.tipo === 'sistema' ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : <FileText className="h-4 w-4 text-blue-500" />}
-                <span className="text-sm text-gray-700 flex-1">{n.mensaje}</span>
-                <span className="text-xs text-gray-400">{n.fecha}</span>
-              </li>
-            ))}
-          </ul>
         </CardContent>
       </Card>
     </div>
