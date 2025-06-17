@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Car, CheckCircle, AlertTriangle, TrendingUp, FileText, Bell, Server, Globe } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const userRole = localStorage.getItem('userRole') || 'inspector';
 const userName = {
@@ -60,15 +61,15 @@ export const Dashboard: React.FC = () => {
           <p className="text-gray-600">Sistema de Control Fronterizo - Salida de Vehículos Chile &rarr; Argentina</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <a href="/inspecciones" className="inline-flex items-center px-4 py-2 bg-blue-700 text-white rounded-md font-semibold hover:bg-blue-800 transition-colors">
+          <Link to="/inspecciones" className="inline-flex items-center px-4 py-2 bg-blue-700 text-white rounded-md font-semibold hover:bg-blue-800 transition-colors">
             <Car className="h-5 w-5 mr-2" /> Nueva Inspección
-          </a>
-          <a href="/documentos" className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md font-semibold hover:bg-indigo-700 transition-colors">
+          </Link>
+          <Link to="/documentos" className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md font-semibold hover:bg-indigo-700 transition-colors">
             <FileText className="h-5 w-5 mr-2" /> Subir Documento
-          </a>
-          <a href="/reportes" className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-md font-semibold hover:bg-emerald-700 transition-colors">
+          </Link>
+          <Link to="/reportes" className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-md font-semibold hover:bg-emerald-700 transition-colors">
             <TrendingUp className="h-5 w-5 mr-2" /> Ver Reportes
-          </a>
+          </Link>
         </div>
       </div>
 
