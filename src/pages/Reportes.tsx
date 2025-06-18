@@ -1,5 +1,4 @@
 import React from 'react';
-import MainLayout from '../components/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Bar, Pie, Line } from 'react-chartjs-2';
@@ -46,7 +45,7 @@ const tiempoPromedio = {
 };
 
 const Reportes = () => (
-  <MainLayout>
+  <>
     <h2 className="text-3xl font-bold text-blue-900 mb-6 flex items-center gap-2">
       <FileText className="h-7 w-7 text-blue-700" /> Reportes y Estadísticas
     </h2>
@@ -119,7 +118,7 @@ const Reportes = () => (
         </Card>
       </div>
     </div>
-  </MainLayout>
+  </>
 );
 
 export default Reportes; 

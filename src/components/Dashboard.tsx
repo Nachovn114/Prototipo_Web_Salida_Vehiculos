@@ -1,25 +1,8 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Car, CheckCircle, AlertTriangle, TrendingUp, FileText, Bell, Server, Globe } from 'lucide-react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Row, Col, Statistic } from 'antd';
-import { 
-  CarOutlined, 
-  ClockCircleOutlined, 
-  CheckCircleOutlined,
-  SyncOutlined 
-} from '@ant-design/icons';
-
-const userRole = localStorage.getItem('userRole') || 'inspector';
-const userName = {
-  conductor: 'Conductor',
-  inspector: 'Inspector García',
-  aduanero: 'Aduanero Soto',
-  admin: 'Administrador',
-}[userRole] || 'Usuario';
+import { Card } from 'antd';
+import { Row, Col, Statistic, Button, Tooltip } from 'antd';
+import { CarOutlined, ClockCircleOutlined, CheckCircleOutlined, SyncOutlined, GlobalOutlined, WarningOutlined } from '@ant-design/icons';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 const metricData = [
   {
@@ -48,159 +31,124 @@ const metricData = [
   },
 ];
 
+const flujoDiario = [
+  { hora: '06:00', vehiculos: 23 },
+  { hora: '08:00', vehiculos: 45 },
+  { hora: '10:00', vehiculos: 38 },
+  { hora: '12:00', vehiculos: 42 },
+  { hora: '14:00', vehiculos: 35 },
+  { hora: '16:00', vehiculos: 28 },
+  { hora: '18:00', vehiculos: 20 },
+];
+
+const changelog = [
+  { version: 'v1.0.0', desc: 'Implementación inicial del sistema', date: '15/03/2024' },
+  { version: 'v0.9.0', desc: 'Pruebas de integración', date: '10/03/2024' },
+  { version: 'v0.8.0', desc: 'Desarrollo de módulos principales', date: '01/03/2024' },
+];
+
 const Dashboard: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const fechaActual = new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  // Datos simulados
-  const stats = [
-    {
-      title: 'Solicitudes Hoy',
-      value: 18,
-      icon: FileText,
-      color: 'text-blue-600',
-    },
-    {
-      title: 'Rechazadas Hoy',
-      value: 2,
-      icon: AlertTriangle,
-      color: 'text-red-600',
-    },
-    {
-      title: 'Promedio de Salida',
-      value: '14 min',
-      icon: Car,
-      color: 'text-emerald-600',
-    },
-    {
-      title: 'En Inspección',
-      value: 3,
-      icon: CheckCircle,
-      color: 'text-amber-600',
-    },
-  ];
-
-  const notificaciones = [
-    { tipo: 'alerta', mensaje: 'Sistema argentino no responde', fecha: 'Hoy 10:12' },
-    { tipo: 'info', mensaje: 'Nuevo protocolo de revisión implementado.', fecha: 'Hoy 09:15' },
-    { tipo: 'sistema', mensaje: 'Sincronización exitosa con SII.', fecha: 'Ayer 18:22' },
-  ];
-
-  // Estado de sincronización
-  const syncArgentina = false; // Simula caída
-  const syncSII = true; // Simula OK
-
-  // Simulación de solicitudes recientes
-  const solicitudesRecientes = [
-    { id: 1, conductor: 'Juan Pérez', patente: 'ABCD-12', estado: 'Pendiente' },
-    { id: 2, conductor: 'María Silva', patente: 'EFGH-34', estado: 'Verificando' },
-    { id: 3, conductor: 'Carlos Rodríguez', patente: 'IJKL-56', estado: 'Aprobado' },
-  ];
+  // Estado de conexión simulado
+  const argentinaOnline = false;
 
   return (
-    <div className="dashboard-bg min-h-screen px-4 py-8 md:px-10 md:py-10 bg-gray-50">
+    <div className="min-h-screen px-4 py-10 md:px-10 bg-gradient-to-br from-white via-blue-50 to-gray-100">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-blue-900">Panel de Control</h1>
+        <h1 className="text-4xl font-extrabold mb-8 text-blue-900 tracking-tight">Panel de Control</h1>
         {/* Métricas */}
-        <Row gutter={[24, 24]} className="mb-8">
+        <Row gutter={[32, 32]} className="mb-10">
           {metricData.map((metric) => (
             <Col xs={24} sm={12} md={6} key={metric.title}>
               <Card
                 bordered={false}
-                style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)', borderRadius: 16 }}
-                className="h-full"
+                style={{ boxShadow: '0 4px 24px rgba(37,99,235,0.07)', borderRadius: 18, minHeight: 120 }}
+                className="h-full hover:shadow-xl transition-shadow duration-200"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <span style={{ color: metric.color, fontSize: 28 }}>{metric.icon}</span>
-                  <span className="text-gray-500 font-medium text-base">{metric.title}</span>
+                  <span style={{ color: metric.color, fontSize: 32 }}>{metric.icon}</span>
+                  <span className="text-gray-600 font-semibold text-lg">{metric.title}</span>
                 </div>
                 <Statistic
                   value={metric.value}
-                  valueStyle={{ color: metric.color, fontWeight: 700, fontSize: 28 }}
+                  valueStyle={{ color: metric.color, fontWeight: 700, fontSize: 32 }}
                 />
               </Card>
             </Col>
           ))}
         </Row>
 
-        {/* Paneles de sistema */}
-        <Row gutter={[24, 24]} className="mb-10">
-          <Col xs={24} md={14}>
+        {/* Gráfico de flujo diario y estado de conexión */}
+        <Row gutter={[32, 32]} className="mb-10">
+          <Col xs={24} md={16}>
             <Card
-              title={<span className="font-semibold text-blue-800">Estado del Sistema</span>}
+              title={<span className="font-semibold text-blue-800">Flujo Diario de Vehículos</span>}
               bordered={false}
-              style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)', borderRadius: 16 }}
+              style={{ boxShadow: '0 4px 24px rgba(37,99,235,0.07)', borderRadius: 18 }}
             >
-              <div className="space-y-5">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span>Disponibilidad</span>
-                    <span className="font-semibold">99.9%</span>
-                  </div>
-                  <Progress percent={99.9} status="active" showInfo={false} />
-                </div>
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span>Tiempo de Respuesta</span>
-                    <span className="font-semibold">0.8s</span>
-                  </div>
-                  <Progress percent={85} status="active" showInfo={false} />
-                </div>
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span>Errores (24h)</span>
-                    <span className="font-semibold">0.1%</span>
-                  </div>
-                  <Progress percent={99.9} status="active" showInfo={false} />
-                </div>
-              </div>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={flujoDiario} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hora" />
+                  <YAxis allowDecimals={false} />
+                  <RechartsTooltip />
+                  <Line type="monotone" dataKey="vehiculos" stroke="#2563eb" strokeWidth={3} dot={{ r: 6 }} activeDot={{ r: 8 }} />
+                </LineChart>
+              </ResponsiveContainer>
             </Card>
           </Col>
-          <Col xs={24} md={10}>
+          <Col xs={24} md={8}>
             <Card
-              title={<span className="font-semibold text-blue-800">Versión Actual</span>}
+              title={<span className="font-semibold text-blue-800">Estado de Conexión</span>}
               bordered={false}
-              style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)', borderRadius: 16 }}
-              extra={<span className="text-blue-600 font-bold">v1.0.0</span>}
+              style={{ boxShadow: '0 4px 24px rgba(37,99,235,0.07)', borderRadius: 18 }}
             >
-              <div className="text-sm text-gray-700 mb-2">
-                <div>Última actualización: <b>15/03/2024</b></div>
-                <div>Estado: <span className="text-green-600 font-semibold">Estable</span></div>
-              </div>
-              <div className="mt-4">
-                <h4 className="font-medium mb-2">Historial de Cambios</h4>
-                <ul className="text-xs space-y-1 text-gray-600">
-                  <li>• v1.0.0 - Implementación inicial del sistema</li>
-                  <li>• v0.9.0 - Pruebas de integración</li>
-                  <li>• v0.8.0 - Desarrollo de módulos principales</li>
-                </ul>
+              <div className="flex flex-col items-center justify-center py-6">
+                <Tooltip title={argentinaOnline ? 'Conectado' : 'Sin conexión'}>
+                  <span className={`rounded-full p-4 ${argentinaOnline ? 'bg-green-100' : 'bg-red-100'} mb-2 animate-pulse`}>
+                    {argentinaOnline ? <GlobalOutlined style={{ color: '#22c55e', fontSize: 40 }} /> : <WarningOutlined style={{ color: '#ef4444', fontSize: 40 }} />}
+                  </span>
+                </Tooltip>
+                <div className={`text-lg font-bold ${argentinaOnline ? 'text-green-700' : 'text-red-700'}`}>Argentina {argentinaOnline ? 'Online' : 'Sin conexión'}</div>
+                <div className="text-gray-500 text-sm mt-1">Última verificación: 10:12</div>
               </div>
             </Card>
           </Col>
         </Row>
 
-        {/* Acciones principales */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <Button type="primary" size="large" icon={<CarOutlined />} className="bg-blue-600 hover:bg-blue-700 border-none">
-            Nueva Inspección
-          </Button>
-          <Button size="large" style={{ background: '#6d28d9', color: '#fff', border: 'none' }} icon={<CheckCircleOutlined />}>
-            Subir Documento
-          </Button>
-          <Button size="large" style={{ background: '#059669', color: '#fff', border: 'none' }} icon={<SyncOutlined />}>
-            Ver Reportes
-          </Button>
-        </div>
-
-        {/* Título inferior */}
-        <div className="bg-white rounded-xl shadow p-6 mt-2">
-          <h2 className="text-2xl font-extrabold text-blue-900 mb-2 flex items-center gap-2">
-            <CarOutlined /> Panel de Control - Frontera Chile Argentina
-          </h2>
-          <div className="text-gray-500 text-base">
-            martes, 17 de junio de 2025 — <span className="font-semibold text-blue-700">Inspector García</span> <span className="text-xs text-blue-400">(Inspector)</span>
-          </div>
-        </div>
+        {/* Changelog y versión */}
+        <Row gutter={[32, 32]} className="mb-10">
+          <Col xs={24} md={8}>
+            <Card
+              title={<span className="font-semibold text-blue-800">Versión y Cambios</span>}
+              bordered={false}
+              style={{ boxShadow: '0 4px 24px rgba(37,99,235,0.07)', borderRadius: 18 }}
+            >
+              <div className="mb-2 text-blue-700 font-bold text-lg">v1.0.0</div>
+              <ul className="text-sm text-gray-700 space-y-1">
+                {changelog.map((c, i) => (
+                  <li key={i} className="flex flex-col">
+                    <span className="font-semibold">{c.version}</span>
+                    <span>{c.desc}</span>
+                    <span className="text-xs text-gray-400">{c.date}</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          </Col>
+          <Col xs={24} md={16}>
+            <div className="flex flex-col md:flex-row gap-4 h-full items-end justify-end">
+              <Button type="primary" size="large" icon={<CarOutlined />} className="bg-blue-600 hover:bg-blue-700 border-none shadow-lg transition-all duration-200">
+                Nueva Inspección
+              </Button>
+              <Button size="large" style={{ background: '#6d28d9', color: '#fff', border: 'none' }} icon={<CheckCircleOutlined />} className="shadow-lg transition-all duration-200">
+                Subir Documento
+              </Button>
+              <Button size="large" style={{ background: '#059669', color: '#fff', border: 'none' }} icon={<SyncOutlined />} className="shadow-lg transition-all duration-200">
+                Ver Reportes
+              </Button>
+            </div>
+          </Col>
+        </Row>
       </div>
     </div>
   );

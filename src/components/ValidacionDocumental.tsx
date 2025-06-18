@@ -59,29 +59,33 @@ const ValidacionDocumental: React.FC = () => {
                     {getEstadoIcon(doc.estado)}
                   </p>
                 </div>
-                <div className="space-x-2">
-                  <Upload
-                    fileList={fileList}
-                    onChange={({ fileList }) => setFileList(fileList)}
-                    beforeUpload={() => false}
-                  >
-                    <Button icon={<UploadOutlined />}>Subir Documento</Button>
-                  </Upload>
+                <div className="flex flex-col items-end gap-2 min-w-[220px]">
+                  <div>
+                    <Upload
+                      fileList={fileList}
+                      onChange={({ fileList }) => setFileList(fileList)}
+                      beforeUpload={() => false}
+                    >
+                      <Button icon={<UploadOutlined />}>Subir Documento</Button>
+                    </Upload>
+                  </div>
                   {doc.estado === 'pendiente' && (
-                    <>
+                    <div className="flex flex-row gap-3 w-full">
                       <Button 
                         type="primary" 
+                        className="w-1/2"
                         onClick={() => handleValidar(index, 'validado')}
                       >
                         Validar
                       </Button>
                       <Button 
                         danger 
+                        className="w-1/2"
                         onClick={() => handleValidar(index, 'rechazado')}
                       >
                         Rechazar
                       </Button>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
