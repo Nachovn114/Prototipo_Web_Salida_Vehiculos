@@ -1,5 +1,4 @@
 import React from 'react';
-import MainLayout from '../components/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Server, Clock, CheckCircle, BarChart } from 'lucide-react';
 
@@ -35,7 +34,7 @@ const indicadores = [
 ];
 
 const Calidad = () => (
-  <MainLayout>
+  <>
     <h2 className="text-3xl font-bold text-blue-900 mb-6 flex items-center gap-2">
       <BarChart className="h-7 w-7 text-blue-700" /> Calidad del Sistema (ISO 25000)
     </h2>
@@ -53,7 +52,7 @@ const Calidad = () => (
         </Card>
       ))}
     </div>
-  </MainLayout>
+  </>
 );
 
 export default Calidad; 
