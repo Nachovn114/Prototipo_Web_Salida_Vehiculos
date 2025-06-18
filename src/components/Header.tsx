@@ -20,6 +20,15 @@ export const Header: React.FC<HeaderProps> = ({ unreadCount, notifications, mark
     setLanguage(prev => prev === 'es' ? 'en' : 'es');
   };
 
+  // Obtener rol y nombre de usuario
+  const userRole = localStorage.getItem('userRole') || 'inspector';
+  const userName = {
+    conductor: 'Conductor',
+    inspector: 'Inspector García',
+    aduanero: 'Aduanero Soto',
+    admin: 'Administrador',
+  }[userRole] || 'Usuario';
+
   return (
     <header className="bg-white shadow-lg border-b border-blue-100">
       <div className="container mx-auto px-4">
@@ -97,7 +106,7 @@ export const Header: React.FC<HeaderProps> = ({ unreadCount, notifications, mark
             {/* User Profile */}
             <Button variant="ghost" size="sm" className="text-blue-900 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center">
               <User className="h-5 w-5 mr-2" />
-              <span className="hidden sm:inline font-semibold">Inspector García</span>
+              <span className="hidden sm:inline font-semibold">{userName} <span className="text-xs text-blue-500 font-normal ml-2">({userRole.charAt(0).toUpperCase() + userRole.slice(1)})</span></span>
             </Button>
 
             {/* Mobile Menu */}

@@ -1,4 +1,3 @@
-
 /* Government Gradient */
 .government-gradient {
   background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
@@ -258,4 +257,80 @@
   button {
     display: none !important;
   }
+}
+
+/* Mejoras de contraste y legibilidad */
+body, html {
+  font-size: 16px;
+  color: #1e293b;
+  background: #f8fafc;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+button, .btn, .Button {
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+button:focus, .btn:focus, .Button:focus {
+  box-shadow: 0 0 0 2px #2563eb55;
+}
+button:active, .btn:active, .Button:active {
+  background: #2563eb;
+  color: #fff;
+}
+
+/* Mejorar contraste de badges */
+.badge, .Badge {
+  font-size: 0.95em;
+  font-weight: 600;
+  border-radius: 9999px;
+  padding: 0.25em 0.75em;
+}
+
+/* Inputs y campos de texto */
+input, textarea {
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #cbd5e1;
+  padding: 0.5em 1em;
+  transition: border 0.2s;
+}
+input:focus, textarea:focus {
+  border: 1.5px solid #2563eb;
+  outline: none;
+}
+
+/* Mejorar legibilidad en móviles */
+@media (max-width: 640px) {
+  body, html {
+    font-size: 17px;
+  }
+  h1, h2, h3 {
+    font-size: 1.25em;
+  }
+}
+
+/* Modo oscuro (opcional, no activado por defecto) */
+body.dark {
+  background: #0f172a;
+  color: #f1f5f9;
+}
+body.dark h1, body.dark h2, body.dark h3, body.dark h4, body.dark h5, body.dark h6 {
+  color: #f1f5f9;
+}
+body.dark button, body.dark .btn, body.dark .Button {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+body.dark input, body.dark textarea {
+  background: #1e293b;
+  color: #f1f5f9;
+  border: 1px solid #334155;
 }

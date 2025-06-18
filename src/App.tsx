@@ -9,6 +9,8 @@ import Inspecciones from "./pages/Inspecciones";
 import Documentos from "./pages/Documentos";
 import Reportes from "./pages/Reportes";
 import Login from "./pages/Login";
+import SolicitudDetalle from './pages/SolicitudDetalle';
+import Calidad from './pages/Calidad';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const location = useLocation();
@@ -33,6 +35,8 @@ const App = () => (
           <Route path="/inspecciones" element={<RequireAuth><Inspecciones /></RequireAuth>} />
           <Route path="/documentos" element={<RequireAuth><Documentos /></RequireAuth>} />
           <Route path="/reportes" element={<RequireAuth><Reportes /></RequireAuth>} />
+          <Route path="/solicitud/:id" element={<RequireAuth><SolicitudDetalle /></RequireAuth>} />
+          <Route path="/calidad" element={<RequireAuth><Calidad /></RequireAuth>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
