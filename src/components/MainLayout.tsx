@@ -1,5 +1,4 @@
 import React from 'react';
-import { Layout, Menu } from 'antd';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   DashboardOutlined,
@@ -9,12 +8,13 @@ import {
   SettingOutlined,
   UserOutlined
 } from '@ant-design/icons';
-
-const { Header, Sider, Content } = Layout;
+import { Header as CustomHeader } from './Header';
+import { useNotifications } from '../hooks/useNotifications';
 
 const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { notifications, unreadCount, markAsRead } = useNotifications();
 
   const menuItems = [
     {
@@ -45,44 +45,16 @@ const MainLayout: React.FC = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider
-        theme="light"
-        breakpoint="lg"
-        collapsedWidth="0"
-        style={{
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-        }}
-      >
-        <div className="p-4">
-          <h1 className="text-xl font-bold text-blue-600">Control Fronterizo</h1>
-        </div>
-        <Menu
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          items={menuItems}
-          onClick={({ key }) => navigate(key)}
-        />
-      </Sider>
-      <Layout>
-        <Header style={{ 
-          background: '#fff', 
-          padding: '0 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-        }}>
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-600">Inspector</span>
-            <UserOutlined className="text-xl" />
-          </div>
-        </Header>
-        <Content style={{ margin: '24px 16px', padding: 24, background: '#fff' }}>
-          <Outlet />
-        </Content>
-      </Layout>
-    </Layout>
+    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
+      <CustomHeader
+        unreadCount={unreadCount}
+        notifications={notifications}
+        markAsRead={markAsRead}
+      />
+      <main className="flex-1 w-full max-w-7xl mx-auto px-2 md:px-8 py-6">
+        <Outlet />
+      </main>
+    </div>
   );
 };
 

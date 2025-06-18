@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { CheckCircle, XCircle, User, Users, Car, FileText, Fingerprint, Package, PenTool, Eye, Upload, AlertCircle } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { toast } from 'sonner';
 
 const mockSolicitud = {
   id: 1,
@@ -61,6 +63,7 @@ const SolicitudDetalle = () => {
   const handleAprobar = () => {
     setEstado('Aprobado');
     setSolicitud({ ...solicitud, estado: 'Aprobado' });
+    toast.success('¡Solicitud aprobada!', { description: '🎉 La solicitud fue aprobada exitosamente.' });
   };
   const handleRechazar = () => {
     setEstado('Rechazado');
@@ -113,200 +116,216 @@ const SolicitudDetalle = () => {
   const arancel = Math.round(totalValor * 0.1 * 100) / 100; // 10% simulado
 
   return (
-    <div className="max-w-3xl mx-auto py-8 space-y-8">
-      <Card className="shadow-lg border-blue-100">
+    <div className="max-w-3xl mx-auto py-8 space-y-8 px-0">
+      <Card className="shadow-lg border-blue-100 bg-white dark:bg-gray-900 text-foreground dark:text-white rounded-2xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl text-blue-900">
+          <CardTitle className="flex items-center gap-2 text-2xl text-blue-900 dark:text-blue-200">
             <FileText className="h-6 w-6 text-blue-700" /> Solicitud #{id}
           </CardTitle>
-          <CardDescription className="text-blue-700">Detalle completo de la solicitud</CardDescription>
+          <CardDescription className="text-blue-700 dark:text-blue-300">Detalle completo de la solicitud</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Sección: Conductor */}
-          <div>
-            <h3 className="font-bold text-lg flex items-center gap-2 mb-2"><User className="h-5 w-5 text-blue-600" /> Conductor</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div><span className="font-medium">Nombre:</span> {solicitud.conductor.nombre}</div>
-              <div><span className="font-medium">Documento:</span> {solicitud.conductor.documento}</div>
-            </div>
-          </div>
-          {/* Sección: Acompañantes */}
-          <div>
-            <h3 className="font-bold text-lg flex items-center gap-2 mb-2"><Users className="h-5 w-5 text-blue-600" /> Acompañantes</h3>
-            {solicitud.acompanantes.length === 0 ? <span className="text-gray-500">Sin acompañantes</span> : (
-              <ul className="list-disc ml-6">
-                {solicitud.acompanantes.map((a, i) => (
-                  <li key={i}>{a.nombre} — {a.documento}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-          {/* Sección: Vehículo */}
-          <div>
-            <h3 className="font-bold text-lg flex items-center gap-2 mb-2"><Car className="h-5 w-5 text-blue-600" /> Vehículo</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div><span className="font-medium">Patente:</span> {solicitud.vehiculo.patente}</div>
-              <div><span className="font-medium">Marca:</span> {solicitud.vehiculo.marca}</div>
-              <div><span className="font-medium">Modelo:</span> {solicitud.vehiculo.modelo}</div>
-              <div><span className="font-medium">Año:</span> {solicitud.vehiculo.año}</div>
-              <div><span className="font-medium">Color:</span> {solicitud.vehiculo.color}</div>
-            </div>
-          </div>
-          {/* Sección: Documentos */}
-          <div>
-            <h3 className="font-bold text-lg flex items-center gap-2 mb-2"><FileText className="h-5 w-5 text-blue-600" /> Documentos</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {documentos.map((doc) => (
-                <div key={doc.id} className="p-3 border rounded-lg bg-gray-50 flex flex-col gap-2">
-                  <span className="font-medium">{doc.nombre}</span>
-                  <div className="flex items-center gap-2">
-                    {doc.estado === 'Válido' && <Badge className="bg-green-100 text-green-800 border-green-200"><CheckIcon className="h-3 w-3 mr-1" />Válido</Badge>}
-                    {doc.estado === 'Pendiente' && <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200"><AlertCircle className="h-3 w-3 mr-1" />Pendiente</Badge>}
-                    {doc.estado === 'Observado' && <Badge className="bg-red-100 text-red-800 border-red-200"><XIcon className="h-3 w-3 mr-1" />Observado</Badge>}
-                  </div>
-                  <span className="text-xs text-gray-500">Vence: {doc.vencimiento}</span>
-                  <div className="flex gap-2 items-center mb-2">
-                    <Button variant="outline" size="sm" onClick={() => handleFileInputClick(doc.id)}>
-                      <Upload className="h-4 w-4 mr-1" />{doc.file ? 'Reemplazar' : 'Cargar'} Documento
-                    </Button>
-                    {doc.file && (
-                      <>
-                        <Button variant="outline" size="sm" onClick={() => setPreviewUrl(URL.createObjectURL(doc.file!))}>
-                          <Eye className="h-4 w-4 mr-1" /> Ver
+          <Accordion type="multiple" className="w-full rounded-xl border border-blue-100 dark:border-blue-800 bg-blue-50 dark:bg-gray-800 shadow-sm">
+            <AccordionItem value="conductor">
+              <AccordionTrigger><User className="h-5 w-5 text-blue-600 mr-2" />Conductor</AccordionTrigger>
+              <AccordionContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><span className="font-medium">Nombre:</span> {solicitud.conductor.nombre}</div>
+                  <div><span className="font-medium">Documento:</span> {solicitud.conductor.documento}</div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="acompanantes">
+              <AccordionTrigger><Users className="h-5 w-5 text-blue-600 mr-2" />Acompañantes</AccordionTrigger>
+              <AccordionContent>
+                {solicitud.acompanantes.length === 0 ? <span className="text-gray-500">Sin acompañantes</span> : (
+                  <ul className="list-disc ml-6">
+                    {solicitud.acompanantes.map((a, i) => (
+                      <li key={i}>{a.nombre} — {a.documento}</li>
+                    ))}
+                  </ul>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="vehiculo">
+              <AccordionTrigger><Car className="h-5 w-5 text-blue-600 mr-2" />Vehículo</AccordionTrigger>
+              <AccordionContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><span className="font-medium">Patente:</span> {solicitud.vehiculo.patente}</div>
+                  <div><span className="font-medium">Marca:</span> {solicitud.vehiculo.marca}</div>
+                  <div><span className="font-medium">Modelo:</span> {solicitud.vehiculo.modelo}</div>
+                  <div><span className="font-medium">Año:</span> {solicitud.vehiculo.año}</div>
+                  <div><span className="font-medium">Color:</span> {solicitud.vehiculo.color}</div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="documentos">
+              <AccordionTrigger><FileText className="h-5 w-5 text-blue-600 mr-2" />Documentos</AccordionTrigger>
+              <AccordionContent>
+                <div className="grid grid-cols-3 gap-4">
+                  {documentos.map((doc) => (
+                    <div key={doc.id} className="p-3 border rounded-lg bg-gray-50 dark:bg-gray-900 flex flex-col gap-2 transition-all duration-300">
+                      <span className="font-medium">{doc.nombre}</span>
+                      <div className="flex items-center gap-2">
+                        {doc.estado === 'Válido' && <Badge className="bg-green-100 text-green-800 border-green-200 animate-pulse"><CheckCircle className="h-3 w-3 mr-1" />Válido</Badge>}
+                        {doc.estado === 'Pendiente' && <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 animate-pulse"><AlertCircle className="h-3 w-3 mr-1" />Pendiente</Badge>}
+                        {doc.estado === 'Observado' && <Badge className="bg-red-100 text-red-800 border-red-200 animate-pulse"><XCircle className="h-3 w-3 mr-1" />Observado</Badge>}
+                      </div>
+                      <span className="text-xs text-gray-500 dark:text-gray-300">Vence: {doc.vencimiento}</span>
+                      <div className="flex gap-2 items-center mb-2">
+                        <Button variant="outline" size="sm" onClick={() => handleFileInputClick(doc.id)}>
+                          <Upload className="h-4 w-4 mr-1" />{doc.file ? 'Reemplazar' : 'Cargar'} Documento
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleRemoveFile(doc.id)}>
-                          <XIcon className="h-4 w-4 mr-1" /> Quitar
+                        {doc.file && (
+                          <>
+                            <Button variant="outline" size="sm" onClick={() => setPreviewUrl(URL.createObjectURL(doc.file!))}>
+                              <Eye className="h-4 w-4 mr-1" /> Ver
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => handleRemoveFile(doc.id)}>
+                              <XCircle className="h-4 w-4 mr-1" /> Quitar
+                            </Button>
+                          </>
+                        )}
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*,application/pdf"
+                          className="hidden"
+                          onChange={handleFileChange}
+                        />
+                      </div>
+                      {doc.file && previewUrl && selectedDocId === doc.id && (
+                        <div className="mt-2">
+                          {doc.file.type.startsWith('image/') ? (
+                            <img src={previewUrl} alt="Previsualización" className="max-h-32 rounded shadow border border-blue-100 dark:border-blue-800 mx-auto" />
+                          ) : (
+                            <iframe src={previewUrl} title="PDF" className="w-full h-32 rounded shadow bg-white" />
+                          )}
+                        </div>
+                      )}
+                      {doc.estado === 'Pendiente' && doc.file && (
+                        <Button size="sm" onClick={() => handleVerifyDocument(doc.id)} className="mt-2 w-full">
+                          <CheckCircle className="h-4 w-4 mr-1" /> Validar con sistema externo
                         </Button>
-                      </>
-                    )}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*,application/pdf"
-                      className="hidden"
-                      onChange={handleFileChange}
-                    />
-                  </div>
-                  {doc.file && previewUrl && selectedDocId === doc.id && (
-                    <div className="mt-2">
-                      {doc.file.type.startsWith('image/') ? (
-                        <img src={previewUrl} alt="Previsualización" className="max-h-48 rounded shadow" />
-                      ) : (
-                        <iframe src={previewUrl} title="PDF" className="w-full h-48 rounded shadow bg-white" />
                       )}
                     </div>
-                  )}
-                  {doc.estado === 'Pendiente' && doc.file && (
-                    <Button size="sm" onClick={() => handleVerifyDocument(doc.id)} className="mt-2 w-full">
-                      <CheckIcon className="h-4 w-4 mr-1" /> Validar con sistema externo
-                    </Button>
-                  )}
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-          {/* Sección: Biometría */}
-          <div>
-            <h3 className="font-bold text-lg flex items-center gap-2 mb-2"><Fingerprint className="h-5 w-5 text-blue-600" /> Validación Biométrica</h3>
-            <div className="flex items-center gap-4">
-              <Badge className={biometria === 'Validado' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>{biometria}</Badge>
-              <Button onClick={handleBiometria} disabled={biometria === 'Validado'} variant="outline" size="sm">
-                Simular Validación
-              </Button>
-            </div>
-          </div>
-          {/* Sección: Mercancías */}
-          <div>
-            <h3 className="font-bold text-lg flex items-center gap-2 mb-2"><Package className="h-5 w-5 text-blue-600" /> Declaración de Mercancías</h3>
-            <div className="mb-4">
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="bg-blue-50">
-                      <th className="px-3 py-2 text-left font-semibold">Tipo</th>
-                      <th className="px-3 py-2 text-left font-semibold">Valor (USD)</th>
-                      <th className="px-3 py-2 text-left font-semibold">Observaciones</th>
-                      <th className="px-3 py-2"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mercancias.length === 0 ? (
-                      <tr><td colSpan={4} className="text-gray-500 px-3 py-2">Sin mercancías declaradas</td></tr>
-                    ) : mercancias.map((m, i) => (
-                      <tr key={i} className="border-b">
-                        <td className="px-3 py-2">{m.tipo}</td>
-                        <td className="px-3 py-2">${m.valor}</td>
-                        <td className="px-3 py-2">{m.observaciones}</td>
-                        <td className="px-3 py-2">
-                          <Button size="sm" variant="destructive" onClick={() => handleRemoveMercancia(i)}>
-                            <XCircle className="h-4 w-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {/* Formulario para agregar mercancía */}
-              <div className="flex flex-col md:flex-row gap-2 mt-3">
-                <Input
-                  placeholder="Tipo de mercancía"
-                  value={nuevaMercancia.tipo}
-                  onChange={e => setNuevaMercancia({ ...nuevaMercancia, tipo: e.target.value })}
-                  className="flex-1"
-                />
-                <Input
-                  placeholder="Valor (USD)"
-                  type="number"
-                  min={0}
-                  value={nuevaMercancia.valor}
-                  onChange={e => setNuevaMercancia({ ...nuevaMercancia, valor: e.target.value })}
-                  className="w-32"
-                />
-                <Input
-                  placeholder="Observaciones"
-                  value={nuevaMercancia.observaciones}
-                  onChange={e => setNuevaMercancia({ ...nuevaMercancia, observaciones: e.target.value })}
-                  className="flex-1"
-                />
-                <Button onClick={handleAddMercancia} className="bg-blue-700 hover:bg-blue-800 text-white">
-                  Agregar
-                </Button>
-              </div>
-            </div>
-            <div className="flex gap-6 mt-2">
-              <Badge className="bg-blue-100 text-blue-800">Total declarado: ${totalValor} USD</Badge>
-              <Badge className="bg-emerald-100 text-emerald-800">Arancel estimado: ${arancel} USD</Badge>
-            </div>
-          </div>
-          {/* Sección: Firma */}
-          <div>
-            <h3 className="font-bold text-lg flex items-center gap-2 mb-2"><PenTool className="h-5 w-5 text-blue-600" /> Firma del Inspector</h3>
-            <div className="flex items-center gap-4">
-              <Badge className={firma ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>{firma ? 'Firmado' : 'Pendiente'}</Badge>
-              <Button onClick={handleFirmar} disabled={firma} variant="outline" size="sm">
-                Simular Firma
-              </Button>
-            </div>
-          </div>
-          {/* Sección: Observaciones y acciones */}
-          <div className="space-y-2">
-            <label className="font-medium text-blue-900">Observaciones</label>
-            <Textarea value={observaciones} onChange={e => setObservaciones(e.target.value)} placeholder="Ingrese observaciones..." />
-            <div className="flex gap-4 mt-2">
-              <Button onClick={handleAprobar} disabled={estado === 'Aprobado'} className="bg-green-600 hover:bg-green-700 text-white flex-1">
-                <CheckCircle className="h-4 w-4 mr-2" /> Aprobar
-              </Button>
-              <Button onClick={handleRechazar} disabled={estado === 'Rechazado'} className="bg-red-600 hover:bg-red-700 text-white flex-1">
-                <XCircle className="h-4 w-4 mr-2" /> Rechazar
-              </Button>
-            </div>
-            <div className="mt-2">
-              <Badge className={estado === 'Aprobado' ? 'bg-green-100 text-green-800' : estado === 'Rechazado' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}>
-                Estado: {estado}
-              </Badge>
-            </div>
-          </div>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="mercancias">
+              <AccordionTrigger><Package className="h-5 w-5 text-blue-600 mr-2" />Declaración de Mercancías</AccordionTrigger>
+              <AccordionContent>
+                <div className="mb-4">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr className="bg-blue-50">
+                          <th className="px-3 py-2 text-left font-semibold">Tipo</th>
+                          <th className="px-3 py-2 text-left font-semibold">Valor (USD)</th>
+                          <th className="px-3 py-2 text-left font-semibold">Observaciones</th>
+                          <th className="px-3 py-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {mercancias.length === 0 ? (
+                          <tr><td colSpan={4} className="text-gray-500 px-3 py-2">Sin mercancías declaradas</td></tr>
+                        ) : mercancias.map((m, i) => (
+                          <tr key={i} className="border-b">
+                            <td className="px-3 py-2">{m.tipo}</td>
+                            <td className="px-3 py-2">${m.valor}</td>
+                            <td className="px-3 py-2">{m.observaciones}</td>
+                            <td className="px-3 py-2">
+                              <Button size="sm" variant="destructive" onClick={() => handleRemoveMercancia(i)}>
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Formulario para agregar mercancía */}
+                  <div className="flex flex-col md:flex-row gap-2 mt-3">
+                    <Input
+                      placeholder="Tipo de mercancía"
+                      value={nuevaMercancia.tipo}
+                      onChange={e => setNuevaMercancia({ ...nuevaMercancia, tipo: e.target.value })}
+                      className="flex-1"
+                    />
+                    <Input
+                      placeholder="Valor (USD)"
+                      type="number"
+                      min={0}
+                      value={nuevaMercancia.valor}
+                      onChange={e => setNuevaMercancia({ ...nuevaMercancia, valor: e.target.value })}
+                      className="w-32"
+                    />
+                    <Input
+                      placeholder="Observaciones"
+                      value={nuevaMercancia.observaciones}
+                      onChange={e => setNuevaMercancia({ ...nuevaMercancia, observaciones: e.target.value })}
+                      className="flex-1"
+                    />
+                    <Button onClick={handleAddMercancia} className="bg-blue-700 hover:bg-blue-800 text-white">
+                      Agregar
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex gap-6 mt-2">
+                  <Badge className="bg-blue-100 text-blue-800">Total declarado: ${totalValor} USD</Badge>
+                  <Badge className="bg-emerald-100 text-emerald-800">Arancel estimado: ${arancel} USD</Badge>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="biometria">
+              <AccordionTrigger><Fingerprint className="h-5 w-5 text-blue-600 mr-2" />Validación Biométrica</AccordionTrigger>
+              <AccordionContent>
+                <div className="flex items-center gap-4">
+                  <Badge className={biometria === 'Validado' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>{biometria}</Badge>
+                  <Button onClick={handleBiometria} disabled={biometria === 'Validado'} variant="outline" size="sm">
+                    Simular Validación
+                  </Button>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="firma">
+              <AccordionTrigger><PenTool className="h-5 w-5 text-blue-600 mr-2" />Firma del Inspector</AccordionTrigger>
+              <AccordionContent>
+                <div className="flex items-center gap-4">
+                  <Badge className={firma ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>{firma ? 'Firmado' : 'Pendiente'}</Badge>
+                  <Button onClick={handleFirmar} disabled={firma} variant="outline" size="sm">
+                    Simular Firma
+                  </Button>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="observaciones">
+              <AccordionTrigger><Eye className="h-5 w-5 text-blue-600 mr-2" />Observaciones</AccordionTrigger>
+              <AccordionContent>
+                <label className="font-medium text-blue-900">Observaciones</label>
+                <Textarea value={observaciones} onChange={e => setObservaciones(e.target.value)} placeholder="Ingrese observaciones..." />
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="acciones">
+              <AccordionTrigger><CheckCircle className="h-5 w-5 text-blue-600 mr-2" />Acciones</AccordionTrigger>
+              <AccordionContent>
+                <div className="flex gap-4 mt-2">
+                  <Button onClick={handleAprobar} disabled={estado === 'Aprobado'} className="bg-green-600 hover:bg-green-700 text-white flex-1">
+                    <CheckCircle className="h-4 w-4 mr-2" /> Aprobar
+                  </Button>
+                  <Button onClick={handleRechazar} disabled={estado === 'Rechazado'} className="bg-red-600 hover:bg-red-700 text-white flex-1">
+                    <XCircle className="h-4 w-4 mr-2" /> Rechazar
+                  </Button>
+                </div>
+                <div className="mt-2">
+                  <Badge className={estado === 'Aprobado' ? 'bg-green-100 text-green-800' : estado === 'Rechazado' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}>
+                    Estado: {estado}
+                  </Badge>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
           <Button variant="outline" className="mt-4" onClick={() => navigate(-1)}>
             Volver
           </Button>

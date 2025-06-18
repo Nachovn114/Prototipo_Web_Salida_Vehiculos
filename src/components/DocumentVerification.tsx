@@ -33,27 +33,28 @@ export const DocumentVerification: React.FC = () => {
         doc.id === id ? { ...doc, status: 'verified' } : doc
       )
     );
-    toast.success('Documento verificado');
+    toast.success('Documento verificado', { description: '🎉 El documento fue validado correctamente.' });
   };
 
   const handleRemoveFile = (id: number) => {
     setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, file: null, status: 'pending' } : doc));
     setPreviewUrl(null);
     setSelectedDocId(null);
+    toast.error('Documento eliminado', { description: 'El archivo fue quitado de la solicitud.' });
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'verified':
         return (
-          <Badge className="bg-green-100 text-green-800 border-green-200">
+          <Badge className="bg-green-100 text-green-800 border-green-200 animate-pulse">
             <CheckCircle className="h-3 w-3 mr-1" />
             Verificado
           </Badge>
         );
       case 'pending':
         return (
-          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 animate-pulse">
             <AlertCircle className="h-3 w-3 mr-1" />
             Pendiente
           </Badge>
@@ -114,7 +115,7 @@ export const DocumentVerification: React.FC = () => {
           <h4 className="font-semibold text-sm text-gray-700">Documentos del Vehículo</h4>
           <div className="space-y-3">
             {documents.filter(doc => doc.name.toLowerCase().includes(searchQuery.toLowerCase())).map((doc) => (
-              <div key={doc.id} className="p-4 border rounded-lg bg-gray-50">
+              <div key={doc.id} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-900 flex flex-col gap-2 transition-all duration-300">
                 <div className="flex items-center justify-between mb-2">
                   <h5 className="font-medium text-sm flex items-center gap-2">
                     <FileText className="h-4 w-4 text-blue-500" /> {doc.name}
@@ -155,9 +156,9 @@ export const DocumentVerification: React.FC = () => {
                 {doc.file && previewUrl && selectedDocId === doc.id && (
                   <div className="mt-2">
                     {doc.file.type.startsWith('image/') ? (
-                      <img src={previewUrl} alt="Previsualización" className="max-h-48 rounded shadow" />
+                      <img src={previewUrl} alt="Previsualización" className="max-h-32 rounded shadow border border-blue-100 dark:border-blue-800 mx-auto" />
                     ) : (
-                      <iframe src={previewUrl} title="PDF" className="w-full h-48 rounded shadow bg-white" />
+                      <iframe src={previewUrl} title="PDF" className="w-full h-32 rounded shadow bg-white" />
                     )}
                   </div>
                 )}

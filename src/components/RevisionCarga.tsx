@@ -127,7 +127,7 @@ const RevisionCarga: React.FC = () => {
 
   return (
     <div className="p-6">
-      <Card title="Revisión de Carga" className="mb-6">
+      <Card title="Revisión de Carga" className="mb-6 bg-white dark:bg-gray-900 text-foreground dark:text-white shadow-md">
         <div className="mb-4">
           <h3 className="text-lg font-medium">Resumen de Carga</h3>
           <div className="grid grid-cols-4 gap-4 mt-2">

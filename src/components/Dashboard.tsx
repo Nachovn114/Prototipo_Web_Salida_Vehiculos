@@ -3,31 +3,42 @@ import { Card } from 'antd';
 import { Row, Col, Statistic, Button, Tooltip } from 'antd';
 import { CarOutlined, ClockCircleOutlined, CheckCircleOutlined, SyncOutlined, GlobalOutlined, WarningOutlined } from '@ant-design/icons';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { Area } from 'recharts';
+import { Car, Clock, CheckCircle, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 
 const metricData = [
   {
     title: 'Solicitudes Activas',
     value: 42,
-    icon: <CarOutlined />, 
-    color: '#2563eb',
+    icon: <Car className="h-12 w-12 text-blue-600" />, 
+    color: 'bg-blue-50 border-blue-200',
+    text: 'text-blue-900',
+    border: 'border-blue-200',
   },
   {
     title: 'Tiempo Promedio',
     value: '15 min',
-    icon: <ClockCircleOutlined />, 
-    color: '#059669',
+    icon: <Clock className="h-12 w-12 text-green-600" />, 
+    color: 'bg-green-50 border-green-200',
+    text: 'text-green-900',
+    border: 'border-green-200',
   },
   {
     title: 'Inspecciones Completadas',
     value: 156,
-    icon: <CheckCircleOutlined />, 
-    color: '#7c3aed',
+    icon: <CheckCircle className="h-12 w-12 text-purple-600" />, 
+    color: 'bg-purple-50 border-purple-200',
+    text: 'text-purple-900',
+    border: 'border-purple-200',
   },
   {
     title: 'Sincronización',
     value: '98 %',
-    icon: <SyncOutlined />, 
-    color: '#dc2626',
+    icon: <RefreshCw className="h-12 w-12 text-red-600 animate-spin-slow" />, 
+    color: 'bg-red-50 border-red-200',
+    text: 'text-red-900',
+    border: 'border-red-200',
   },
 ];
 
@@ -42,43 +53,42 @@ const flujoDiario = [
 ];
 
 const changelog = [
-  { version: 'v1.0.0', desc: 'Implementación inicial del sistema', date: '15/03/2024' },
-  { version: 'v0.9.0', desc: 'Pruebas de integración', date: '10/03/2024' },
-  { version: 'v0.8.0', desc: 'Desarrollo de módulos principales', date: '01/03/2024' },
+  { version: 'v1.0.0', desc: 'Implementación inicial del sistema', date: '17/06/2025' },
+  { version: 'v0.9.0', desc: 'Pruebas de integración', date: '20/06/2025' },
+  { version: 'v0.8.0', desc: 'Desarrollo de módulos principales', date: '25/06/2025' },
 ];
 
 const Dashboard: React.FC = () => {
   // Estado de conexión simulado
   const argentinaOnline = false;
 
+  React.useEffect(() => {
+    toast.success('¡Bienvenido al Panel de Control!', { description: 'Sistema listo para operar 🚗🎉' });
+  }, []);
+
   return (
-    <div className="min-h-screen px-4 py-10 md:px-10 bg-gradient-to-br from-white via-blue-50 to-gray-100">
+    <div className="min-h-screen px-2 py-6 md:px-8 bg-gray-50 dark:bg-gray-900 font-sans">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-extrabold mb-8 text-blue-900 tracking-tight">Panel de Control</h1>
+        <h1 className="text-4xl font-extrabold mb-6 text-blue-900 tracking-tight font-sans text-left">Panel de Control</h1>
         {/* Métricas */}
-        <Row gutter={[32, 32]} className="mb-10">
+        <div className="grid grid-cols-4 gap-6 mb-10">
           {metricData.map((metric) => (
-            <Col xs={24} sm={12} md={6} key={metric.title}>
-              <Card
-                bordered={false}
-                style={{ boxShadow: '0 4px 24px rgba(37,99,235,0.07)', borderRadius: 18, minHeight: 120 }}
-                className="h-full hover:shadow-xl transition-shadow duration-200"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <span style={{ color: metric.color, fontSize: 32 }}>{metric.icon}</span>
-                  <span className="text-gray-600 font-semibold text-lg">{metric.title}</span>
-                </div>
-                <Statistic
-                  value={metric.value}
-                  valueStyle={{ color: metric.color, fontWeight: 700, fontSize: 32 }}
-                />
-              </Card>
-            </Col>
+            <div
+              key={metric.title}
+              className={`rounded-2xl shadow-lg ${metric.color} ${metric.border} ${metric.text} flex flex-col items-center justify-center py-8 px-4 border transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer group`}
+              style={{ minHeight: 180 }}
+            >
+              <div className="mb-3 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                {metric.icon}
+              </div>
+              <div className="text-lg font-semibold mb-1 text-center">{metric.title}</div>
+              <div className="text-4xl font-extrabold text-center">{metric.value}</div>
+            </div>
           ))}
-        </Row>
+        </div>
 
         {/* Gráfico de flujo diario y estado de conexión */}
-        <Row gutter={[32, 32]} className="mb-10">
+        <Row gutter={[32, 32]} className="mb-8">
           <Col xs={24} md={16}>
             <Card
               title={<span className="font-semibold text-blue-800">Flujo Diario de Vehículos</span>}
@@ -91,7 +101,9 @@ const Dashboard: React.FC = () => {
                   <XAxis dataKey="hora" />
                   <YAxis allowDecimals={false} />
                   <RechartsTooltip />
-                  <Line type="monotone" dataKey="vehiculos" stroke="#2563eb" strokeWidth={3} dot={{ r: 6 }} activeDot={{ r: 8 }} />
+                  <Line type="monotone" dataKey="vehiculos" stroke="#2563eb" strokeWidth={3} dot={{ r: 8, stroke: '#fff', strokeWidth: 2, fill: '#2563eb', className: 'transition-all duration-300' }} activeDot={{ r: 12, fill: '#1d4ed8', stroke: '#fff', strokeWidth: 3, className: 'transition-all duration-300' }} isAnimationActive={true} animationDuration={1800} animationEasing="ease-in-out" >
+                    <Area type="monotone" dataKey="vehiculos" stroke="#2563eb" fillOpacity={0.18} fill="#2563eb" />
+                  </Line>
                 </LineChart>
               </ResponsiveContainer>
             </Card>

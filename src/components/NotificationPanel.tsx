@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { X, CheckCircle, AlertTriangle, FileText, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,10 +26,10 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
   };
 
   return (
-    <Card className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto z-50 shadow-xl">
+    <Card className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto z-50 shadow-xl bg-white dark:bg-gray-900 text-foreground dark:text-white">
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold">Notificaciones</h3>
+          <h3 className="font-semibold dark:text-white">Notificaciones</h3>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
@@ -38,27 +37,25 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
 
         <div className="space-y-3">
           {notifications.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No hay notificaciones</p>
+            <p className="text-gray-500 dark:text-gray-300 text-center py-4">No hay notificaciones</p>
           ) : (
             notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-3 rounded-lg border ${
-                  notification.leida ? 'bg-gray-50' : 'bg-blue-50 border-blue-200'
-                }`}
+                className={`p-3 rounded-lg border transition-colors duration-300 cursor-pointer ${notification.leida ? 'bg-gray-50 dark:bg-gray-800' : 'bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-700 animate-pulse'}`}
                 onClick={() => markAsRead(notification.id)}
               >
                 <div className="flex items-start space-x-3">
                   {getIcon(notification.tipo)}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="font-medium text-sm">{notification.titulo}</p>
+                      <p className="font-medium text-sm dark:text-white">{notification.titulo}</p>
                       {!notification.leida && (
-                        <Badge variant="secondary" className="text-xs">Nuevo</Badge>
+                        <Badge variant="secondary" className="text-xs animate-bounce">Nuevo</Badge>
                       )}
                     </div>
-                    <p className="text-xs text-gray-600 mt-1">{notification.mensaje}</p>
-                    <p className="text-xs text-gray-400 mt-1">{notification.fecha}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-200 mt-1">{notification.mensaje}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">{notification.fecha}</p>
                   </div>
                 </div>
               </div>

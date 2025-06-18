@@ -6,6 +6,8 @@ import RevisionCarga from './components/RevisionCarga';
 import Reportes from './pages/Reportes';
 import Calidad from './pages/Calidad';
 import SolicitudDetalle from './pages/SolicitudDetalle';
+import Inspecciones from './pages/Inspecciones';
+import Documentos from './pages/Documentos';
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
           <Route path="reportes" element={<Reportes />} />
           <Route path="calidad" element={<Calidad />} />
           <Route path="solicitud/:id" element={<SolicitudDetalle />} />
+          <Route path="inspecciones" element={<Inspecciones />} />
+          <Route path="documentos" element={<Documentos />} />
         </Route>
       </Routes>
     </Router>

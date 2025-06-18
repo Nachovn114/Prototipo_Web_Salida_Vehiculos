@@ -41,8 +41,8 @@ const ValidacionDocumental: React.FC = () => {
 
   return (
     <div className="p-6">
-      <Card title="Validación Documental" className="mb-6">
-        <Steps current={1} className="mb-8">
+      <Card title="Validación Documental" className="mb-6 bg-white dark:bg-gray-900 text-foreground dark:text-white shadow-md">
+        <Steps current={1} className="mb-8 dark:text-white">
           <Step title="Recepción" description="Documentos recibidos" />
           <Step title="Validación" description="En proceso" />
           <Step title="Aprobación" description="Pendiente" />
@@ -50,14 +50,26 @@ const ValidacionDocumental: React.FC = () => {
 
         <div className="space-y-6">
           {documentos.map((doc, index) => (
-            <Card key={doc.tipo} className="mb-4">
-              <div className="flex justify-between items-center">
+            <Card key={doc.tipo} className="mb-4 bg-white dark:bg-gray-900 text-foreground dark:text-white shadow">
+              <div className="flex justify-between items-center dark:text-white">
                 <div>
-                  <h3 className="text-lg font-medium">{doc.tipo}</h3>
-                  <p className="text-gray-500">
-                    Estado: {doc.estado.charAt(0).toUpperCase() + doc.estado.slice(1)}
+                  <h3 className="text-lg font-medium dark:text-white">{doc.tipo}</h3>
+                  <p className="text-gray-500 dark:text-gray-200">
+                    Estado: <span className={`inline-flex items-center gap-1 transition-colors duration-300 ${doc.estado === 'validado' ? 'bg-green-100 text-green-800 animate-pulse' : doc.estado === 'rechazado' ? 'bg-red-100 text-red-800 animate-pulse' : 'bg-yellow-100 text-yellow-800 animate-pulse'} px-2 py-0.5 rounded-full font-semibold text-xs ml-1`}>
+                      {doc.estado.charAt(0).toUpperCase() + doc.estado.slice(1)}
+                    </span>
                     {getEstadoIcon(doc.estado)}
                   </p>
+                  {/* Miniatura del documento */}
+                  {fileList[index]?.originFileObj && (
+                    <div className="mt-2">
+                      {fileList[index].type?.startsWith('image/') ? (
+                        <img src={URL.createObjectURL(fileList[index].originFileObj as File)} alt="Miniatura" className="max-h-24 rounded shadow border" />
+                      ) : fileList[index].type === 'application/pdf' ? (
+                        <iframe src={URL.createObjectURL(fileList[index].originFileObj as File)} title="PDF" className="w-24 h-24 rounded shadow border bg-white" />
+                      ) : null}
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-col items-end gap-2 min-w-[220px]">
                   <div>
