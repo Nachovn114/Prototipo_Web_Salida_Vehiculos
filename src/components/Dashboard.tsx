@@ -5,6 +5,13 @@ import { Progress } from '@/components/ui/progress';
 import { Car, CheckCircle, AlertTriangle, TrendingUp, FileText, Bell, Server, Globe } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Row, Col, Statistic } from 'antd';
+import { 
+  CarOutlined, 
+  ClockCircleOutlined, 
+  CheckCircleOutlined,
+  SyncOutlined 
+} from '@ant-design/icons';
 
 const userRole = localStorage.getItem('userRole') || 'inspector';
 const userName = {
@@ -65,6 +72,109 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-10 max-w-7xl mx-auto px-2 md:px-6 py-6">
+      <h1 className="text-2xl font-bold mb-6">Panel de Control</h1>
+      
+      <Row gutter={[16, 16]}>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="Solicitudes Activas"
+              value={42}
+              prefix={<CarOutlined />}
+              valueStyle={{ color: '#1d4ed8' }}
+            />
+          </Card>
+        </Col>
+        
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="Tiempo Promedio"
+              value="15"
+              suffix="min"
+              prefix={<ClockCircleOutlined />}
+              valueStyle={{ color: '#059669' }}
+            />
+          </Card>
+        </Col>
+        
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="Inspecciones Completadas"
+              value={156}
+              prefix={<CheckCircleOutlined />}
+              valueStyle={{ color: '#7c3aed' }}
+            />
+          </Card>
+        </Col>
+        
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="Sincronización"
+              value={98}
+              suffix="%"
+              prefix={<SyncOutlined />}
+              valueStyle={{ color: '#dc2626' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} className="mt-6">
+        <Col xs={24} lg={12}>
+          <Card title="Estado del Sistema">
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between mb-2">
+                  <span>Disponibilidad</span>
+                  <span>99.9%</span>
+                </div>
+                <Progress percent={99.9} status="active" />
+              </div>
+              <div>
+                <div className="flex justify-between mb-2">
+                  <span>Tiempo de Respuesta</span>
+                  <span>0.8s</span>
+                </div>
+                <Progress percent={85} status="active" />
+              </div>
+              <div>
+                <div className="flex justify-between mb-2">
+                  <span>Errores (24h)</span>
+                  <span>0.1%</span>
+                </div>
+                <Progress percent={99.9} status="active" />
+              </div>
+            </div>
+          </Card>
+        </Col>
+        
+        <Col xs={24} lg={12}>
+          <Card title="Versión del Sistema">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">Versión Actual</span>
+                <span className="text-blue-600">v1.0.0</span>
+              </div>
+              <div className="text-sm text-gray-600">
+                <p>Última actualización: 15/03/2024</p>
+                <p>Estado: Estable</p>
+              </div>
+              <div className="mt-4">
+                <h4 className="font-medium mb-2">Historial de Cambios</h4>
+                <ul className="text-sm space-y-2">
+                  <li>• v1.0.0 - Implementación inicial del sistema</li>
+                  <li>• v0.9.0 - Pruebas de integración</li>
+                  <li>• v0.8.0 - Desarrollo de módulos principales</li>
+                </ul>
+              </div>
+            </div>
+          </Card>
+        </Col>
+      </Row>
+
       {/* Encabezado destacado */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
         <div>
@@ -259,3 +369,5 @@ export const Dashboard: React.FC = () => {
     </div>
   );
 };
+
+export default Dashboard;

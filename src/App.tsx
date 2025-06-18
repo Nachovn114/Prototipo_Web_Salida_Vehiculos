@@ -1,48 +1,27 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Inspecciones from "./pages/Inspecciones";
-import Documentos from "./pages/Documentos";
-import Reportes from "./pages/Reportes";
-import Login from "./pages/Login";
-import SolicitudDetalle from './pages/SolicitudDetalle';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import MainLayout from './components/MainLayout';
+import Dashboard from './components/Dashboard';
+import ValidacionDocumental from './components/ValidacionDocumental';
+import RevisionCarga from './components/RevisionCarga';
+import Reportes from './pages/Reportes';
 import Calidad from './pages/Calidad';
+import SolicitudDetalle from './pages/SolicitudDetalle';
 
-function RequireAuth({ children }: { children: JSX.Element }) {
-  const location = useLocation();
-  const isLogged = !!localStorage.getItem('userRole');
-  if (!isLogged) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-  return children;
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="validacion" element={<ValidacionDocumental />} />
+          <Route path="revision-carga" element={<RevisionCarga />} />
+          <Route path="reportes" element={<Reportes />} />
+          <Route path="calidad" element={<Calidad />} />
+          <Route path="solicitud/:id" element={<SolicitudDetalle />} />
+        </Route>
+      </Routes>
+    </Router>
+  );
 }
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<RequireAuth><Index /></RequireAuth>} />
-          <Route path="/inspecciones" element={<RequireAuth><Inspecciones /></RequireAuth>} />
-          <Route path="/documentos" element={<RequireAuth><Documentos /></RequireAuth>} />
-          <Route path="/reportes" element={<RequireAuth><Reportes /></RequireAuth>} />
-          <Route path="/solicitud/:id" element={<RequireAuth><SolicitudDetalle /></RequireAuth>} />
-          <Route path="/calidad" element={<RequireAuth><Calidad /></RequireAuth>} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
 
 export default App;
