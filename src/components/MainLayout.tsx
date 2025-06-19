@@ -271,6 +271,18 @@ const MainLayout: React.FC = () => {
         <main className="flex-1 w-full max-w-7xl mx-auto px-2 md:px-8 py-6">
           <Outlet />
         </main>
+        <footer className="w-full bg-blue-900 text-white text-center py-4 mt-8">
+          <div className="container mx-auto flex flex-col items-center gap-2">
+            <img src="/assets/frontera-digital-logo.png" alt="Frontera Digital Logo" className="h-8 w-8 inline-block mb-1" />
+            <div className="font-semibold">Frontera Digital – Aduana Chile</div>
+            <div className="flex gap-4 justify-center mt-1">
+              <a href="/acerca" className="text-xs text-blue-200 hover:text-white underline transition">Acerca del sistema</a>
+              <a href="/contacto" className="text-xs text-blue-200 hover:text-white underline transition">Contacto</a>
+            </div>
+            <div className="text-xs opacity-80 mt-1">© 2025 Sistema oficial de control de salida vehicular. Todos los derechos reservados.</div>
+            <div className="text-xs text-blue-200 mt-1">Desarrollado por Ignacio Valeria (2025)</div>
+          </div>
+        </footer>
       </div>
       {/* Drawer de notificaciones lateral derecho */}
       {drawerOpen && (

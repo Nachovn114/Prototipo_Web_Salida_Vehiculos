@@ -28,8 +28,8 @@ const mockSolicitud = {
     color: 'Gris',
   },
   documentos: [
-    { nombre: 'SOAP', estado: 'Válido', vencimiento: '2024-12-31' },
-    { nombre: 'Revisión Técnica', estado: 'Válido', vencimiento: '2024-08-20' },
+    { nombre: 'SOAP', estado: 'Válido', vencimiento: '2025-12-31' },
+    { nombre: 'Revisión Técnica', estado: 'Válido', vencimiento: '2025-08-20' },
     { nombre: 'Licencia', estado: 'Válido', vencimiento: '2028-05-15' },
   ],
   biometria: 'Pendiente',
@@ -49,8 +49,8 @@ const SolicitudDetalle = () => {
   const [firma, setFirma] = useState(false);
   const [estado, setEstado] = useState('Pendiente');
   const [documentos, setDocumentos] = useState([
-    { id: 1, nombre: 'SOAP', estado: 'Válido', vencimiento: '2024-12-31', file: null },
-    { id: 2, nombre: 'Revisión Técnica', estado: 'Pendiente', vencimiento: '2024-08-20', file: null },
+    { id: 1, nombre: 'SOAP', estado: 'Válido', vencimiento: '2025-12-31', file: null },
+    { id: 2, nombre: 'Revisión Técnica', estado: 'Pendiente', vencimiento: '2025-08-20', file: null },
     { id: 3, nombre: 'Licencia', estado: 'Válido', vencimiento: '2028-05-15', file: null },
   ]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -325,12 +325,22 @@ const SolicitudDetalle = () => {
             <AccordionItem value="firma">
               <AccordionTrigger><PenTool className="h-5 w-5 text-blue-600 mr-2" />Firma del Inspector</AccordionTrigger>
               <AccordionContent>
-                <div className="flex items-center gap-4">
-                  <Badge className={firma ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>{firma ? 'Firmado' : 'Pendiente'}</Badge>
-                  <Button onClick={handleFirmar} disabled={firma} variant="outline" size="sm">
-                    Simular Firma
-                  </Button>
-                </div>
+                {firma ? (
+                  <div className="flex items-center gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg mt-2">
+                    <span className="text-2xl">🔐</span>
+                    <div>
+                      <div className="font-bold text-blue-900 text-base">Firmado digitalmente por Inspector García</div>
+                      <div className="text-xs text-blue-700">Fecha y hora: {new Date().toLocaleString('es-CL')}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <Badge className="bg-gray-100 text-gray-800">Pendiente</Badge>
+                    <Button onClick={handleFirmar} disabled={firma} variant="outline" size="sm">
+                      Simular Firma
+                    </Button>
+                  </div>
+                )}
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="observaciones">

@@ -30,6 +30,10 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-blue-100">
+      <div className="flex flex-col items-center mb-8">
+        <img src="/assets/frontera-digital-logo.png" alt="Frontera Digital Logo" className="h-20 w-20 mb-2" />
+        <h1 className="text-2xl font-bold text-blue-900">Frontera Digital <span className="text-blue-600">– Aduana Chile</span></h1>
+      </div>
       <form onSubmit={handleLogin} className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md space-y-6">
         <div className="flex items-center gap-3 mb-4">
           <Shield className="h-10 w-10 text-blue-700" />

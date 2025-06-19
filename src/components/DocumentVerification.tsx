@@ -202,6 +202,15 @@ export const DocumentVerification: React.FC = () => {
           </div>
         </div>
 
+        {/* Visualización institucional de la firma digital */}
+        <div className="flex items-center gap-3 mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <span className="text-2xl">🔐</span>
+          <div>
+            <div className="font-bold text-blue-900">Firmado digitalmente por Inspector García</div>
+            <div className="text-xs text-blue-700">Fecha y hora: {new Date().toLocaleString('es-CL')}</div>
+          </div>
+        </div>
+
         {/* Status Summary */}
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-center justify-between">

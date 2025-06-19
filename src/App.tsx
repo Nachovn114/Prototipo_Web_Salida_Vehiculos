@@ -8,6 +8,8 @@ import Calidad from './pages/Calidad';
 import SolicitudDetalle from './pages/SolicitudDetalle';
 import Inspecciones from './pages/Inspecciones';
 import Documentos from './pages/Documentos';
+import Acerca from './pages/Acerca';
+import Contacto from './pages/Contacto';
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
           <Route path="solicitud/:id" element={<SolicitudDetalle />} />
           <Route path="inspecciones" element={<Inspecciones />} />
           <Route path="documentos" element={<Documentos />} />
+          <Route path="acerca" element={<Acerca />} />
+          <Route path="contacto" element={<Contacto />} />
         </Route>
       </Routes>
     </Router>
