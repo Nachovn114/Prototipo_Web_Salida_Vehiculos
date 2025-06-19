@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Shield, User, Key, UserCheck, UserCog, UserPlus, Loader2, X, Mail, UserCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Shield, User, Key, UserCheck, UserCog, UserPlus, Loader2, X, Mail, UserCircle, HelpCircle, Globe, Info, Wifi, WifiOff, Server, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import FeatureDemo from '../components/FeatureDemo';
 
 const roles = [
   { value: 'conductor', label: 'Conductor', icon: <User className="h-5 w-5 mr-2" />, placeholder: '12.345.678-9' },
@@ -19,7 +20,9 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [showRegister, setShowRegister] = useState(false);
+  const [showFeatureDemo, setShowFeatureDemo] = useState(false);
   const navigate = useNavigate();
+  const [systemStatus, setSystemStatus] = useState<'online' | 'offline' | 'checking'>('checking');
 
   // Estados para el formulario de registro
   const [registerData, setRegisterData] = useState({
@@ -66,53 +69,50 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
-    if (!rut || !password) {
-      setError('Por favor, ingresa todos los campos.');
+    
+    if (!role) {
+      setError('Por favor selecciona tu rol');
+      return;
+    }
+    
+    if (!rut.trim()) {
+      setError('Por favor ingresa tu identificación');
+      return;
+    }
+    
+    if (!password.trim()) {
+      setError('Por favor ingresa tu contraseña');
       return;
     }
 
-    try {
-      setLoading(true);
-      
-      // Simulación de proceso de autenticación con mensajes
-      setLoadingMessage('Verificando credenciales...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setLoadingMessage('Validando permisos...');
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      setLoadingMessage('Preparando tu sesión...');
-      await new Promise(resolve => setTimeout(resolve, 700));
-      
-      // Guardar rol en localStorage para simular sesión
-      localStorage.setItem('userRole', role);
-      
-      // Mostrar toast de bienvenida según el rol
-      const userName = {
-        conductor: 'Sr. Conductor',
-        inspector: 'Inspector García',
-        aduanero: 'Aduanero Soto',
-        admin: 'Administrador',
-      }[role];
+    setError('');
+    setLoading(true);
+    
+    // Simulación de verificación de credenciales con animaciones progresivas
+    const steps = [
+      { message: 'Verificando credenciales...', duration: 800 },
+      { message: 'Validando permisos de acceso...', duration: 600 },
+      { message: 'Conectando con servidor institucional...', duration: 700 },
+      { message: 'Cargando perfil de usuario...', duration: 500 },
+      { message: 'Inicializando sistema...', duration: 400 }
+    ];
 
-      toast.success(`¡Bienvenido ${userName}!`, {
-        description: 'Accediendo al sistema...',
-        duration: 4000,
-      });
+    for (let i = 0; i < steps.length; i++) {
+      setLoadingMessage(steps[i].message);
+      await new Promise(resolve => setTimeout(resolve, steps[i].duration));
+    }
 
-      // Animación de redirección
-      setLoadingMessage('Redirigiendo al sistema...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    // Simulación de éxito
+    toast.success('¡Acceso exitoso!', {
+      description: `Bienvenido ${selectedRole?.label} al Sistema Frontera Digital`,
+      duration: 3000,
+    });
 
-      navigate('/');
-    } catch (error) {
-      setError('Error al iniciar sesión. Por favor, intenta nuevamente.');
-    } finally {
+    setTimeout(() => {
       setLoading(false);
       setLoadingMessage('');
-    }
+      navigate('/dashboard');
+    }, 500);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -185,6 +185,24 @@ const Login = () => {
     }
   };
 
+  // Simular verificación de estado del sistema
+  useEffect(() => {
+    const checkSystemStatus = async () => {
+      setSystemStatus('checking');
+      // Simular verificación de conectividad
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setSystemStatus('online');
+      
+      // Mostrar notificación de estado
+      toast.success('Sistema conectado', {
+        description: 'Servidor institucional disponible',
+        duration: 2000,
+      });
+    };
+
+    checkSystemStatus();
+  }, []);
+
   return (
     <motion.div 
       className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-900/90 via-blue-900/90 to-red-900/90 relative overflow-hidden"
@@ -193,6 +211,45 @@ const Login = () => {
       transition={{ duration: 0.3 }}
       style={{ willChange: 'auto' }}
     >
+      {/* Indicador de estado del sistema */}
+      <motion.div 
+        className="fixed top-4 right-4 z-50"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3, delay: 0.5 }}
+        style={{ willChange: 'auto' }}
+      >
+        <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-white/20">
+          {systemStatus === 'checking' && (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              style={{ willChange: 'transform' }}
+            >
+              <Server className="h-4 w-4 text-yellow-500" />
+            </motion.div>
+          )}
+          {systemStatus === 'online' && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              style={{ willChange: 'transform' }}
+            >
+              <Wifi className="h-4 w-4 text-green-500" />
+            </motion.div>
+          )}
+          {systemStatus === 'offline' && (
+            <WifiOff className="h-4 w-4 text-red-500" />
+          )}
+          <span className="text-xs font-medium text-gray-700">
+            {systemStatus === 'checking' && 'Verificando...'}
+            {systemStatus === 'online' && 'Sistema Online'}
+            {systemStatus === 'offline' && 'Sistema Offline'}
+          </span>
+        </div>
+      </motion.div>
+      
       {/* Patrón de fondo - optimizado para scroll */}
       <div 
         className="absolute inset-0 bg-[url('/assets/pattern.svg')] bg-center opacity-5"
@@ -305,9 +362,22 @@ const Login = () => {
             transition={{ duration: 0.3, delay: 0.5 }}
             style={{ willChange: 'auto' }}
           >
-            <label className="block text-sm font-medium text-blue-900">
-              Selecciona tu rol
-            </label>
+            <div className="flex items-center gap-2">
+              <label className="block text-sm font-medium text-blue-900">
+                Selecciona tu rol
+              </label>
+              <motion.div
+                className="relative group"
+                whileHover={{ scale: 1.05 }}
+                style={{ willChange: 'transform' }}
+              >
+                <HelpCircle className="h-4 w-4 text-blue-500 cursor-help" />
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                  Define tus permisos y acceso al sistema
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                </div>
+              </motion.div>
+            </div>
             <div 
               className="grid grid-cols-2 gap-2"
               role="radiogroup"
@@ -348,9 +418,22 @@ const Login = () => {
             style={{ willChange: 'auto' }}
           >
             <div>
-              <label className="block text-sm font-medium text-blue-900 mb-1" htmlFor="rut">
-                Identificación
-              </label>
+              <div className="flex items-center gap-2 mb-1">
+                <label className="block text-sm font-medium text-blue-900" htmlFor="rut">
+                  Identificación
+                </label>
+                <motion.div
+                  className="relative group"
+                  whileHover={{ scale: 1.05 }}
+                  style={{ willChange: 'transform' }}
+                >
+                  <HelpCircle className="h-4 w-4 text-blue-500 cursor-help" />
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                    {selectedRole?.helpText || 'Ingresa tu RUT o correo institucional'}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </motion.div>
+              </div>
               <div className="relative">
                 <input
                   id="rut"
@@ -362,15 +445,32 @@ const Login = () => {
                   autoFocus
                   aria-label="Ingresa tu identificación"
                   aria-required="true"
+                  aria-describedby="rut-help"
                 />
                 <User className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
+              </div>
+              <div id="rut-help" className="text-xs text-gray-500 mt-1">
+                {selectedRole?.helpText || 'Formato: 12.345.678-9 o correo@institucion.cl'}
               </div>
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-blue-900 mb-1" htmlFor="password">
-                Contraseña
-              </label>
+              <div className="flex items-center gap-2 mb-1">
+                <label className="block text-sm font-medium text-blue-900" htmlFor="password">
+                  Contraseña
+                </label>
+                <motion.div
+                  className="relative group"
+                  whileHover={{ scale: 1.05 }}
+                  style={{ willChange: 'transform' }}
+                >
+                  <HelpCircle className="h-4 w-4 text-blue-500 cursor-help" />
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                    Contraseña de acceso al sistema institucional
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </motion.div>
+              </div>
               <div className="relative">
                 <input
                   id="password"
@@ -381,8 +481,12 @@ const Login = () => {
                   placeholder="••••••••"
                   aria-label="Ingresa tu contraseña"
                   aria-required="true"
+                  aria-describedby="password-help"
                 />
                 <Key className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
+              </div>
+              <div id="password-help" className="text-xs text-gray-500 mt-1">
+                Mínimo 8 caracteres, incluir mayúsculas y números
               </div>
             </div>
 
@@ -396,18 +500,22 @@ const Login = () => {
                 />
                 Recordar sesión
               </label>
-              <a 
-                href="#" 
-                className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+              <motion.button
+                type="button"
+                className="text-blue-600 hover:text-blue-700 font-medium transition-colors flex items-center gap-1"
                 onClick={(e) => {
                   e.preventDefault();
                   toast.info("Función no disponible en el prototipo", {
                     description: "Esta es una simulación académica"
                   });
                 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{ willChange: 'transform' }}
               >
                 ¿Olvidaste tu contraseña?
-              </a>
+                <Info className="h-3 w-3" />
+              </motion.button>
             </div>
           </motion.div>
 
@@ -448,7 +556,7 @@ const Login = () => {
           <motion.button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
+            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70 relative overflow-hidden"
             aria-label="Iniciar sesión"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
@@ -459,6 +567,18 @@ const Login = () => {
           >
             {loading ? (
               <>
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                  animate={{
+                    x: ['-100%', '100%']
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  style={{ willChange: 'transform' }}
+                />
                 <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
                 Verificando...
               </>
@@ -486,23 +606,22 @@ const Login = () => {
             >
               Portal Aduana
             </a>
+            <motion.button
+              type="button"
+              onClick={() => setShowFeatureDemo(true)}
+              className="hover:text-blue-600 transition-colors flex items-center justify-center gap-1"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{ willChange: 'transform' }}
+            >
+              <Zap className="h-3 w-3" />
+              Funcionalidades
+            </motion.button>
             <a 
               href="/contacto" 
               className="hover:text-blue-600 transition-colors"
             >
               Mesa de Ayuda
-            </a>
-            <a 
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                toast.info("Función no disponible en el prototipo", {
-                  description: "Esta es una simulación académica"
-                });
-              }}
-              className="hover:text-blue-600 transition-colors"
-            >
-              Soporte 24/7
             </a>
           </motion.div>
 
@@ -593,6 +712,29 @@ const Login = () => {
             <span>•</span>
             <span>Chile - Argentina</span>
           </div>
+          
+          {/* Selector de idioma */}
+          <motion.div 
+            className="flex justify-center items-center gap-2 mt-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 1.3 }}
+            style={{ willChange: 'auto' }}
+          >
+            <Globe className="h-4 w-4 text-white/60" />
+            <select 
+              className="bg-transparent text-white/80 text-xs border border-white/20 rounded px-2 py-1 focus:outline-none focus:border-white/40"
+              onChange={(e) => {
+                toast.info(`Idioma cambiado a: ${e.target.value}`, {
+                  description: "Función simulada para demostración"
+                });
+              }}
+            >
+              <option value="es">Español</option>
+              <option value="en">English</option>
+              <option value="pt">Português</option>
+            </select>
+          </motion.div>
         </div>
       </motion.div>
 
@@ -915,6 +1057,12 @@ const Login = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Componente de demostración de funcionalidades */}
+      <FeatureDemo 
+        isVisible={showFeatureDemo} 
+        onClose={() => setShowFeatureDemo(false)} 
+      />
     </motion.div>
   );
 };
