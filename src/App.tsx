@@ -11,6 +11,7 @@ import Documentos from './pages/Documentos';
 import Acerca from './pages/Acerca';
 import Contacto from './pages/Contacto';
 import Login from './pages/Login';
+import Ayuda from './pages/Ayuda';
 import { useEffect } from 'react';
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
         <Route path="documentos" element={<Documentos />} />
         <Route path="acerca" element={<Acerca />} />
         <Route path="contacto" element={<Contacto />} />
+        <Route path="ayuda" element={<Ayuda />} />
       </Route>
     </Routes>
   );

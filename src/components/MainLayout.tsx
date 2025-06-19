@@ -5,7 +5,8 @@ import {
   FileTextOutlined,
   CarOutlined,
   BarChartOutlined,
-  SettingOutlined
+  SettingOutlined,
+  QuestionCircleOutlined
 } from '@ant-design/icons';
 import { Header as CustomHeader } from './Header';
 import { useNotifications } from '../hooks/useNotifications';
@@ -38,6 +39,11 @@ const menuItems = [
     key: '/calidad',
     icon: <SettingOutlined />,
     label: 'Calidad',
+  },
+  {
+    key: '/ayuda',
+    icon: <QuestionCircleOutlined />,
+    label: 'Ayuda',
   },
 ];
 

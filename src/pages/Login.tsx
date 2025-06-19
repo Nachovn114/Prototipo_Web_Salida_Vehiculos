@@ -30,7 +30,38 @@ const Login = () => {
   });
   const [registerLoading, setRegisterLoading] = useState(false);
 
+  // Estados para validaciones visuales
+  const [fieldErrors, setFieldErrors] = useState({
+    fullName: false,
+    email: false,
+    registerPassword: false,
+    confirmPassword: false
+  });
+
   const selectedRole = roles.find(r => r.value === role);
+
+  // Función para validar campos en tiempo real
+  const validateField = (field: string, value: string) => {
+    let isValid = true;
+    
+    switch (field) {
+      case 'fullName':
+        isValid = value.trim().length >= 3;
+        break;
+      case 'email':
+        isValid = value.includes('@') || /^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/.test(value);
+        break;
+      case 'registerPassword':
+        isValid = value.length >= 6;
+        break;
+      case 'confirmPassword':
+        isValid = value === registerData.registerPassword && value.length > 0;
+        break;
+    }
+    
+    setFieldErrors(prev => ({ ...prev, [field]: !isValid }));
+    return isValid;
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +101,10 @@ const Login = () => {
         duration: 4000,
       });
 
+      // Animación de redirección
+      setLoadingMessage('Redirigiendo al sistema...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       navigate('/');
     } catch (error) {
       setError('Error al iniciar sesión. Por favor, intenta nuevamente.');
@@ -82,8 +117,16 @@ const Login = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!registerData.fullName || !registerData.email || !registerData.registerPassword) {
-      toast.error('Por favor, completa todos los campos obligatorios.');
+    // Validar todos los campos
+    const validations = {
+      fullName: validateField('fullName', registerData.fullName),
+      email: validateField('email', registerData.email),
+      registerPassword: validateField('registerPassword', registerData.registerPassword),
+      confirmPassword: validateField('confirmPassword', registerData.confirmPassword)
+    };
+
+    if (!Object.values(validations).every(Boolean)) {
+      toast.error('Por favor, corrige los errores en el formulario.');
       return;
     }
 
@@ -95,7 +138,12 @@ const Login = () => {
     try {
       setRegisterLoading(true);
       
-      // Simulación de proceso de registro
+      // Simulación de proceso de registro con animación
+      toast.info('Creando tu cuenta...', {
+        description: 'Procesando información',
+        duration: 2000,
+      });
+      
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Guardar datos de registro en localStorage
@@ -121,6 +169,12 @@ const Login = () => {
         registerRole: 'conductor',
         registerPassword: '',
         confirmPassword: ''
+      });
+      setFieldErrors({
+        fullName: false,
+        email: false,
+        registerPassword: false,
+        confirmPassword: false
       });
       
     } catch (error) {
@@ -443,14 +497,32 @@ const Login = () => {
                   <div className="relative">
                     <input
                       type="text"
-                      className="w-full border-2 rounded-xl px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                      className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
+                        fieldErrors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
                       value={registerData.fullName}
-                      onChange={e => setRegisterData({...registerData, fullName: e.target.value})}
+                      onChange={e => {
+                        setRegisterData({...registerData, fullName: e.target.value});
+                        validateField('fullName', e.target.value);
+                      }}
+                      onBlur={e => validateField('fullName', e.target.value)}
                       placeholder="Ingresa tu nombre completo"
                       required
                     />
                     <UserCircle className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    {registerData.fullName && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        {fieldErrors.fullName ? (
+                          <span className="text-red-500 text-lg">❌</span>
+                        ) : (
+                          <span className="text-green-500 text-lg">✅</span>
+                        )}
+                      </div>
+                    )}
                   </div>
+                  {fieldErrors.fullName && (
+                    <p className="text-red-500 text-xs mt-1">El nombre debe tener al menos 3 caracteres</p>
+                  )}
                 </div>
 
                 <div>
@@ -460,14 +532,32 @@ const Login = () => {
                   <div className="relative">
                     <input
                       type="text"
-                      className="w-full border-2 rounded-xl px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                      className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
+                        fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
                       value={registerData.email}
-                      onChange={e => setRegisterData({...registerData, email: e.target.value})}
+                      onChange={e => {
+                        setRegisterData({...registerData, email: e.target.value});
+                        validateField('email', e.target.value);
+                      }}
+                      onBlur={e => validateField('email', e.target.value)}
                       placeholder="12.345.678-9 o usuario@email.com"
                       required
                     />
                     <Mail className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    {registerData.email && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        {fieldErrors.email ? (
+                          <span className="text-red-500 text-lg">❌</span>
+                        ) : (
+                          <span className="text-green-500 text-lg">✅</span>
+                        )}
+                      </div>
+                    )}
                   </div>
+                  {fieldErrors.email && (
+                    <p className="text-red-500 text-xs mt-1">Ingresa un RUT válido o correo electrónico</p>
+                  )}
                 </div>
 
                 <div>
@@ -475,7 +565,7 @@ const Login = () => {
                     Rol
                   </label>
                   <select
-                    className="w-full border-2 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                    className="w-full border-2 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent border-gray-300"
                     value={registerData.registerRole}
                     onChange={e => setRegisterData({...registerData, registerRole: e.target.value})}
                     required
@@ -495,14 +585,32 @@ const Login = () => {
                   <div className="relative">
                     <input
                       type="password"
-                      className="w-full border-2 rounded-xl px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                      className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
+                        fieldErrors.registerPassword ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
                       value={registerData.registerPassword}
-                      onChange={e => setRegisterData({...registerData, registerPassword: e.target.value})}
+                      onChange={e => {
+                        setRegisterData({...registerData, registerPassword: e.target.value});
+                        validateField('registerPassword', e.target.value);
+                      }}
+                      onBlur={e => validateField('registerPassword', e.target.value)}
                       placeholder="••••••••"
                       required
                     />
                     <Key className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    {registerData.registerPassword && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        {fieldErrors.registerPassword ? (
+                          <span className="text-red-500 text-lg">❌</span>
+                        ) : (
+                          <span className="text-green-500 text-lg">✅</span>
+                        )}
+                      </div>
+                    )}
                   </div>
+                  {fieldErrors.registerPassword && (
+                    <p className="text-red-500 text-xs mt-1">La contraseña debe tener al menos 6 caracteres</p>
+                  )}
                 </div>
 
                 <div>
@@ -512,14 +620,32 @@ const Login = () => {
                   <div className="relative">
                     <input
                       type="password"
-                      className="w-full border-2 rounded-xl px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                      className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
+                        fieldErrors.confirmPassword ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
                       value={registerData.confirmPassword}
-                      onChange={e => setRegisterData({...registerData, confirmPassword: e.target.value})}
+                      onChange={e => {
+                        setRegisterData({...registerData, confirmPassword: e.target.value});
+                        validateField('confirmPassword', e.target.value);
+                      }}
+                      onBlur={e => validateField('confirmPassword', e.target.value)}
                       placeholder="••••••••"
                       required
                     />
                     <Key className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    {registerData.confirmPassword && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        {fieldErrors.confirmPassword ? (
+                          <span className="text-red-500 text-lg">❌</span>
+                        ) : (
+                          <span className="text-green-500 text-lg">✅</span>
+                        )}
+                      </div>
+                    )}
                   </div>
+                  {fieldErrors.confirmPassword && (
+                    <p className="text-red-500 text-xs mt-1">Las contraseñas no coinciden</p>
+                  )}
                 </div>
 
                 <button
