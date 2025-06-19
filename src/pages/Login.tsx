@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, User, Key, UserCheck, UserCog, UserPlus, Loader2 } from 'lucide-react';
+import { Shield, User, Key, UserCheck, UserCog, UserPlus, Loader2, X, Mail, UserCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -17,7 +17,18 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
+  const [showRegister, setShowRegister] = useState(false);
   const navigate = useNavigate();
+
+  // Estados para el formulario de registro
+  const [registerData, setRegisterData] = useState({
+    fullName: '',
+    email: '',
+    registerRole: 'conductor',
+    registerPassword: '',
+    confirmPassword: ''
+  });
+  const [registerLoading, setRegisterLoading] = useState(false);
 
   const selectedRole = roles.find(r => r.value === role);
 
@@ -65,6 +76,57 @@ const Login = () => {
     } finally {
       setLoading(false);
       setLoadingMessage('');
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!registerData.fullName || !registerData.email || !registerData.registerPassword) {
+      toast.error('Por favor, completa todos los campos obligatorios.');
+      return;
+    }
+
+    if (registerData.registerPassword !== registerData.confirmPassword) {
+      toast.error('Las contraseñas no coinciden.');
+      return;
+    }
+
+    try {
+      setRegisterLoading(true);
+      
+      // Simulación de proceso de registro
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Guardar datos de registro en localStorage
+      const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      const newUser = {
+        id: Date.now(),
+        ...registerData,
+        createdAt: new Date().toISOString()
+      };
+      users.push(newUser);
+      localStorage.setItem('registeredUsers', JSON.stringify(users));
+      
+      toast.success('¡Registro exitoso!', {
+        description: 'Tu cuenta ha sido creada correctamente.',
+        duration: 4000,
+      });
+
+      // Cerrar modal y limpiar formulario
+      setShowRegister(false);
+      setRegisterData({
+        fullName: '',
+        email: '',
+        registerRole: 'conductor',
+        registerPassword: '',
+        confirmPassword: ''
+      });
+      
+    } catch (error) {
+      toast.error('Error en el registro. Por favor, intenta nuevamente.');
+    } finally {
+      setRegisterLoading(false);
     }
   };
 
@@ -323,8 +385,169 @@ const Login = () => {
               <p className="mt-1 text-gray-400">No se almacena información real</p>
             </div>
           </div>
+
+          {/* Enlace de registro */}
+          <div className="text-center pt-4 border-t border-gray-100">
+            <p className="text-sm text-gray-600">
+              ¿No tienes cuenta?{' '}
+              <button
+                type="button"
+                onClick={() => setShowRegister(true)}
+                className="text-blue-600 hover:text-blue-700 font-medium underline"
+              >
+                Regístrate aquí
+              </button>
+            </p>
+          </div>
         </form>
       </div>
+
+      {/* Footer institucional */}
+      <div className="relative z-10 w-full max-w-md px-4 mt-8">
+        <div className="text-center text-white/80 text-sm">
+          <p className="mb-2">
+            © 2025 Servicio Nacional de Aduanas
+          </p>
+          <p className="text-xs text-white/60">
+            Sistema Frontera Digital - Plataforma de Control Vehicular
+          </p>
+          <div className="flex justify-center gap-4 mt-3 text-xs text-white/60">
+            <span>Versión 1.0.0</span>
+            <span>•</span>
+            <span>Chile - Argentina</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal de Registro */}
+      {showRegister && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-blue-900">📋 Registrarse</h2>
+                <button
+                  onClick={() => setShowRegister(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Cerrar modal de registro"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-blue-900 mb-1">
+                    Nombre completo
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className="w-full border-2 rounded-xl px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                      value={registerData.fullName}
+                      onChange={e => setRegisterData({...registerData, fullName: e.target.value})}
+                      placeholder="Ingresa tu nombre completo"
+                      required
+                    />
+                    <UserCircle className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-blue-900 mb-1">
+                    RUT o correo electrónico
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className="w-full border-2 rounded-xl px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                      value={registerData.email}
+                      onChange={e => setRegisterData({...registerData, email: e.target.value})}
+                      placeholder="12.345.678-9 o usuario@email.com"
+                      required
+                    />
+                    <Mail className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-blue-900 mb-1">
+                    Rol
+                  </label>
+                  <select
+                    className="w-full border-2 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                    value={registerData.registerRole}
+                    onChange={e => setRegisterData({...registerData, registerRole: e.target.value})}
+                    required
+                  >
+                    {roles.map(r => (
+                      <option key={r.value} value={r.value}>
+                        {r.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-blue-900 mb-1">
+                    Contraseña
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      className="w-full border-2 rounded-xl px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                      value={registerData.registerPassword}
+                      onChange={e => setRegisterData({...registerData, registerPassword: e.target.value})}
+                      placeholder="••••••••"
+                      required
+                    />
+                    <Key className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-blue-900 mb-1">
+                    Confirmar contraseña
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      className="w-full border-2 rounded-xl px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                      value={registerData.confirmPassword}
+                      onChange={e => setRegisterData({...registerData, confirmPassword: e.target.value})}
+                      placeholder="••••••••"
+                      required
+                    />
+                    <Key className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={registerLoading}
+                  className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  {registerLoading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Creando cuenta...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="h-5 w-5" />
+                      Registrarme
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="text-xs text-gray-500 text-center mt-4">
+                <p>Al registrarte aceptas nuestros términos y condiciones</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
