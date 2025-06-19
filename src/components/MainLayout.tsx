@@ -98,10 +98,10 @@ const MainLayout: React.FC = () => {
       <aside className={`hidden md:flex flex-col w-64 min-h-screen bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700 shadow-xl px-4 py-8 gap-8 transition-transform duration-300 z-30`}>
         {/* Branding */}
         <div className="flex items-center gap-3 mb-10 px-2">
-          <div className="bg-white/20 rounded-xl p-2 flex items-center justify-center shadow-md">
-            <Shield className="h-9 w-9 text-white drop-shadow" />
+          <div className="bg-white/20 rounded-xl flex items-center justify-center shadow-md h-20 w-60">
+            <img src="/assets/frontera-digital-logo.png" alt="Frontera Digital Logo" className="w-full h-full object-contain drop-shadow" />
           </div>
-          <span className="text-white text-2xl font-extrabold tracking-widest ml-1">ADUANAS</span>
+          <span className="text-white text-2xl font-extrabold tracking-widest ml-1">Frontera Digital</span>
         </div>
         {/* Menú principal */}
         <nav className="flex flex-col gap-2 mb-8">
@@ -179,10 +179,10 @@ const MainLayout: React.FC = () => {
         <div className="w-64 min-h-screen bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700 shadow-xl px-4 py-8 gap-8 flex flex-col">
           {/* Branding */}
           <div className="flex items-center gap-3 mb-10 px-2">
-            <div className="bg-white/20 rounded-xl p-2 flex items-center justify-center shadow-md">
-              <Shield className="h-9 w-9 text-white drop-shadow" />
+            <div className="bg-white/20 rounded-xl flex items-center justify-center shadow-md h-40 w-40">
+              <img src="/assets/frontera-digital-logo.png" alt="Frontera Digital Logo" className="w-full h-full object-contain drop-shadow" />
             </div>
-            <span className="text-white text-2xl font-extrabold tracking-widest ml-1">ADUANAS</span>
+            <span className="text-white text-2xl font-extrabold tracking-widest ml-1">Frontera Digital</span>
           </div>
           {/* Menú principal */}
           <nav className="flex flex-col gap-2 mb-8">

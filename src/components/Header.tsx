@@ -73,10 +73,14 @@ export const Header: React.FC<HeaderProps> = ({ unreadCount, notifications, mark
         <div className="flex items-center justify-between h-20 md:h-24 gap-8">
           {/* Logo and Title */}
           <Link to="/" className="flex items-center gap-4 group hover:opacity-90 transition-all min-w-fit">
-            <Shield className="h-12 w-12 md:h-14 md:w-14 text-blue-700 drop-shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300" />
+            <img
+              src="/assets/frontera-digital-logo.png"
+              alt="Frontera Digital Logo"
+              className="h-12 w-12 md:h-14 md:w-14 drop-shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300"
+            />
             <div className="flex flex-col justify-center">
-              <h1 className="text-2xl md:text-3xl font-black text-blue-900 leading-tight tracking-tight drop-shadow-sm">Aduana Chile</h1>
-              <p className="text-xs md:text-sm text-blue-600 font-semibold bg-blue-50 rounded px-2 py-0.5 inline-block shadow-sm mt-1">Frontera Los Libertadores</p>
+              <h1 className="text-2xl md:text-3xl font-black text-blue-900 leading-tight tracking-tight drop-shadow-sm">Frontera Digital</h1>
+              <p className="text-xs md:text-sm text-blue-600 font-semibold bg-blue-50 rounded px-2 py-0.5 inline-block shadow-sm mt-1">Sistema de Control Fronterizo</p>
             </div>
           </Link>
 
