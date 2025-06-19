@@ -108,10 +108,17 @@ const Login = () => {
       duration: 3000,
     });
 
+    // Guardar rol en localStorage para simular sesión
+    localStorage.setItem('userRole', role);
+    
+    // Log de debug
+    console.log('Login exitoso:', { role, selectedRole: selectedRole?.label });
+    console.log('Navegando a /');
+
     setTimeout(() => {
       setLoading(false);
       setLoadingMessage('');
-      navigate('/dashboard');
+      navigate('/'); // Cambiar de '/dashboard' a '/' que es donde está el dashboard
     }, 500);
   };
 
