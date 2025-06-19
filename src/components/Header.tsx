@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { NotificationPanel } from './NotificationPanel';
 import { Notification } from '../hooks/useNotifications';
 import { Link, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 interface HeaderProps {
   unreadCount: number;
@@ -80,39 +81,57 @@ export const Header: React.FC<HeaderProps> = ({ unreadCount, notifications, mark
           </Link>
 
           {/* Navigation */}
-          <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
-            <Link to="/">
-              <Button
-                variant="ghost"
-                className={`text-blue-900 font-bold text-base px-5 py-2 rounded-lg transition-colors shadow-none relative group ${location.pathname === '/' ? 'bg-blue-700 text-white after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-1 after:bg-blue-400 after:rounded-full after:scale-x-100 after:transition-transform' : 'hover:bg-blue-100 hover:text-blue-800 after:scale-x-0'}`}
-              >
-                Inicio
-              </Button>
-            </Link>
-            <Link to="/inspecciones">
-              <Button
-                variant="ghost"
-                className={`text-blue-900 font-bold text-base px-5 py-2 rounded-lg transition-colors shadow-none relative group ${location.pathname.startsWith('/inspecciones') ? 'bg-blue-700 text-white after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-1 after:bg-blue-400 after:rounded-full after:scale-x-100 after:transition-transform' : 'hover:bg-blue-100 hover:text-blue-800 after:scale-x-0'}`}
-              >
-                {language === 'es' ? 'Inspecciones' : 'Inspections'}
-              </Button>
-            </Link>
-            <Link to="/documentos">
-              <Button
-                variant="ghost"
-                className={`text-blue-900 font-bold text-base px-5 py-2 rounded-lg transition-colors shadow-none relative group ${location.pathname.startsWith('/documentos') ? 'bg-blue-700 text-white after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-1 after:bg-blue-400 after:rounded-full after:scale-x-100 after:transition-transform' : 'hover:bg-blue-100 hover:text-blue-800 after:scale-x-0'}`}
-              >
-                {language === 'es' ? 'Documentos' : 'Documents'}
-              </Button>
-            </Link>
-            <Link to="/reportes">
-              <Button
-                variant="ghost"
-                className={`text-blue-900 font-bold text-base px-5 py-2 rounded-lg transition-colors shadow-none relative group ${location.pathname.startsWith('/reportes') ? 'bg-blue-700 text-white after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-1 after:bg-blue-400 after:rounded-full after:scale-x-100 after:transition-transform' : 'hover:bg-blue-100 hover:text-blue-800 after:scale-x-0'}`}
-              >
-                {language === 'es' ? 'Reportes' : 'Reports'}
-              </Button>
-            </Link>
+          <nav className="hidden md:flex items-center space-x-6">
+            <NavLink 
+              to="/" 
+              className={({ isActive }) => 
+                `text-sm font-medium transition-all duration-200 hover:text-blue-600 hover:scale-105 ${
+                  isActive ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'
+                }`
+              }
+            >
+              Dashboard
+            </NavLink>
+            <NavLink 
+              to="/inspecciones" 
+              className={({ isActive }) => 
+                `text-sm font-medium transition-all duration-200 hover:text-blue-600 hover:scale-105 ${
+                  isActive ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'
+                }`
+              }
+            >
+              Inspecciones
+            </NavLink>
+            <NavLink 
+              to="/documentos" 
+              className={({ isActive }) => 
+                `text-sm font-medium transition-all duration-200 hover:text-blue-600 hover:scale-105 ${
+                  isActive ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'
+                }`
+              }
+            >
+              Documentos
+            </NavLink>
+            <NavLink 
+              to="/reportes" 
+              className={({ isActive }) => 
+                `text-sm font-medium transition-all duration-200 hover:text-blue-600 hover:scale-105 ${
+                  isActive ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'
+                }`
+              }
+            >
+              Reportes
+            </NavLink>
+            <NavLink 
+              to="/calidad" 
+              className={({ isActive }) => 
+                `text-sm font-medium transition-all duration-200 hover:text-blue-600 hover:scale-105 ${
+                  isActive ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'
+                }`
+              }
+            >
+              Calidad
+            </NavLink>
           </nav>
 
           {/* Actions */}
@@ -130,26 +149,25 @@ export const Header: React.FC<HeaderProps> = ({ unreadCount, notifications, mark
 
             {/* Notifications */}
             <div className="relative" ref={notificationRef}>
-              <Button
-                variant="ghost"
-                size="sm"
+              <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="text-blue-900 hover:bg-blue-50 hover:text-blue-700 transition-colors relative"
-                aria-label="Ver notificaciones"
+                className="relative p-2 text-gray-600 hover:text-blue-600 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full"
               >
                 <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold shadow-lg border-2 border-white animate-bounce">
-                    {unreadCount}
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse transition-all duration-300">
+                    {notifications.length}
                   </span>
                 )}
-              </Button>
+              </button>
               {showNotifications && (
-                <NotificationPanel
-                  notifications={notifications}
-                  markAsRead={markAsRead}
-                  onClose={() => setShowNotifications(false)}
-                />
+                <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 transform transition-all duration-200 ease-out">
+                  <NotificationPanel
+                    notifications={notifications}
+                    markAsRead={markAsRead}
+                    onClose={() => setShowNotifications(false)}
+                  />
+                </div>
               )}
             </div>
 

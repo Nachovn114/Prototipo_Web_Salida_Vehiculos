@@ -1,13 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { VehicleInspection } from '../components/VehicleInspection';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const Inspecciones = () => (
-  <>
-    <h2 className="text-3xl font-bold text-blue-900 mb-6">Inspección de Vehículos</h2>
-    <div className="w-full max-w-2xl mx-auto">
-      <VehicleInspection />
-    </div>
-  </>
-);
+const Inspecciones = () => {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto py-8 space-y-8 px-0">
+        <Skeleton className="h-12 w-1/3 mb-6" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={i} className="h-64 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <h2 className="text-3xl font-bold text-blue-900 mb-6">Inspección de Vehículos</h2>
+      <div className="w-full max-w-2xl mx-auto">
+        <VehicleInspection />
+      </div>
+    </>
+  );
+};
 
 export default Inspecciones; 

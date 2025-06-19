@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 
 export interface Notification {
@@ -33,7 +32,7 @@ const initialNotifications: Notification[] = [
     titulo: 'Actualización del Sistema',
     mensaje: 'El sistema estará en mantenimiento el 25/06',
     fecha: '2024-06-19 10:00',
-    leida: true
+    leida: false
   }
 ];
 

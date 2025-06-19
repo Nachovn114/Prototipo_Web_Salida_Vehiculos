@@ -8,6 +8,7 @@ import { CheckCircle, XCircle, User, Users, Car, FileText, Fingerprint, Package,
 import { useParams, useNavigate } from 'react-router-dom';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const mockSolicitud = {
   id: 1,
@@ -59,6 +60,12 @@ const SolicitudDetalle = () => {
     { tipo: 'Electrodomésticos', valor: 500, observaciones: 'Sin observaciones' },
   ]);
   const [nuevaMercancia, setNuevaMercancia] = useState({ tipo: '', valor: '', observaciones: '' });
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleAprobar = () => {
     setEstado('Aprobado');
@@ -115,6 +122,20 @@ const SolicitudDetalle = () => {
   const totalValor = mercancias.reduce((acc, m) => acc + Number(m.valor), 0);
   const arancel = Math.round(totalValor * 0.1 * 100) / 100; // 10% simulado
 
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto py-8 space-y-8 px-0">
+        <Skeleton className="h-12 w-2/3 mb-6" />
+        <Skeleton className="h-8 w-full mb-4" />
+        <div className="space-y-6">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto py-8 space-y-8 px-0">
       <Card className="shadow-lg border-blue-100 bg-white dark:bg-gray-900 text-foreground dark:text-white rounded-2xl">
@@ -124,43 +145,55 @@ const SolicitudDetalle = () => {
           </CardTitle>
           <CardDescription className="text-blue-700 dark:text-blue-300">Detalle completo de la solicitud</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <Accordion type="multiple" className="w-full rounded-xl border border-blue-100 dark:border-blue-800 bg-blue-50 dark:bg-gray-800 shadow-sm">
+        <CardContent className="space-y-10">
+          <Accordion type="multiple" className="w-full rounded-xl border border-blue-100 dark:border-blue-800 bg-blue-50 dark:bg-gray-800 shadow-sm divide-y divide-blue-200 dark:divide-blue-800">
             <AccordionItem value="conductor">
-              <AccordionTrigger><User className="h-5 w-5 text-blue-600 mr-2" />Conductor</AccordionTrigger>
+              <AccordionTrigger>
+                <User className="h-5 w-5 text-blue-600 mr-2" />
+                <span className="text-xl font-bold text-blue-900 dark:text-blue-200">Datos del Conductor</span>
+              </AccordionTrigger>
               <AccordionContent>
                 <div className="grid grid-cols-2 gap-4">
-                  <div><span className="font-medium">Nombre:</span> {solicitud.conductor.nombre}</div>
-                  <div><span className="font-medium">Documento:</span> {solicitud.conductor.documento}</div>
+                  <div><span className="font-semibold text-blue-800 dark:text-blue-300">Nombre:</span> <span className="text-base text-gray-800 dark:text-gray-200">{solicitud.conductor.nombre}</span></div>
+                  <div><span className="font-semibold text-blue-800 dark:text-blue-300">Documento:</span> <span className="text-base text-gray-800 dark:text-gray-200">{solicitud.conductor.documento}</span></div>
                 </div>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="acompanantes">
-              <AccordionTrigger><Users className="h-5 w-5 text-blue-600 mr-2" />Acompañantes</AccordionTrigger>
+              <AccordionTrigger>
+                <Users className="h-5 w-5 text-blue-600 mr-2" />
+                <span className="text-xl font-bold text-blue-900 dark:text-blue-200">Acompañantes</span>
+              </AccordionTrigger>
               <AccordionContent>
                 {solicitud.acompanantes.length === 0 ? <span className="text-gray-500">Sin acompañantes</span> : (
                   <ul className="list-disc ml-6">
                     {solicitud.acompanantes.map((a, i) => (
-                      <li key={i}>{a.nombre} — {a.documento}</li>
+                      <li key={i}><span className="font-semibold text-blue-800 dark:text-blue-300">{a.nombre}</span> <span className="text-gray-700 dark:text-gray-200">— {a.documento}</span></li>
                     ))}
                   </ul>
                 )}
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="vehiculo">
-              <AccordionTrigger><Car className="h-5 w-5 text-blue-600 mr-2" />Vehículo</AccordionTrigger>
+              <AccordionTrigger>
+                <Car className="h-5 w-5 text-blue-600 mr-2" />
+                <span className="text-xl font-bold text-blue-900 dark:text-blue-200">Datos del Vehículo</span>
+              </AccordionTrigger>
               <AccordionContent>
                 <div className="grid grid-cols-2 gap-4">
-                  <div><span className="font-medium">Patente:</span> {solicitud.vehiculo.patente}</div>
-                  <div><span className="font-medium">Marca:</span> {solicitud.vehiculo.marca}</div>
-                  <div><span className="font-medium">Modelo:</span> {solicitud.vehiculo.modelo}</div>
-                  <div><span className="font-medium">Año:</span> {solicitud.vehiculo.año}</div>
-                  <div><span className="font-medium">Color:</span> {solicitud.vehiculo.color}</div>
+                  <div><span className="font-semibold text-blue-800 dark:text-blue-300">Patente:</span> <span className="text-base text-gray-800 dark:text-gray-200">{solicitud.vehiculo.patente}</span></div>
+                  <div><span className="font-semibold text-blue-800 dark:text-blue-300">Marca:</span> <span className="text-base text-gray-800 dark:text-gray-200">{solicitud.vehiculo.marca}</span></div>
+                  <div><span className="font-semibold text-blue-800 dark:text-blue-300">Modelo:</span> <span className="text-base text-gray-800 dark:text-gray-200">{solicitud.vehiculo.modelo}</span></div>
+                  <div><span className="font-semibold text-blue-800 dark:text-blue-300">Año:</span> <span className="text-base text-gray-800 dark:text-gray-200">{solicitud.vehiculo.año}</span></div>
+                  <div><span className="font-semibold text-blue-800 dark:text-blue-300">Color:</span> <span className="text-base text-gray-800 dark:text-gray-200">{solicitud.vehiculo.color}</span></div>
                 </div>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="documentos">
-              <AccordionTrigger><FileText className="h-5 w-5 text-blue-600 mr-2" />Documentos</AccordionTrigger>
+              <AccordionTrigger>
+                <FileText className="h-5 w-5 text-blue-600 mr-2" />
+                <span className="text-xl font-bold text-blue-900 dark:text-blue-200">Documentos</span>
+              </AccordionTrigger>
               <AccordionContent>
                 <div className="grid grid-cols-3 gap-4">
                   {documentos.map((doc) => (
@@ -173,15 +206,15 @@ const SolicitudDetalle = () => {
                       </div>
                       <span className="text-xs text-gray-500 dark:text-gray-300">Vence: {doc.vencimiento}</span>
                       <div className="flex gap-2 items-center mb-2">
-                        <Button variant="outline" size="sm" onClick={() => handleFileInputClick(doc.id)}>
+                        <Button variant="outline" size="sm" onClick={() => handleFileInputClick(doc.id)} className="border-blue-300 text-blue-800 hover:bg-blue-50">
                           <Upload className="h-4 w-4 mr-1" />{doc.file ? 'Reemplazar' : 'Cargar'} Documento
                         </Button>
                         {doc.file && (
                           <>
-                            <Button variant="outline" size="sm" onClick={() => setPreviewUrl(URL.createObjectURL(doc.file!))}>
+                            <Button variant="outline" size="sm" onClick={() => setPreviewUrl(URL.createObjectURL(doc.file!))} className="border-green-300 text-green-800 hover:bg-green-50">
                               <Eye className="h-4 w-4 mr-1" /> Ver
                             </Button>
-                            <Button variant="destructive" size="sm" onClick={() => handleRemoveFile(doc.id)}>
+                            <Button variant="destructive" size="sm" onClick={() => handleRemoveFile(doc.id)} className="border-red-300 text-red-800 hover:bg-red-50">
                               <XCircle className="h-4 w-4 mr-1" /> Quitar
                             </Button>
                           </>
@@ -204,7 +237,7 @@ const SolicitudDetalle = () => {
                         </div>
                       )}
                       {doc.estado === 'Pendiente' && doc.file && (
-                        <Button size="sm" onClick={() => handleVerifyDocument(doc.id)} className="mt-2 w-full">
+                        <Button size="sm" onClick={() => handleVerifyDocument(doc.id)} className="mt-2 w-full bg-blue-700 hover:bg-blue-800 text-white">
                           <CheckCircle className="h-4 w-4 mr-1" /> Validar con sistema externo
                         </Button>
                       )}
@@ -267,7 +300,7 @@ const SolicitudDetalle = () => {
                       onChange={e => setNuevaMercancia({ ...nuevaMercancia, observaciones: e.target.value })}
                       className="flex-1"
                     />
-                    <Button onClick={handleAddMercancia} className="bg-blue-700 hover:bg-blue-800 text-white">
+                    <Button size="sm" onClick={() => handleAddMercancia()} className="bg-blue-700 hover:bg-blue-800 text-white">
                       Agregar
                     </Button>
                   </div>

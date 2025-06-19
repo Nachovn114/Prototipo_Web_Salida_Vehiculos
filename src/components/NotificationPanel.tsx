@@ -1,7 +1,6 @@
 import React from 'react';
 import { X, CheckCircle, AlertTriangle, FileText, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Notification } from '../hooks/useNotifications';
 
@@ -26,16 +25,9 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
   };
 
   return (
-    <Card className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto z-50 shadow-xl bg-white dark:bg-gray-900 text-foreground dark:text-white">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold dark:text-white">Notificaciones</h3>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="space-y-3">
+    <div className="w-full max-w-md mx-auto bg-white dark:bg-gray-900 text-foreground dark:text-white rounded-none shadow-none">
+      <div className="p-0">
+        <div className="space-y-3 px-2 pb-2">
           {notifications.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-300 text-center py-4">No hay notificaciones</p>
           ) : (
@@ -63,6 +55,6 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
           )}
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
