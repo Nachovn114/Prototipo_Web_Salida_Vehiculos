@@ -187,88 +187,103 @@ const Login = () => {
 
   return (
     <motion.div 
-      className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-900/90 via-blue-900/90 to-red-900/90 relative"
+      className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-900/90 via-blue-900/90 to-red-900/90 relative overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.3 }}
+      style={{ willChange: 'auto' }}
     >
-      {/* Patrón de fondo */}
-      <motion.div 
+      {/* Patrón de fondo - optimizado para scroll */}
+      <div 
         className="absolute inset-0 bg-[url('/assets/pattern.svg')] bg-center opacity-5"
         aria-hidden="true"
-        animate={{ 
-          backgroundPosition: ['0% 0%', '100% 100%'],
-        }}
-        transition={{ 
-          duration: 20,
-          repeat: Infinity,
-          repeatType: "reverse"
+        style={{ 
+          willChange: 'auto',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden'
         }}
       />
       
-      {/* Overlay con gradiente */}
+      {/* Overlay con gradiente - optimizado */}
       <div 
-        className="absolute inset-0 bg-gradient-to-br from-red-900/20 via-transparent to-red-900/20 backdrop-blur-sm"
+        className="absolute inset-0 bg-gradient-to-br from-red-900/20 via-transparent to-red-900/20"
         aria-hidden="true"
+        style={{ 
+          willChange: 'auto',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden'
+        }}
       />
       
-      {/* Contenido */}
-      <div className="relative z-10 w-full max-w-md px-4">
-        {/* Logo y título */}
+      {/* Contenido - optimizado para scroll */}
+      <div className="relative z-10 w-full max-w-md px-4" style={{ willChange: 'auto' }}>
+        {/* Logo y título - animación simplificada */}
         <motion.div 
           className="flex flex-col items-center mb-6"
-          initial={{ y: -50, opacity: 0 }}
+          initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          transition={{ duration: 0.4 }}
+          style={{ willChange: 'auto' }}
         >
           <motion.div 
-            className="bg-white/95 rounded-2xl p-4 shadow-lg mb-4 backdrop-blur-md"
-            whileHover={{ scale: 1.05, rotate: 2 }}
-            transition={{ type: "spring", stiffness: 300 }}
+            className="bg-white/95 rounded-2xl p-4 shadow-lg mb-4"
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            style={{ willChange: 'transform' }}
           >
             <img 
               src="/assets/frontera-digital-logo.png" 
               alt="Logo de Frontera Digital"
               className="h-24 w-24 drop-shadow-lg"
+              style={{ willChange: 'auto' }}
             />
           </motion.div>
           <motion.h1 
             className="text-3xl font-black text-white mb-2 text-center drop-shadow-lg"
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            style={{ willChange: 'auto' }}
           >
             Frontera Digital
           </motion.h1>
           <motion.h2 
             className="text-xl text-white/90 font-medium text-center drop-shadow"
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            style={{ willChange: 'auto' }}
           >
             Sistema oficial de control de salida vehicular
           </motion.h2>
         </motion.div>
 
-        {/* Formulario */}
+        {/* Formulario - optimizado para scroll */}
         <motion.form 
           onSubmit={handleLogin} 
-          className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-8 space-y-6 border border-white/20"
+          className="bg-white/95 rounded-2xl shadow-xl p-8 space-y-6 border border-white/20"
           aria-label="Formulario de inicio de sesión"
-          initial={{ y: 50, opacity: 0 }}
+          initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.8 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          style={{ 
+            willChange: 'auto',
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden'
+          }}
         >
           <motion.div 
             className="flex items-center gap-3 pb-4 border-b border-blue-100"
-            initial={{ x: -20, opacity: 0 }}
+            initial={{ x: -10, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 1 }}
+            transition={{ duration: 0.3, delay: 0.4 }}
+            style={{ willChange: 'auto' }}
           >
             <motion.div 
               className="bg-blue-100 p-3 rounded-xl"
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              transition={{ type: "spring", stiffness: 400 }}
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              style={{ willChange: 'transform' }}
             >
               <Shield className="h-8 w-8 text-blue-700" aria-hidden="true" />
             </motion.div>
@@ -282,12 +297,13 @@ const Login = () => {
             </div>
           </motion.div>
 
-          {/* Selector de rol */}
+          {/* Selector de rol - optimizado */}
           <motion.div 
             className="space-y-2"
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 1.2 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+            style={{ willChange: 'auto' }}
           >
             <label className="block text-sm font-medium text-blue-900">
               Selecciona tu rol
@@ -310,11 +326,12 @@ const Login = () => {
                   aria-label={`Seleccionar rol: ${r.label}`}
                   aria-pressed={role === r.value}
                   role="radio"
-                  initial={{ scale: 0.8, opacity: 0 }}
+                  initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.4, delay: 1.4 + index * 0.1 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.2, delay: 0.6 + index * 0.05 }}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  style={{ willChange: 'transform' }}
                 >
                   {r.icon} {r.label}
                 </motion.button>
@@ -322,12 +339,13 @@ const Login = () => {
             </div>
           </motion.div>
 
-          {/* Campos de acceso */}
+          {/* Campos de acceso - optimizados */}
           <motion.div 
             className="space-y-4"
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 1.6 }}
+            transition={{ duration: 0.3, delay: 0.7 }}
+            style={{ willChange: 'auto' }}
           >
             <div>
               <label className="block text-sm font-medium text-blue-900 mb-1" htmlFor="rut">
@@ -380,7 +398,7 @@ const Login = () => {
               </label>
               <a 
                 href="#" 
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
                 onClick={(e) => {
                   e.preventDefault();
                   toast.info("Función no disponible en el prototipo", {
@@ -393,16 +411,17 @@ const Login = () => {
             </div>
           </motion.div>
 
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {error && (
               <motion.div 
                 className="bg-red-50 text-red-700 p-3 rounded-lg text-sm font-medium flex items-center gap-2"
                 role="alert"
                 aria-live="polite"
-                initial={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.2 }}
+                style={{ willChange: 'auto' }}
               >
                 <Shield className="h-4 w-4" aria-hidden="true" />
                 {error}
@@ -414,10 +433,11 @@ const Login = () => {
                 className="bg-blue-50 text-blue-700 p-3 rounded-lg text-sm font-medium flex items-center gap-2"
                 role="status"
                 aria-live="polite"
-                initial={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.2 }}
+                style={{ willChange: 'auto' }}
               >
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 {loadingMessage}
@@ -430,11 +450,12 @@ const Login = () => {
             disabled={loading}
             className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
             aria-label="Iniciar sesión"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            initial={{ y: 20, opacity: 0 }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 1.8 }}
+            transition={{ duration: 0.3, delay: 0.8 }}
+            style={{ willChange: 'transform' }}
           >
             {loading ? (
               <>
@@ -449,12 +470,13 @@ const Login = () => {
             )}
           </motion.button>
 
-          {/* Enlaces institucionales */}
+          {/* Enlaces institucionales - optimizados */}
           <motion.div 
             className="grid grid-cols-3 gap-4 text-center text-xs text-gray-500"
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 2 }}
+            transition={{ duration: 0.3, delay: 0.9 }}
+            style={{ willChange: 'auto' }}
           >
             <a 
               href="https://www.aduana.cl" 
@@ -484,12 +506,13 @@ const Login = () => {
             </a>
           </motion.div>
 
-          {/* Términos y privacidad */}
+          {/* Términos y privacidad - optimizados */}
           <motion.div 
             className="text-xs text-center space-y-2"
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 2.2 }}
+            transition={{ duration: 0.3, delay: 1.0 }}
+            style={{ willChange: 'auto' }}
           >
             <div className="text-gray-500">
               Al iniciar sesión aceptas nuestros{' '}
@@ -525,12 +548,13 @@ const Login = () => {
             </div>
           </motion.div>
 
-          {/* Enlace de registro */}
+          {/* Enlace de registro - optimizado */}
           <motion.div 
             className="text-center pt-4 border-t border-gray-100"
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 2.4 }}
+            transition={{ duration: 0.3, delay: 1.1 }}
+            style={{ willChange: 'auto' }}
           >
             <p className="text-sm text-gray-600">
               ¿No tienes cuenta?{' '}
@@ -538,8 +562,9 @@ const Login = () => {
                 type="button"
                 onClick={() => setShowRegister(true)}
                 className="text-blue-600 hover:text-blue-700 font-medium underline"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                style={{ willChange: 'transform' }}
               >
                 Regístrate aquí
               </motion.button>
@@ -548,12 +573,13 @@ const Login = () => {
         </motion.form>
       </div>
 
-      {/* Footer institucional */}
+      {/* Footer institucional - optimizado */}
       <motion.div 
         className="relative z-10 w-full max-w-md px-4 mt-8"
-        initial={{ y: 30, opacity: 0 }}
+        initial={{ y: 15, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, delay: 2.6 }}
+        transition={{ duration: 0.3, delay: 1.2 }}
+        style={{ willChange: 'auto' }}
       >
         <div className="text-center text-white/80 text-sm">
           <p className="mb-2">
@@ -570,22 +596,32 @@ const Login = () => {
         </div>
       </motion.div>
 
-      {/* Modal de Registro */}
+      {/* Modal de Registro - optimizado para scroll */}
       <AnimatePresence>
         {showRegister && (
           <motion.div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2 }}
+            style={{ 
+              willChange: 'auto',
+              transform: 'translateZ(0)',
+              backfaceVisibility: 'hidden'
+            }}
           >
             <motion.div 
               className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
-              initial={{ scale: 0.8, opacity: 0, y: 50 }}
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.8, opacity: 0, y: 50 }}
-              transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
+              style={{ 
+                willChange: 'transform',
+                transform: 'translateZ(0)',
+                backfaceVisibility: 'hidden'
+              }}
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -594,18 +630,21 @@ const Login = () => {
                     onClick={() => setShowRegister(false)}
                     className="text-gray-400 hover:text-gray-600 transition-colors"
                     aria-label="Cerrar modal de registro"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{ willChange: 'transform' }}
                   >
                     <X className="h-6 w-6" />
                   </motion.button>
                 </div>
 
                 <form onSubmit={handleRegister} className="space-y-4">
+                  {/* Campos del formulario - optimizados */}
                   <motion.div
-                    initial={{ x: -20, opacity: 0 }}
+                    initial={{ x: -10, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ willChange: 'auto' }}
                   >
                     <label className="block text-sm font-medium text-blue-900 mb-1">
                       Nombre completo
@@ -631,7 +670,8 @@ const Login = () => {
                           className="absolute right-3 top-1/2 -translate-y-1/2"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 400 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                          style={{ willChange: 'transform' }}
                         >
                           {fieldErrors.fullName ? (
                             <span className="text-red-500 text-lg">❌</span>
@@ -644,9 +684,10 @@ const Login = () => {
                     {fieldErrors.fullName && (
                       <motion.p 
                         className="text-red-500 text-xs mt-1"
-                        initial={{ opacity: 0, y: -5 }}
+                        initial={{ opacity: 0, y: -2 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.2 }}
+                        style={{ willChange: 'auto' }}
                       >
                         El nombre debe tener al menos 3 caracteres
                       </motion.p>
@@ -654,9 +695,10 @@ const Login = () => {
                   </motion.div>
 
                   <motion.div
-                    initial={{ x: -20, opacity: 0 }}
+                    initial={{ x: -10, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ willChange: 'auto' }}
                   >
                     <label className="block text-sm font-medium text-blue-900 mb-1">
                       RUT o correo electrónico
@@ -682,7 +724,8 @@ const Login = () => {
                           className="absolute right-3 top-1/2 -translate-y-1/2"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 400 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                          style={{ willChange: 'transform' }}
                         >
                           {fieldErrors.email ? (
                             <span className="text-red-500 text-lg">❌</span>
@@ -695,9 +738,10 @@ const Login = () => {
                     {fieldErrors.email && (
                       <motion.p 
                         className="text-red-500 text-xs mt-1"
-                        initial={{ opacity: 0, y: -5 }}
+                        initial={{ opacity: 0, y: -2 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.2 }}
+                        style={{ willChange: 'auto' }}
                       >
                         Ingresa un RUT válido o correo electrónico
                       </motion.p>
@@ -705,9 +749,10 @@ const Login = () => {
                   </motion.div>
 
                   <motion.div
-                    initial={{ x: -20, opacity: 0 }}
+                    initial={{ x: -10, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.4, delay: 0.3 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ willChange: 'auto' }}
                   >
                     <label className="block text-sm font-medium text-blue-900 mb-1">
                       Rol
@@ -727,9 +772,10 @@ const Login = () => {
                   </motion.div>
 
                   <motion.div
-                    initial={{ x: -20, opacity: 0 }}
+                    initial={{ x: -10, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.4, delay: 0.4 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ willChange: 'auto' }}
                   >
                     <label className="block text-sm font-medium text-blue-900 mb-1">
                       Contraseña
@@ -755,7 +801,8 @@ const Login = () => {
                           className="absolute right-3 top-1/2 -translate-y-1/2"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 400 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                          style={{ willChange: 'transform' }}
                         >
                           {fieldErrors.registerPassword ? (
                             <span className="text-red-500 text-lg">❌</span>
@@ -768,9 +815,10 @@ const Login = () => {
                     {fieldErrors.registerPassword && (
                       <motion.p 
                         className="text-red-500 text-xs mt-1"
-                        initial={{ opacity: 0, y: -5 }}
+                        initial={{ opacity: 0, y: -2 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.2 }}
+                        style={{ willChange: 'auto' }}
                       >
                         La contraseña debe tener al menos 6 caracteres
                       </motion.p>
@@ -778,9 +826,10 @@ const Login = () => {
                   </motion.div>
 
                   <motion.div
-                    initial={{ x: -20, opacity: 0 }}
+                    initial={{ x: -10, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.4, delay: 0.5 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ willChange: 'auto' }}
                   >
                     <label className="block text-sm font-medium text-blue-900 mb-1">
                       Confirmar contraseña
@@ -806,7 +855,8 @@ const Login = () => {
                           className="absolute right-3 top-1/2 -translate-y-1/2"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 400 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                          style={{ willChange: 'transform' }}
                         >
                           {fieldErrors.confirmPassword ? (
                             <span className="text-red-500 text-lg">❌</span>
@@ -819,9 +869,10 @@ const Login = () => {
                     {fieldErrors.confirmPassword && (
                       <motion.p 
                         className="text-red-500 text-xs mt-1"
-                        initial={{ opacity: 0, y: -5 }}
+                        initial={{ opacity: 0, y: -2 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.2 }}
+                        style={{ willChange: 'auto' }}
                       >
                         Las contraseñas no coinciden
                       </motion.p>
@@ -832,8 +883,9 @@ const Login = () => {
                     type="submit"
                     disabled={registerLoading}
                     className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    style={{ willChange: 'transform' }}
                   >
                     {registerLoading ? (
                       <>
@@ -851,9 +903,10 @@ const Login = () => {
 
                 <motion.div 
                   className="text-xs text-gray-500 text-center mt-4"
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                  style={{ willChange: 'auto' }}
                 >
                   <p>Al registrarte aceptas nuestros términos y condiciones</p>
                 </motion.div>
