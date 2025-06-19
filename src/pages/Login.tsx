@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Shield, User, Key, UserCheck, UserCog, UserPlus, Loader2, X, Mail, UserCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const roles = [
   { value: 'conductor', label: 'Conductor', icon: <User className="h-5 w-5 mr-2" />, placeholder: '12.345.678-9' },
@@ -185,11 +186,24 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-900/90 via-blue-900/90 to-red-900/90 relative">
+    <motion.div 
+      className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-900/90 via-blue-900/90 to-red-900/90 relative"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       {/* Patrón de fondo */}
-      <div 
+      <motion.div 
         className="absolute inset-0 bg-[url('/assets/pattern.svg')] bg-center opacity-5"
         aria-hidden="true"
+        animate={{ 
+          backgroundPosition: ['0% 0%', '100% 100%'],
+        }}
+        transition={{ 
+          duration: 20,
+          repeat: Infinity,
+          repeatType: "reverse"
+        }}
       />
       
       {/* Overlay con gradiente */}
@@ -201,32 +215,63 @@ const Login = () => {
       {/* Contenido */}
       <div className="relative z-10 w-full max-w-md px-4">
         {/* Logo y título */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="bg-white/95 rounded-2xl p-4 shadow-lg mb-4 backdrop-blur-md">
+        <motion.div 
+          className="flex flex-col items-center mb-6"
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
+          <motion.div 
+            className="bg-white/95 rounded-2xl p-4 shadow-lg mb-4 backdrop-blur-md"
+            whileHover={{ scale: 1.05, rotate: 2 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
             <img 
               src="/assets/frontera-digital-logo.png" 
               alt="Logo de Frontera Digital"
               className="h-24 w-24 drop-shadow-lg"
             />
-          </div>
-          <h1 className="text-3xl font-black text-white mb-2 text-center drop-shadow-lg">
+          </motion.div>
+          <motion.h1 
+            className="text-3xl font-black text-white mb-2 text-center drop-shadow-lg"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
             Frontera Digital
-          </h1>
-          <h2 className="text-xl text-white/90 font-medium text-center drop-shadow">
+          </motion.h1>
+          <motion.h2 
+            className="text-xl text-white/90 font-medium text-center drop-shadow"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
             Sistema oficial de control de salida vehicular
-          </h2>
-        </div>
+          </motion.h2>
+        </motion.div>
 
         {/* Formulario */}
-        <form 
+        <motion.form 
           onSubmit={handleLogin} 
           className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl p-8 space-y-6 border border-white/20"
           aria-label="Formulario de inicio de sesión"
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
         >
-          <div className="flex items-center gap-3 pb-4 border-b border-blue-100">
-            <div className="bg-blue-100 p-3 rounded-xl">
+          <motion.div 
+            className="flex items-center gap-3 pb-4 border-b border-blue-100"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1 }}
+          >
+            <motion.div 
+              className="bg-blue-100 p-3 rounded-xl"
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
               <Shield className="h-8 w-8 text-blue-700" aria-hidden="true" />
-            </div>
+            </motion.div>
             <div>
               <h2 className="text-2xl font-extrabold text-blue-900 leading-tight">
                 Aduana Chile
@@ -235,10 +280,15 @@ const Login = () => {
                 Portal de Acceso Institucional
               </p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Selector de rol */}
-          <div className="space-y-2">
+          <motion.div 
+            className="space-y-2"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1.2 }}
+          >
             <label className="block text-sm font-medium text-blue-900">
               Selecciona tu rol
             </label>
@@ -247,28 +297,38 @@ const Login = () => {
               role="radiogroup"
               aria-label="Selección de rol de usuario"
             >
-              {roles.map(r => (
-                <button
+              {roles.map((r, index) => (
+                <motion.button
                   type="button"
                   key={r.value}
                   className={`flex items-center px-3 py-2 rounded-xl border-2 transition-all duration-200 ${
                     role === r.value 
-                      ? 'bg-blue-100 border-blue-500 text-blue-900 font-bold shadow-md scale-[1.02]' 
+                      ? 'bg-blue-100 border-blue-500 text-blue-900 font-bold shadow-md' 
                       : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50'
                   }`}
                   onClick={() => setRole(r.value)}
                   aria-label={`Seleccionar rol: ${r.label}`}
                   aria-pressed={role === r.value}
                   role="radio"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 1.4 + index * 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   {r.icon} {r.label}
-                </button>
+                </motion.button>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Campos de acceso */}
-          <div className="space-y-4">
+          <motion.div 
+            className="space-y-4"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1.6 }}
+          >
             <div>
               <label className="block text-sm font-medium text-blue-900 mb-1" htmlFor="rut">
                 Identificación
@@ -331,35 +391,50 @@ const Login = () => {
                 ¿Olvidaste tu contraseña?
               </a>
             </div>
-          </div>
+          </motion.div>
 
-          {error && (
-            <div 
-              className="bg-red-50 text-red-700 p-3 rounded-lg text-sm font-medium flex items-center gap-2"
-              role="alert"
-              aria-live="polite"
-            >
-              <Shield className="h-4 w-4" aria-hidden="true" />
-              {error}
-            </div>
-          )}
+          <AnimatePresence>
+            {error && (
+              <motion.div 
+                className="bg-red-50 text-red-700 p-3 rounded-lg text-sm font-medium flex items-center gap-2"
+                role="alert"
+                aria-live="polite"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Shield className="h-4 w-4" aria-hidden="true" />
+                {error}
+              </motion.div>
+            )}
 
-          {loading && loadingMessage && (
-            <div 
-              className="bg-blue-50 text-blue-700 p-3 rounded-lg text-sm font-medium flex items-center gap-2"
-              role="status"
-              aria-live="polite"
-            >
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              {loadingMessage}
-            </div>
-          )}
+            {loading && loadingMessage && (
+              <motion.div 
+                className="bg-blue-50 text-blue-700 p-3 rounded-lg text-sm font-medium flex items-center gap-2"
+                role="status"
+                aria-live="polite"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                {loadingMessage}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <button
+          <motion.button
             type="submit"
             disabled={loading}
             className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
             aria-label="Iniciar sesión"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1.8 }}
           >
             {loading ? (
               <>
@@ -372,21 +447,26 @@ const Login = () => {
                 Ingresar al Sistema
               </>
             )}
-          </button>
+          </motion.button>
 
           {/* Enlaces institucionales */}
-          <div className="grid grid-cols-3 gap-4 text-center text-xs text-gray-500">
+          <motion.div 
+            className="grid grid-cols-3 gap-4 text-center text-xs text-gray-500"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 2 }}
+          >
             <a 
               href="https://www.aduana.cl" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="hover:text-blue-600"
+              className="hover:text-blue-600 transition-colors"
             >
               Portal Aduana
             </a>
             <a 
               href="/contacto" 
-              className="hover:text-blue-600"
+              className="hover:text-blue-600 transition-colors"
             >
               Mesa de Ayuda
             </a>
@@ -398,19 +478,24 @@ const Login = () => {
                   description: "Esta es una simulación académica"
                 });
               }}
-              className="hover:text-blue-600"
+              className="hover:text-blue-600 transition-colors"
             >
               Soporte 24/7
             </a>
-          </div>
+          </motion.div>
 
           {/* Términos y privacidad */}
-          <div className="text-xs text-center space-y-2">
+          <motion.div 
+            className="text-xs text-center space-y-2"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 2.2 }}
+          >
             <div className="text-gray-500">
               Al iniciar sesión aceptas nuestros{' '}
               <a 
                 href="#" 
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 hover:text-blue-700 font-medium underline"
                 onClick={(e) => {
                   e.preventDefault();
                   toast.info("Función no disponible en el prototipo", {
@@ -423,7 +508,7 @@ const Login = () => {
               {' '}y{' '}
               <a 
                 href="#" 
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 hover:text-blue-700 font-medium underline"
                 onClick={(e) => {
                   e.preventDefault();
                   toast.info("Función no disponible en el prototipo", {
@@ -438,26 +523,38 @@ const Login = () => {
               <p>Sistema de simulación para fines académicos</p>
               <p className="mt-1 text-gray-400">No se almacena información real</p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Enlace de registro */}
-          <div className="text-center pt-4 border-t border-gray-100">
+          <motion.div 
+            className="text-center pt-4 border-t border-gray-100"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 2.4 }}
+          >
             <p className="text-sm text-gray-600">
               ¿No tienes cuenta?{' '}
-              <button
+              <motion.button
                 type="button"
                 onClick={() => setShowRegister(true)}
                 className="text-blue-600 hover:text-blue-700 font-medium underline"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 Regístrate aquí
-              </button>
+              </motion.button>
             </p>
-          </div>
-        </form>
+          </motion.div>
+        </motion.form>
       </div>
 
       {/* Footer institucional */}
-      <div className="relative z-10 w-full max-w-md px-4 mt-8">
+      <motion.div 
+        className="relative z-10 w-full max-w-md px-4 mt-8"
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, delay: 2.6 }}
+      >
         <div className="text-center text-white/80 text-sm">
           <p className="mb-2">
             © 2025 Servicio Nacional de Aduanas
@@ -471,210 +568,301 @@ const Login = () => {
             <span>Chile - Argentina</span>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Modal de Registro */}
-      {showRegister && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-blue-900">📋 Registrarse</h2>
-                <button
-                  onClick={() => setShowRegister(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label="Cerrar modal de registro"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-
-              <form onSubmit={handleRegister} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-blue-900 mb-1">
-                    Nombre completo
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
-                        fieldErrors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                      }`}
-                      value={registerData.fullName}
-                      onChange={e => {
-                        setRegisterData({...registerData, fullName: e.target.value});
-                        validateField('fullName', e.target.value);
-                      }}
-                      onBlur={e => validateField('fullName', e.target.value)}
-                      placeholder="Ingresa tu nombre completo"
-                      required
-                    />
-                    <UserCircle className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                    {registerData.fullName && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        {fieldErrors.fullName ? (
-                          <span className="text-red-500 text-lg">❌</span>
-                        ) : (
-                          <span className="text-green-500 text-lg">✅</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {fieldErrors.fullName && (
-                    <p className="text-red-500 text-xs mt-1">El nombre debe tener al menos 3 caracteres</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-blue-900 mb-1">
-                    RUT o correo electrónico
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
-                        fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                      }`}
-                      value={registerData.email}
-                      onChange={e => {
-                        setRegisterData({...registerData, email: e.target.value});
-                        validateField('email', e.target.value);
-                      }}
-                      onBlur={e => validateField('email', e.target.value)}
-                      placeholder="12.345.678-9 o usuario@email.com"
-                      required
-                    />
-                    <Mail className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                    {registerData.email && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        {fieldErrors.email ? (
-                          <span className="text-red-500 text-lg">❌</span>
-                        ) : (
-                          <span className="text-green-500 text-lg">✅</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {fieldErrors.email && (
-                    <p className="text-red-500 text-xs mt-1">Ingresa un RUT válido o correo electrónico</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-blue-900 mb-1">
-                    Rol
-                  </label>
-                  <select
-                    className="w-full border-2 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent border-gray-300"
-                    value={registerData.registerRole}
-                    onChange={e => setRegisterData({...registerData, registerRole: e.target.value})}
-                    required
+      <AnimatePresence>
+        {showRegister && (
+          <motion.div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div 
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+              initial={{ scale: 0.8, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 50 }}
+              transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-blue-900">📋 Registrarse</h2>
+                  <motion.button
+                    onClick={() => setShowRegister(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    aria-label="Cerrar modal de registro"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                   >
-                    {roles.map(r => (
-                      <option key={r.value} value={r.value}>
-                        {r.label}
-                      </option>
-                    ))}
-                  </select>
+                    <X className="h-6 w-6" />
+                  </motion.button>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-blue-900 mb-1">
-                    Contraseña
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
-                        fieldErrors.registerPassword ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                      }`}
-                      value={registerData.registerPassword}
-                      onChange={e => {
-                        setRegisterData({...registerData, registerPassword: e.target.value});
-                        validateField('registerPassword', e.target.value);
-                      }}
-                      onBlur={e => validateField('registerPassword', e.target.value)}
-                      placeholder="••••••••"
-                      required
-                    />
-                    <Key className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                    {registerData.registerPassword && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        {fieldErrors.registerPassword ? (
-                          <span className="text-red-500 text-lg">❌</span>
-                        ) : (
-                          <span className="text-green-500 text-lg">✅</span>
-                        )}
-                      </div>
+                <form onSubmit={handleRegister} className="space-y-4">
+                  <motion.div
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                  >
+                    <label className="block text-sm font-medium text-blue-900 mb-1">
+                      Nombre completo
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
+                          fieldErrors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
+                        value={registerData.fullName}
+                        onChange={e => {
+                          setRegisterData({...registerData, fullName: e.target.value});
+                          validateField('fullName', e.target.value);
+                        }}
+                        onBlur={e => validateField('fullName', e.target.value)}
+                        placeholder="Ingresa tu nombre completo"
+                        required
+                      />
+                      <UserCircle className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      {registerData.fullName && (
+                        <motion.div 
+                          className="absolute right-3 top-1/2 -translate-y-1/2"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 400 }}
+                        >
+                          {fieldErrors.fullName ? (
+                            <span className="text-red-500 text-lg">❌</span>
+                          ) : (
+                            <span className="text-green-500 text-lg">✅</span>
+                          )}
+                        </motion.div>
+                      )}
+                    </div>
+                    {fieldErrors.fullName && (
+                      <motion.p 
+                        className="text-red-500 text-xs mt-1"
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        El nombre debe tener al menos 3 caracteres
+                      </motion.p>
                     )}
-                  </div>
-                  {fieldErrors.registerPassword && (
-                    <p className="text-red-500 text-xs mt-1">La contraseña debe tener al menos 6 caracteres</p>
-                  )}
-                </div>
+                  </motion.div>
 
-                <div>
-                  <label className="block text-sm font-medium text-blue-900 mb-1">
-                    Confirmar contraseña
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
-                        fieldErrors.confirmPassword ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                      }`}
-                      value={registerData.confirmPassword}
-                      onChange={e => {
-                        setRegisterData({...registerData, confirmPassword: e.target.value});
-                        validateField('confirmPassword', e.target.value);
-                      }}
-                      onBlur={e => validateField('confirmPassword', e.target.value)}
-                      placeholder="••••••••"
-                      required
-                    />
-                    <Key className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                    {registerData.confirmPassword && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        {fieldErrors.confirmPassword ? (
-                          <span className="text-red-500 text-lg">❌</span>
-                        ) : (
-                          <span className="text-green-500 text-lg">✅</span>
-                        )}
-                      </div>
+                  <motion.div
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.4, delay: 0.2 }}
+                  >
+                    <label className="block text-sm font-medium text-blue-900 mb-1">
+                      RUT o correo electrónico
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
+                          fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
+                        value={registerData.email}
+                        onChange={e => {
+                          setRegisterData({...registerData, email: e.target.value});
+                          validateField('email', e.target.value);
+                        }}
+                        onBlur={e => validateField('email', e.target.value)}
+                        placeholder="12.345.678-9 o usuario@email.com"
+                        required
+                      />
+                      <Mail className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      {registerData.email && (
+                        <motion.div 
+                          className="absolute right-3 top-1/2 -translate-y-1/2"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 400 }}
+                        >
+                          {fieldErrors.email ? (
+                            <span className="text-red-500 text-lg">❌</span>
+                          ) : (
+                            <span className="text-green-500 text-lg">✅</span>
+                          )}
+                        </motion.div>
+                      )}
+                    </div>
+                    {fieldErrors.email && (
+                      <motion.p 
+                        className="text-red-500 text-xs mt-1"
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        Ingresa un RUT válido o correo electrónico
+                      </motion.p>
                     )}
-                  </div>
-                  {fieldErrors.confirmPassword && (
-                    <p className="text-red-500 text-xs mt-1">Las contraseñas no coinciden</p>
-                  )}
-                </div>
+                  </motion.div>
 
-                <button
-                  type="submit"
-                  disabled={registerLoading}
-                  className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
+                  <motion.div
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.4, delay: 0.3 }}
+                  >
+                    <label className="block text-sm font-medium text-blue-900 mb-1">
+                      Rol
+                    </label>
+                    <select
+                      className="w-full border-2 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent border-gray-300"
+                      value={registerData.registerRole}
+                      onChange={e => setRegisterData({...registerData, registerRole: e.target.value})}
+                      required
+                    >
+                      {roles.map(r => (
+                        <option key={r.value} value={r.value}>
+                          {r.label}
+                        </option>
+                      ))}
+                    </select>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.4, delay: 0.4 }}
+                  >
+                    <label className="block text-sm font-medium text-blue-900 mb-1">
+                      Contraseña
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="password"
+                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
+                          fieldErrors.registerPassword ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
+                        value={registerData.registerPassword}
+                        onChange={e => {
+                          setRegisterData({...registerData, registerPassword: e.target.value});
+                          validateField('registerPassword', e.target.value);
+                        }}
+                        onBlur={e => validateField('registerPassword', e.target.value)}
+                        placeholder="••••••••"
+                        required
+                      />
+                      <Key className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      {registerData.registerPassword && (
+                        <motion.div 
+                          className="absolute right-3 top-1/2 -translate-y-1/2"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 400 }}
+                        >
+                          {fieldErrors.registerPassword ? (
+                            <span className="text-red-500 text-lg">❌</span>
+                          ) : (
+                            <span className="text-green-500 text-lg">✅</span>
+                          )}
+                        </motion.div>
+                      )}
+                    </div>
+                    {fieldErrors.registerPassword && (
+                      <motion.p 
+                        className="text-red-500 text-xs mt-1"
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        La contraseña debe tener al menos 6 caracteres
+                      </motion.p>
+                    )}
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.4, delay: 0.5 }}
+                  >
+                    <label className="block text-sm font-medium text-blue-900 mb-1">
+                      Confirmar contraseña
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="password"
+                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
+                          fieldErrors.confirmPassword ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
+                        value={registerData.confirmPassword}
+                        onChange={e => {
+                          setRegisterData({...registerData, confirmPassword: e.target.value});
+                          validateField('confirmPassword', e.target.value);
+                        }}
+                        onBlur={e => validateField('confirmPassword', e.target.value)}
+                        placeholder="••••••••"
+                        required
+                      />
+                      <Key className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      {registerData.confirmPassword && (
+                        <motion.div 
+                          className="absolute right-3 top-1/2 -translate-y-1/2"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 400 }}
+                        >
+                          {fieldErrors.confirmPassword ? (
+                            <span className="text-red-500 text-lg">❌</span>
+                          ) : (
+                            <span className="text-green-500 text-lg">✅</span>
+                          )}
+                        </motion.div>
+                      )}
+                    </div>
+                    {fieldErrors.confirmPassword && (
+                      <motion.p 
+                        className="text-red-500 text-xs mt-1"
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        Las contraseñas no coinciden
+                      </motion.p>
+                    )}
+                  </motion.div>
+
+                  <motion.button
+                    type="submit"
+                    disabled={registerLoading}
+                    className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {registerLoading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Creando cuenta...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="h-5 w-5" />
+                        Registrarme
+                      </>
+                    )}
+                  </motion.button>
+                </form>
+
+                <motion.div 
+                  className="text-xs text-gray-500 text-center mt-4"
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  {registerLoading ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      Creando cuenta...
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="h-5 w-5" />
-                      Registrarme
-                    </>
-                  )}
-                </button>
-              </form>
-
-              <div className="text-xs text-gray-500 text-center mt-4">
-                <p>Al registrarte aceptas nuestros términos y condiciones</p>
+                  <p>Al registrarte aceptas nuestros términos y condiciones</p>
+                </motion.div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
