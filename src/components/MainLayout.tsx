@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { NotificationPanel } from './NotificationPanel';
 import { GlobalSearch } from './GlobalSearch';
 import { TourGuide, useTour } from './TourGuide';
-import { FeedbackButton } from './FeedbackButton';
 import Footer from './Footer';
 import {
   Tooltip,
@@ -25,6 +24,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useTranslation } from 'react-i18next';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AduanaChatbot } from './AduanaChatbot';
 
 const menuItems = [
   {
@@ -489,8 +489,7 @@ const MainLayout: React.FC = () => {
           onClose={closeTour} 
         />
 
-        {/* Botón de feedback */}
-        <FeedbackButton />
+        <AduanaChatbot />
       </div>
     </TooltipProvider>
   );
