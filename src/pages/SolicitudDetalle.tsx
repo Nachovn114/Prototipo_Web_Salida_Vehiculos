@@ -247,29 +247,31 @@ const SolicitudDetalle = () => {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="mercancias">
-              <AccordionTrigger><Package className="h-5 w-5 text-blue-600 mr-2" />Declaración de Mercancías</AccordionTrigger>
+              <AccordionTrigger>
+                <Package className="h-5 w-5 text-blue-600 mr-2" />
+                <span className="text-xl font-bold text-blue-900 dark:text-blue-200">Declaración de Mercancías</span>
+              </AccordionTrigger>
               <AccordionContent>
-                <div className="mb-4">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm">
-                      <thead>
-                        <tr className="bg-blue-50">
-                          <th className="px-3 py-2 text-left font-semibold">Tipo</th>
-                          <th className="px-3 py-2 text-left font-semibold">Valor (USD)</th>
-                          <th className="px-3 py-2 text-left font-semibold">Observaciones</th>
-                          <th className="px-3 py-2"></th>
+                <div className="space-y-6">
+                  {/* Contenedor para hacer la tabla responsive */}
+                  <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                    <table className="min-w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
+                      <thead className="bg-gray-50 dark:bg-gray-800">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Tipo</th>
+                          <th scope="col" className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Valor (USD)</th>
+                          <th scope="col" className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Observaciones</th>
+                          <th scope="col" className="px-6 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Acción</th>
                         </tr>
                       </thead>
-                      <tbody>
-                        {mercancias.length === 0 ? (
-                          <tr><td colSpan={4} className="text-gray-500 px-3 py-2">Sin mercancías declaradas</td></tr>
-                        ) : mercancias.map((m, i) => (
-                          <tr key={i} className="border-b">
-                            <td className="px-3 py-2">{m.tipo}</td>
-                            <td className="px-3 py-2">${m.valor}</td>
-                            <td className="px-3 py-2">{m.observaciones}</td>
-                            <td className="px-3 py-2">
-                              <Button size="sm" variant="destructive" onClick={() => handleRemoveMercancia(i)}>
+                      <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                        {mercancias.map((m, idx) => (
+                          <tr key={idx}>
+                            <td className="px-6 py-4 whitespace-nowrap">{m.tipo}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">${m.valor.toFixed(2)}</td>
+                            <td className="px-6 py-4 whitespace-normal max-w-xs truncate">{m.observaciones}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <Button variant="destructive" size="sm" onClick={() => handleRemoveMercancia(idx)}>
                                 <XCircle className="h-4 w-4" />
                               </Button>
                             </td>
@@ -278,36 +280,42 @@ const SolicitudDetalle = () => {
                       </tbody>
                     </table>
                   </div>
-                  {/* Formulario para agregar mercancía */}
-                  <div className="flex flex-col md:flex-row gap-2 mt-3">
-                    <Input
-                      placeholder="Tipo de mercancía"
-                      value={nuevaMercancia.tipo}
-                      onChange={e => setNuevaMercancia({ ...nuevaMercancia, tipo: e.target.value })}
-                      className="flex-1"
-                    />
-                    <Input
-                      placeholder="Valor (USD)"
-                      type="number"
-                      min={0}
-                      value={nuevaMercancia.valor}
-                      onChange={e => setNuevaMercancia({ ...nuevaMercancia, valor: e.target.value })}
-                      className="w-32"
-                    />
-                    <Input
-                      placeholder="Observaciones"
-                      value={nuevaMercancia.observaciones}
-                      onChange={e => setNuevaMercancia({ ...nuevaMercancia, observaciones: e.target.value })}
-                      className="flex-1"
-                    />
-                    <Button size="sm" onClick={() => handleAddMercancia()} className="bg-blue-700 hover:bg-blue-800 text-white">
-                      Agregar
-                    </Button>
+
+                  <Card className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="text-base">Añadir Nueva Mercancía</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Input
+                        placeholder="Tipo"
+                        value={nuevaMercancia.tipo}
+                        onChange={(e) => setNuevaMercancia({ ...nuevaMercancia, tipo: e.target.value })}
+                      />
+                      <Input
+                        type="number"
+                        placeholder="Valor (USD)"
+                        value={nuevaMercancia.valor}
+                        onChange={(e) => setNuevaMercancia({ ...nuevaMercancia, valor: e.target.value })}
+                      />
+                      <Input
+                        placeholder="Observaciones"
+                        value={nuevaMercancia.observaciones}
+                        onChange={(e) => setNuevaMercancia({ ...nuevaMercancia, observaciones: e.target.value })}
+                      />
+                      <Button onClick={handleAddMercancia} className="md:col-span-3">Añadir</Button>
+                    </CardContent>
+                  </Card>
+
+                  <div className="text-right font-semibold space-y-2 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Total Declarado:</span>
+                      <span>${totalValor.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Arancel Aduanero (10%):</span>
+                      <span className="text-red-600">${arancel.toFixed(2)}</span>
+                    </div>
                   </div>
-                </div>
-                <div className="flex gap-6 mt-2">
-                  <Badge className="bg-blue-100 text-blue-800">Total declarado: ${totalValor} USD</Badge>
-                  <Badge className="bg-emerald-100 text-emerald-800">Arancel estimado: ${arancel} USD</Badge>
                 </div>
               </AccordionContent>
             </AccordionItem>

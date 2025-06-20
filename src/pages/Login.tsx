@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, User, Key, UserCheck, UserCog, UserPlus, Loader2, X, Mail, UserCircle, HelpCircle, Globe, Info, Wifi, WifiOff, Server, Zap } from 'lucide-react';
+import { Shield, User, Key, UserCheck, UserCog, UserPlus, Loader2, X, Mail, UserCircle, HelpCircle, Globe, Info, Wifi, WifiOff, Server, Zap, AlertCircle, CheckCircle as CheckCircleIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -36,37 +36,41 @@ const Login = () => {
   });
   const [registerLoading, setRegisterLoading] = useState(false);
 
-  // Estados para validaciones visuales
+  // Estados para validaciones visuales con mensajes de error
   const [fieldErrors, setFieldErrors] = useState({
-    fullName: false,
-    email: false,
-    registerPassword: false,
-    confirmPassword: false
+    fullName: '',
+    email: '',
+    registerPassword: '',
+    confirmPassword: ''
   });
 
   const selectedRole = roles.find(r => r.value === role);
 
-  // Función para validar campos en tiempo real
-  const validateField = (field: string, value: string) => {
-    let isValid = true;
+  // Función para validar campos en tiempo real y devolver mensaje de error
+  const validateField = (field: keyof typeof fieldErrors, value: string) => {
+    let errorMessage = '';
     
     switch (field) {
       case 'fullName':
-        isValid = value.trim().length >= 3;
+        if (!value.trim()) errorMessage = 'El nombre es obligatorio.';
+        else if (value.trim().length < 3) errorMessage = 'Debe tener al menos 3 caracteres.';
         break;
       case 'email':
-        isValid = value.includes('@') || /^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/.test(value);
+        if (!value.trim()) errorMessage = 'El email es obligatorio.';
+        else if (!/^\S+@\S+\.\S+$/.test(value)) errorMessage = 'Formato de email inválido.';
         break;
       case 'registerPassword':
-        isValid = value.length >= 6;
+        if (!value) errorMessage = 'La contraseña es obligatoria.';
+        else if (value.length < 6) errorMessage = 'Mínimo 6 caracteres.';
         break;
       case 'confirmPassword':
-        isValid = value === registerData.registerPassword && value.length > 0;
+        if (!value) errorMessage = 'La confirmación es obligatoria.';
+        else if (value !== registerData.registerPassword) errorMessage = 'Las contraseñas no coinciden.';
         break;
     }
     
-    setFieldErrors(prev => ({ ...prev, [field]: !isValid }));
-    return isValid;
+    setFieldErrors(prev => ({ ...prev, [field]: errorMessage }));
+    return !errorMessage;
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -132,68 +136,42 @@ const Login = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar todos los campos
-    const validations = {
-      fullName: validateField('fullName', registerData.fullName),
-      email: validateField('email', registerData.email),
-      registerPassword: validateField('registerPassword', registerData.registerPassword),
-      confirmPassword: validateField('confirmPassword', registerData.confirmPassword)
-    };
+    // Validar todos los campos antes de enviar
+    const isFullNameValid = validateField('fullName', registerData.fullName);
+    const isEmailValid = validateField('email', registerData.email);
+    const isPasswordValid = validateField('registerPassword', registerData.registerPassword);
+    const isConfirmPasswordValid = validateField('confirmPassword', registerData.confirmPassword);
 
-    if (!Object.values(validations).every(Boolean)) {
+    if (!isFullNameValid || !isEmailValid || !isPasswordValid || !isConfirmPasswordValid) {
       toast.error('Por favor, corrige los errores en el formulario.');
-      return;
-    }
-
-    if (registerData.registerPassword !== registerData.confirmPassword) {
-      toast.error('Las contraseñas no coinciden.');
       return;
     }
 
     try {
       setRegisterLoading(true);
       
-      // Simulación de proceso de registro con animación
-      toast.info('Creando tu cuenta...', {
-        description: 'Procesando información',
-        duration: 2000,
-      });
-      
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Guardar datos de registro en localStorage
-      const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      const newUser = {
-        id: Date.now(),
-        ...registerData,
-        createdAt: new Date().toISOString()
-      };
-      users.push(newUser);
-      localStorage.setItem('registeredUsers', JSON.stringify(users));
-      
-      toast.success('¡Registro exitoso!', {
-        description: 'Tu cuenta ha sido creada correctamente.',
-        duration: 4000,
-      });
-
-      // Cerrar modal y limpiar formulario
-      setShowRegister(false);
-      setRegisterData({
-        fullName: '',
-        email: '',
-        registerRole: 'conductor',
-        registerPassword: '',
-        confirmPassword: ''
-      });
-      setFieldErrors({
-        fullName: false,
-        email: false,
-        registerPassword: false,
-        confirmPassword: false
+      // Simulación de proceso de registro
+      toast.promise(new Promise(resolve => setTimeout(resolve, 2000)), {
+        loading: 'Creando tu cuenta...',
+        success: () => {
+          // Guardar datos de registro en localStorage
+          const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+          const newUser = { id: Date.now(), ...registerData, createdAt: new Date().toISOString() };
+          users.push(newUser);
+          localStorage.setItem('registeredUsers', JSON.stringify(users));
+          
+          // Cerrar modal y limpiar formulario
+          setShowRegister(false);
+          setRegisterData({ fullName: '', email: '', registerRole: 'conductor', registerPassword: '', confirmPassword: '' });
+          setFieldErrors({ fullName: '', email: '', registerPassword: '', confirmPassword: '' });
+          
+          return '¡Registro exitoso! Ya puedes iniciar sesión.';
+        },
+        error: 'Error en el registro. Por favor, intenta nuevamente.'
       });
       
     } catch (error) {
-      toast.error('Error en el registro. Por favor, intenta nuevamente.');
+      // El toast.promise ya maneja el error
     } finally {
       setRegisterLoading(false);
     }
@@ -795,21 +773,19 @@ const Login = () => {
                 </div>
 
                 <form onSubmit={handleRegister} className="space-y-4">
-                  {/* Campos del formulario - optimizados */}
-                  <motion.div
-                    initial={{ x: -10, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.2 }}
-                    style={{ willChange: 'auto' }}
-                  >
-                    <label className="block text-sm font-medium text-blue-900 mb-1">
+                  {/* Campo Nombre completo */}
+                  <div>
+                    <label htmlFor="fullName" className="block text-sm font-medium text-blue-900 mb-1">
                       Nombre completo
                     </label>
                     <div className="relative">
                       <input
+                        id="fullName"
                         type="text"
-                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
-                          fieldErrors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                          fieldErrors.fullName
+                            ? 'border-red-500 bg-red-50 focus:ring-red-400'
+                            : registerData.fullName ? 'border-green-500 bg-green-50 focus:ring-green-400' : 'border-gray-300'
                         }`}
                         value={registerData.fullName}
                         onChange={e => {
@@ -819,51 +795,56 @@ const Login = () => {
                         onBlur={e => validateField('fullName', e.target.value)}
                         placeholder="Ingresa tu nombre completo"
                         required
+                        aria-invalid={!!fieldErrors.fullName}
+                        aria-describedby="fullName-error"
                       />
-                      <UserCircle className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                      {registerData.fullName && (
-                        <motion.div 
-                          className="absolute right-3 top-1/2 -translate-y-1/2"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                          style={{ willChange: 'transform' }}
-                        >
-                          {fieldErrors.fullName ? (
-                            <span className="text-red-500 text-lg">❌</span>
-                          ) : (
-                            <span className="text-green-500 text-lg">✅</span>
-                          )}
-                        </motion.div>
-                      )}
+                      <UserCircle className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <AnimatePresence>
+                        {registerData.fullName && (
+                          <motion.div 
+                            className="absolute right-3 top-1/2 -translate-y-1/2"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                          >
+                            {fieldErrors.fullName ? (
+                              <AlertCircle className="h-5 w-5 text-red-500" />
+                            ) : (
+                              <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                    {fieldErrors.fullName && (
-                      <motion.p 
-                        className="text-red-500 text-xs mt-1"
-                        initial={{ opacity: 0, y: -2 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2 }}
-                        style={{ willChange: 'auto' }}
-                      >
-                        El nombre debe tener al menos 3 caracteres
-                      </motion.p>
-                    )}
-                  </motion.div>
+                    <AnimatePresence>
+                      {fieldErrors.fullName && (
+                        <motion.p 
+                          id="fullName-error"
+                          className="text-red-600 text-xs mt-1 flex items-center gap-1"
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                        >
+                          <AlertCircle className="h-3 w-3" />
+                          {fieldErrors.fullName}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
 
-                  <motion.div
-                    initial={{ x: -10, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.2 }}
-                    style={{ willChange: 'auto' }}
-                  >
-                    <label className="block text-sm font-medium text-blue-900 mb-1">
+                  {/* Campo Email */}
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-blue-900 mb-1">
                       RUT o correo electrónico
                     </label>
                     <div className="relative">
                       <input
+                        id="email"
                         type="text"
-                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
-                          fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                          fieldErrors.email
+                            ? 'border-red-500 bg-red-50 focus:ring-red-400'
+                            : registerData.email ? 'border-green-500 bg-green-50 focus:ring-green-400' : 'border-gray-300'
                         }`}
                         value={registerData.email}
                         onChange={e => {
@@ -871,76 +852,59 @@ const Login = () => {
                           validateField('email', e.target.value);
                         }}
                         onBlur={e => validateField('email', e.target.value)}
-                        placeholder="12.345.678-9 o usuario@email.com"
+                        placeholder="usuario@email.com"
                         required
+                        aria-invalid={!!fieldErrors.email}
+                        aria-describedby="email-error"
                       />
-                      <Mail className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                      {registerData.email && (
-                        <motion.div 
-                          className="absolute right-3 top-1/2 -translate-y-1/2"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                          style={{ willChange: 'transform' }}
-                        >
-                          {fieldErrors.email ? (
-                            <span className="text-red-500 text-lg">❌</span>
-                          ) : (
-                            <span className="text-green-500 text-lg">✅</span>
-                          )}
-                        </motion.div>
-                      )}
+                      <Mail className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <AnimatePresence>
+                        {registerData.email && (
+                          <motion.div 
+                            className="absolute right-3 top-1/2 -translate-y-1/2"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                          >
+                            {fieldErrors.email ? (
+                              <AlertCircle className="h-5 w-5 text-red-500" />
+                            ) : (
+                              <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                    {fieldErrors.email && (
-                      <motion.p 
-                        className="text-red-500 text-xs mt-1"
-                        initial={{ opacity: 0, y: -2 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2 }}
-                        style={{ willChange: 'auto' }}
-                      >
-                        Ingresa un RUT válido o correo electrónico
-                      </motion.p>
-                    )}
-                  </motion.div>
+                    <AnimatePresence>
+                      {fieldErrors.email && (
+                        <motion.p 
+                          id="email-error"
+                          className="text-red-600 text-xs mt-1 flex items-center gap-1"
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                        >
+                          <AlertCircle className="h-3 w-3" />
+                          {fieldErrors.email}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
 
-                  <motion.div
-                    initial={{ x: -10, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.2 }}
-                    style={{ willChange: 'auto' }}
-                  >
-                    <label className="block text-sm font-medium text-blue-900 mb-1">
-                      Rol
-                    </label>
-                    <select
-                      className="w-full border-2 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent border-gray-300"
-                      value={registerData.registerRole}
-                      onChange={e => setRegisterData({...registerData, registerRole: e.target.value})}
-                      required
-                    >
-                      {roles.map(r => (
-                        <option key={r.value} value={r.value}>
-                          {r.label}
-                        </option>
-                      ))}
-                    </select>
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ x: -10, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.2 }}
-                    style={{ willChange: 'auto' }}
-                  >
-                    <label className="block text-sm font-medium text-blue-900 mb-1">
+                  {/* Campo Contraseña */}
+                  <div>
+                    <label htmlFor="registerPassword"
+                      className="block text-sm font-medium text-blue-900 mb-1">
                       Contraseña
                     </label>
                     <div className="relative">
                       <input
+                        id="registerPassword"
                         type="password"
-                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
-                          fieldErrors.registerPassword ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                          fieldErrors.registerPassword
+                            ? 'border-red-500 bg-red-50 focus:ring-red-400'
+                            : registerData.registerPassword ? 'border-green-500 bg-green-50 focus:ring-green-400' : 'border-gray-300'
                         }`}
                         value={registerData.registerPassword}
                         onChange={e => {
@@ -950,51 +914,57 @@ const Login = () => {
                         onBlur={e => validateField('registerPassword', e.target.value)}
                         placeholder="••••••••"
                         required
+                        aria-invalid={!!fieldErrors.registerPassword}
+                        aria-describedby="registerPassword-error"
                       />
-                      <Key className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                      {registerData.registerPassword && (
-                        <motion.div 
-                          className="absolute right-3 top-1/2 -translate-y-1/2"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                          style={{ willChange: 'transform' }}
-                        >
-                          {fieldErrors.registerPassword ? (
-                            <span className="text-red-500 text-lg">❌</span>
-                          ) : (
-                            <span className="text-green-500 text-lg">✅</span>
-                          )}
-                        </motion.div>
-                      )}
+                      <Key className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <AnimatePresence>
+                        {registerData.registerPassword && (
+                          <motion.div
+                            className="absolute right-3 top-1/2 -translate-y-1/2"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                          >
+                            {fieldErrors.registerPassword ? (
+                              <AlertCircle className="h-5 w-5 text-red-500" />
+                            ) : (
+                              <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                    {fieldErrors.registerPassword && (
-                      <motion.p 
-                        className="text-red-500 text-xs mt-1"
-                        initial={{ opacity: 0, y: -2 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2 }}
-                        style={{ willChange: 'auto' }}
-                      >
-                        La contraseña debe tener al menos 6 caracteres
-                      </motion.p>
-                    )}
-                  </motion.div>
+                    <AnimatePresence>
+                      {fieldErrors.registerPassword && (
+                        <motion.p
+                          id="registerPassword-error"
+                          className="text-red-600 text-xs mt-1 flex items-center gap-1"
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                        >
+                          <AlertCircle className="h-3 w-3" />
+                          {fieldErrors.registerPassword}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
 
-                  <motion.div
-                    initial={{ x: -10, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.2 }}
-                    style={{ willChange: 'auto' }}
-                  >
-                    <label className="block text-sm font-medium text-blue-900 mb-1">
+                  {/* Campo Confirmar Contraseña */}
+                  <div>
+                    <label htmlFor="confirmPassword"
+                      className="block text-sm font-medium text-blue-900 mb-1">
                       Confirmar contraseña
                     </label>
                     <div className="relative">
                       <input
+                        id="confirmPassword"
                         type="password"
-                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
-                          fieldErrors.confirmPassword ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                          fieldErrors.confirmPassword
+                            ? 'border-red-500 bg-red-50 focus:ring-red-400'
+                            : registerData.confirmPassword && !fieldErrors.confirmPassword ? 'border-green-500 bg-green-50 focus:ring-green-400' : 'border-gray-300'
                         }`}
                         value={registerData.confirmPassword}
                         onChange={e => {
@@ -1004,36 +974,42 @@ const Login = () => {
                         onBlur={e => validateField('confirmPassword', e.target.value)}
                         placeholder="••••••••"
                         required
+                        aria-invalid={!!fieldErrors.confirmPassword}
+                        aria-describedby="confirmPassword-error"
                       />
-                      <Key className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                      {registerData.confirmPassword && (
-                        <motion.div 
-                          className="absolute right-3 top-1/2 -translate-y-1/2"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                          style={{ willChange: 'transform' }}
-                        >
-                          {fieldErrors.confirmPassword ? (
-                            <span className="text-red-500 text-lg">❌</span>
-                          ) : (
-                            <span className="text-green-500 text-lg">✅</span>
-                          )}
-                        </motion.div>
-                      )}
+                      <Key className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <AnimatePresence>
+                        {registerData.confirmPassword && (
+                          <motion.div
+                            className="absolute right-3 top-1/2 -translate-y-1/2"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                          >
+                            {fieldErrors.confirmPassword ? (
+                              <AlertCircle className="h-5 w-5 text-red-500" />
+                            ) : (
+                              <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                    {fieldErrors.confirmPassword && (
-                      <motion.p 
-                        className="text-red-500 text-xs mt-1"
-                        initial={{ opacity: 0, y: -2 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2 }}
-                        style={{ willChange: 'auto' }}
-                      >
-                        Las contraseñas no coinciden
-                      </motion.p>
-                    )}
-                  </motion.div>
+                    <AnimatePresence>
+                      {fieldErrors.confirmPassword && (
+                        <motion.p
+                          id="confirmPassword-error"
+                          className="text-red-600 text-xs mt-1 flex items-center gap-1"
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                        >
+                          <AlertCircle className="h-3 w-3" />
+                          {fieldErrors.confirmPassword}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </div>
 
                   <motion.button
                     type="submit"

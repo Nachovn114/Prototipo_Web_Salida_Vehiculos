@@ -10,9 +10,10 @@ import {
 } from '@ant-design/icons';
 import { Header as CustomHeader } from './Header';
 import { useNotifications } from '../hooks/useNotifications';
-import { Bell, Globe, User, Moon, Sun, Menu, Shield } from 'lucide-react';
+import { Bell, Globe, User, Moon, Sun, Menu, Shield, Zap, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationPanel } from './NotificationPanel';
+import { GlobalSearch } from './GlobalSearch';
 import Footer from './Footer';
 import {
   Tooltip,
@@ -57,8 +58,18 @@ const menuItems = [
 const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { notifications, unreadCount, markAsRead } = useNotifications();
+  const { 
+    notifications, 
+    unreadCount, 
+    urgentCount,
+    markAsRead, 
+    markAllAsRead, 
+    removeNotification, 
+    clearAll, 
+    executeAction 
+  } = useNotifications();
   const [showNotifications, setShowNotifications] = React.useState(false);
+  const [showGlobalSearch, setShowGlobalSearch] = React.useState(false);
   const [language, setLanguage] = React.useState('es');
   const [isDark, setIsDark] = React.useState(() => {
     if (typeof window !== 'undefined') {
@@ -69,6 +80,7 @@ const MainLayout: React.FC = () => {
   const notificationRef = React.useRef<HTMLDivElement>(null);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  
   React.useEffect(() => {
     if (!showNotifications) return;
     function handleClickOutside(event: MouseEvent) {
@@ -84,6 +96,20 @@ const MainLayout: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showNotifications]);
+  
+  // Atajo de teclado para búsqueda global (Ctrl/Cmd + K)
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowGlobalSearch(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+  
   const toggleLanguage = () => setLanguage(prev => prev === 'es' ? 'en' : 'es');
   const toggleDarkMode = () => {
     setIsDark((prev) => {
@@ -96,6 +122,7 @@ const MainLayout: React.FC = () => {
       return newValue;
     });
   };
+  
   // Obtener rol y nombre de usuario
   const userRole = localStorage.getItem('userRole') || 'inspector';
   const userName = {
@@ -104,6 +131,25 @@ const MainLayout: React.FC = () => {
     aduanero: 'Aduanero Soto',
     admin: 'Administrador',
   }[userRole] || 'Usuario';
+
+  // Función para renderizar el indicador de notificaciones
+  const renderNotificationBadge = () => {
+    if (urgentCount > 0) {
+      return (
+        <span className="absolute -top-2 -right-2 h-6 w-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse transition-all duration-300 shadow-md border-2 border-blue-900" aria-label={`${urgentCount} notificaciones urgentes`}>
+          <Zap className="h-3 w-3" />
+        </span>
+      );
+    } else if (unreadCount > 0) {
+      return (
+        <span className="absolute -top-2 -right-2 h-5 w-5 bg-orange-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse transition-all duration-300 shadow-md border-2 border-blue-900" aria-label={`${unreadCount} notificaciones nuevas`}>
+          {unreadCount > 9 ? '9+' : unreadCount}
+        </span>
+      );
+    }
+    return null;
+  };
+
   return (
     <TooltipProvider>
       <div className="min-h-screen flex bg-background text-foreground transition-colors duration-300">
@@ -117,6 +163,28 @@ const MainLayout: React.FC = () => {
             </div>
             <span className="text-white text-2xl font-extrabold tracking-widest ml-1">Frontera Digital</span>
           </div>
+          
+          {/* Búsqueda global */}
+          <div className="px-2 mb-4">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowGlobalSearch(true)}
+                  className="w-full justify-start text-white hover:bg-white/10 border border-white/20"
+                  aria-label="Búsqueda global (Ctrl+K)"
+                >
+                  <Search className="h-4 w-4 mr-2" />
+                  <span className="text-sm">Buscar...</span>
+                  <span className="ml-auto text-xs opacity-60">⌘K</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Búsqueda global (Ctrl+K)</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          
           {/* Menú principal */}
           <nav className="flex flex-col gap-2 mb-8" role="navigation" aria-label="Navegación principal">
             {menuItems.map((item) => (
@@ -194,19 +262,15 @@ const MainLayout: React.FC = () => {
                       size="icon"
                       onClick={() => setDrawerOpen(!drawerOpen)}
                       className="text-white hover:bg-blue-800 hover:text-blue-200 relative"
-                      aria-label={`Notificaciones ${notifications.length > 0 ? `(${notifications.length} nuevas)` : ''}`}
+                      aria-label={`Notificaciones ${unreadCount > 0 ? `(${unreadCount} nuevas)` : ''} ${urgentCount > 0 ? `(${urgentCount} urgentes)` : ''}`}
                     >
                       <Bell className="h-5 w-5" />
-                      {notifications.length > 0 && (
-                        <span className="absolute -top-2 -right-2 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse transition-all duration-300 shadow-md border-2 border-blue-900" aria-label={`${notifications.length} notificaciones nuevas`}>
-                          {notifications.length}
-                        </span>
-                      )}
+                      {renderNotificationBadge()}
                     </Button>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Notificaciones</p>
+                  <p>Notificaciones {urgentCount > 0 && `(${urgentCount} urgentes)`}</p>
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -222,6 +286,20 @@ const MainLayout: React.FC = () => {
               </div>
               <span className="text-white text-2xl font-extrabold tracking-widest ml-1">Frontera Digital</span>
             </div>
+            
+            {/* Búsqueda global móvil */}
+            <div className="px-2 mb-4">
+              <Button
+                variant="ghost"
+                onClick={() => { setShowGlobalSearch(true); setSidebarOpen(false); }}
+                className="w-full justify-start text-white hover:bg-white/10 border border-white/20"
+                aria-label="Búsqueda global"
+              >
+                <Search className="h-4 w-4 mr-2" />
+                <span className="text-sm">Buscar...</span>
+              </Button>
+            </div>
+            
             {/* Menú principal */}
             <nav className="flex flex-col gap-2 mb-8" role="navigation" aria-label="Navegación principal">
               {menuItems.map((item) => (
@@ -277,14 +355,10 @@ const MainLayout: React.FC = () => {
                     size="icon"
                     onClick={() => setDrawerOpen(!drawerOpen)}
                     className="text-white hover:bg-blue-800 hover:text-blue-200 relative"
-                    aria-label={`Notificaciones ${notifications.length > 0 ? `(${notifications.length} nuevas)` : ''}`}
+                    aria-label={`Notificaciones ${unreadCount > 0 ? `(${unreadCount} nuevas)` : ''} ${urgentCount > 0 ? `(${urgentCount} urgentes)` : ''}`}
                   >
                     <Bell className="h-5 w-5" />
-                    {notifications.length > 0 && (
-                      <span className="absolute -top-2 -right-2 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse transition-all duration-300 shadow-md border-2 border-blue-900" aria-label={`${notifications.length} notificaciones nuevas`}>
-                        {notifications.length}
-                      </span>
-                    )}
+                    {renderNotificationBadge()}
                   </Button>
                 </div>
               </div>
@@ -331,12 +405,22 @@ const MainLayout: React.FC = () => {
                 <NotificationPanel
                   notifications={notifications}
                   markAsRead={markAsRead}
+                  markAllAsRead={markAllAsRead}
+                  removeNotification={removeNotification}
+                  clearAll={clearAll}
+                  executeAction={executeAction}
                   onClose={() => setDrawerOpen(false)}
                 />
               </div>
             </div>
           </>
         )}
+        
+        {/* Búsqueda global */}
+        <GlobalSearch 
+          isOpen={showGlobalSearch} 
+          onClose={() => setShowGlobalSearch(false)} 
+        />
       </div>
     </TooltipProvider>
   );
