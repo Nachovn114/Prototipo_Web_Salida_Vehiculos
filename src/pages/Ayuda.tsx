@@ -149,6 +149,26 @@ const commonProblems = [
 
 const updates = [
   {
+    version: "v2.2.0",
+    date: "10 de Junio, 2025",
+    changes: [
+      "Mejoras de accesibilidad y contraste en formularios de ayuda",
+      "Optimización de la compatibilidad multiplataforma (Windows/Mac)",
+      "Actualización de dependencias de seguridad",
+      "Corrección de errores menores en la carga de documentos"
+    ]
+  },
+  {
+    version: "v2.1.2",
+    date: "28 de Marzo, 2025",
+    changes: [
+      "Nuevo sistema de notificaciones en tiempo real",
+      "Ajustes visuales en el login y dashboard",
+      "Mejoras en la traducción multilenguaje",
+      "Soporte para nuevos roles de usuario"
+    ]
+  },
+  {
     version: "v2.1.0",
     date: "15 de Diciembre, 2024",
     changes: [
@@ -156,15 +176,6 @@ const updates = [
       "Soporte para firmas biométricas",
       "Mejoras en la responsividad móvil",
       "Corrección de errores menores"
-    ]
-  },
-  {
-    version: "v2.0.5",
-    date: "1 de Diciembre, 2024",
-    changes: [
-      "Integración con sistema de aduanas argentino",
-      "Nuevos reportes de estadísticas",
-      "Optimización del rendimiento"
     ]
   }
 ];
@@ -449,7 +460,7 @@ const Ayuda: React.FC = () => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9 }}
+          transition={{ delay: 0.1 }}
         >
           <Card className="bg-blue-600 text-white dark:bg-blue-700 overflow-hidden">
             <div className="p-8 md:p-12">
@@ -459,7 +470,6 @@ const Ayuda: React.FC = () => (
                   <p className="text-blue-100 mb-6">
                     Nuestro equipo de soporte está disponible para asistirte con cualquier consulta o problema técnico.
                   </p>
-                  
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <Mail className="h-5 w-5" />
@@ -479,27 +489,16 @@ const Ayuda: React.FC = () => (
                     </div>
                   </div>
                 </div>
-                
-                <div className="flex flex-col gap-4">
-                  <Button asChild variant="secondary" size="lg" className="w-full">
-                    <a href="mailto:soporte.frontera@aduana.cl">
-                      <Mail className="h-4 w-4 mr-2" />
-                      Enviar Email
-                    </a>
-                  </Button>
-                  <Button asChild variant="outline" size="lg" className="w-full border-white text-white hover:bg-white hover:text-blue-600">
-                    <a href="tel:+56223456789">
-                      <Phone className="h-4 w-4 mr-2" />
-                      Llamar Ahora
-                    </a>
-                  </Button>
-                  <Button asChild variant="outline" size="lg" className="w-full border-white text-white hover:bg-white hover:text-blue-600">
-                    <a href="#" target="_blank" rel="noopener noreferrer">
-                      <Download className="h-4 w-4 mr-2" />
-                      Manual de Usuario
-                    </a>
-                  </Button>
-                </div>
+                {/* Formulario de contacto accesible y con alto contraste */}
+                <form className="flex flex-col gap-4" autoComplete="off" aria-label="Formulario de contacto">
+                  <label htmlFor="nombre" className="block text-sm font-semibold text-white">Nombre completo *</label>
+                  <input id="nombre" name="nombre" type="text" required placeholder="Tu nombre completo" className="rounded-md border border-white bg-white/90 text-blue-900 placeholder:text-blue-700 focus:ring-2 focus:ring-white focus:border-white px-3 py-2 text-base transition-colors" />
+                  <label htmlFor="email" className="block text-sm font-semibold text-white">Correo electrónico *</label>
+                  <input id="email" name="email" type="email" required placeholder="tu@email.com" className="rounded-md border border-white bg-white/90 text-blue-900 placeholder:text-blue-700 focus:ring-2 focus:ring-white focus:border-white px-3 py-2 text-base transition-colors" />
+                  <label htmlFor="mensaje" className="block text-sm font-semibold text-white">Mensaje *</label>
+                  <textarea id="mensaje" name="mensaje" required rows={5} placeholder="Describe tu consulta..." className="rounded-md border border-white bg-white/90 text-blue-900 placeholder:text-blue-700 focus:ring-2 focus:ring-white focus:border-white px-3 py-2 text-base transition-colors resize-none" />
+                  <button type="submit" className="mt-2 rounded-md bg-white text-blue-700 font-bold py-2 px-4 shadow hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 transition-colors">Enviar mensaje</button>
+                </form>
               </div>
             </div>
           </Card>
