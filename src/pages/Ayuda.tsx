@@ -189,7 +189,7 @@ const Ayuda: React.FC = () => (
   >
     {/* Header */}
     <header className="bg-white dark:bg-gray-950 border-b dark:border-gray-800 shadow-sm">
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-8 text-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -209,7 +209,7 @@ const Ayuda: React.FC = () => (
     </header>
 
     {/* Contenido principal */}
-    <main className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+    <main className="max-w-7xl mx-auto py-8 px-4 sm:px-8">
       {/* Videos Tutoriales */}
       <section className="mb-20">
         <div className="text-center mb-12">

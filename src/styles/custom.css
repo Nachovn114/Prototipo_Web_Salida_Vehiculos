@@ -892,3 +892,18 @@ textarea:focus-visible {
   scrollbar-width: thick;
   scrollbar-color: #2563eb #e0e7ff;
 }
+
+.glass-btn {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  border-radius: 50%;
+  box-shadow: 0 2px 12px 0 rgba(59, 130, 246, 0.10);
+  color: #fff;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.glass-btn:hover, .glass-btn:focus {
+  background: rgba(59, 130, 246, 0.18);
+  color: #fff;
+  box-shadow: 0 4px 24px 0 rgba(59, 130, 246, 0.18);
+  transform: scale(1.12) rotate(-6deg);
+}

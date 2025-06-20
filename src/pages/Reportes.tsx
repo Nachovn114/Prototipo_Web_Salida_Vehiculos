@@ -14,9 +14,7 @@ import { DateRange } from "react-day-picker";
 import { toast } from 'sonner';
 
 // Exportación de utilidades
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-import Papa from 'papaparse';
+import { exportReport } from '@/services/exportService';
 
 Chart.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend, Title);
 
@@ -50,44 +48,34 @@ const Reportes = () => {
   }, [date]);
   
   // --- Lógica de Exportación ---
-  const handleExportPDF = () => {
-    if (!reportRef.current) return;
-    const reportElement = reportRef.current;
-    
-    toast.info("Generando PDF...", {
-      description: "Esto puede tardar unos segundos.",
-    });
-
-    html2canvas(reportElement, {
-      scale: 2, // Mejorar calidad de imagen
-      useCORS: true,
-      backgroundColor: document.documentElement.classList.contains('dark') ? '#1f2937' : '#ffffff',
-    }).then(canvas => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`reporte-frontera-digital-${new Date().toISOString().split('T')[0]}.pdf`);
-      toast.success("¡PDF generado exitosamente!");
-    });
-  };
-
-  const handleExportCSV = () => {
+  const handleExport = async (format: 'pdf' | 'csv') => {
     if (data.length === 0) {
       toast.warning("No hay datos para exportar.");
       return;
     }
-    const csv = Papa.unparse(data);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `reporte-completo-${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success("¡CSV exportado exitosamente!");
+
+    // Asegurarse de que tenemos un rango de fechas válido
+    if (!date?.from || !date?.to) {
+      toast.warning("Por favor, selecciona un rango de fechas válido");
+      return;
+    }
+
+    try {
+      await exportReport(data, {
+        format,
+        dateRange: {
+          start: date.from,
+          end: date.to
+        },
+        includeDetails: true,
+        filters: {
+          // Aquí puedes agregar filtros adicionales si es necesario
+        }
+      });
+    } catch (error) {
+      console.error('Error al exportar:', error);
+      toast.error(`Error al exportar el reporte a ${format.toUpperCase()}`);
+    }
   };
 
   // --- Procesamiento de datos para gráficos ---
@@ -203,17 +191,17 @@ const Reportes = () => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-4">
+    <div className="w-full max-w-7xl mx-auto space-y-4 p-4 sm:p-8">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-        <h2 className="text-3xl font-bold text-foreground flex items-center gap-2">
+        <h2 className="text-3xl font-bold text-foreground flex items-center gap-2 text-center md:text-left">
           <BarChart2 className="h-7 w-7" /> Reportes y Analítica Avanzada
         </h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant={"outline"}
-                className="w-[280px] justify-start text-left font-normal"
+                className="w-full sm:w-[280px] justify-start text-left font-normal"
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {date?.from ? (
@@ -242,8 +230,8 @@ const Reportes = () => {
               />
             </PopoverContent>
           </Popover>
-          <Button onClick={handleExportPDF} variant="outline"><Share2 className="mr-2 h-4 w-4" /> Exportar Vista (PDF)</Button>
-          <Button onClick={handleExportCSV}><FileDown className="mr-2 h-4 w-4" /> Exportar Datos (CSV)</Button>
+          <Button onClick={() => handleExport('pdf')} variant="outline" className="w-full sm:w-auto"><Share2 className="mr-2 h-4 w-4" /> Exportar Vista (PDF)</Button>
+          <Button onClick={() => handleExport('csv')} className="w-full sm:w-auto"><FileDown className="mr-2 h-4 w-4" /> Exportar Datos (CSV)</Button>
         </div>
       </div>
       {renderContent()}

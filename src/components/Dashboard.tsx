@@ -501,28 +501,64 @@ const Dashboard: React.FC = () => {
             <button 
               onClick={() => setShowNotifications(true)}
               className="relative p-2 text-gray-600 hover:text-blue-600 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full"
+              aria-label="Notificaciones"
+              aria-haspopup="dialog"
+              aria-expanded={showNotifications}
+              aria-controls="notifications-dialog"
             >
-              <Bell className="h-6 w-6 text-gray-700 dark:text-gray-200" />
+              <Bell className="h-6 w-6 text-gray-700 dark:text-gray-200" aria-hidden="true" />
               {notificacionesNoArchivadas > 0 && (
                 <span className="absolute -top-2 -right-2 h-7 w-7 bg-red-500 text-white text-base font-bold rounded-full flex items-center justify-center border-2 border-white shadow-lg animate-bounce z-10">
-                  {notificacionesNoArchivadas}
+                  <span className="sr-only">{notificacionesNoArchivadas} notificaciones sin leer</span>
+                  <span aria-hidden="true">{notificacionesNoArchivadas}</span>
                 </span>
               )}
+              <span className="sr-only">, {notificacionesNoArchivadas > 0 ? `${notificacionesNoArchivadas} sin leer` : 'sin notificaciones nuevas'}</span>
             </button>
             <Dialog open={showNotifications} onOpenChange={setShowNotifications}>
-              <DialogContent className="max-w-2xl w-full p-0 rounded-2xl">
+              <DialogContent 
+                className="max-w-2xl w-full p-0 rounded-2xl"
+                id="notifications-dialog"
+                role="dialog"
+                aria-labelledby="notifications-dialog-title"
+                aria-describedby="notifications-dialog-desc"
+              >
                 <DialogHeader className="flex flex-row items-center justify-between px-6 pt-6 pb-2 border-b">
-                  <DialogTitle className="text-2xl font-bold">Notificaciones</DialogTitle>
-                  <button className="text-blue-700 text-sm font-medium hover:underline" onClick={() => markAllAsRead()}>
+                  <DialogTitle id="notifications-dialog-title" className="text-2xl font-bold">
+                    Notificaciones
+                    {notifications.length > 0 && (
+                      <span className="sr-only">, {notifications.length} notificaciones</span>
+                    )}
+                  </DialogTitle>
+                  <button 
+                    className="text-blue-700 text-sm font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 px-2 py-1 rounded"
+                    onClick={() => markAllAsRead()}
+                    aria-label="Marcar todas las notificaciones como leídas"
+                  >
                     Marcar todas como leídas
                   </button>
                 </DialogHeader>
+                <p id="notifications-dialog-desc" className="sr-only">Lista de notificaciones del sistema</p>
                 <div className="px-6 pt-4 pb-2">
-                  <Tabs value={notificationTab} onValueChange={value => setNotificationTab(value as 'todas' | 'urgentes' | 'archivadas')} className="w-full">
-                    <TabsList className="mb-4">
-                      <TabsTrigger value="todas">Todas</TabsTrigger>
-                      <TabsTrigger value="urgentes">Urgentes</TabsTrigger>
-                      <TabsTrigger value="archivadas">Archivadas</TabsTrigger>
+                  <Tabs 
+                    value={notificationTab} 
+                    onValueChange={value => setNotificationTab(value as 'todas' | 'urgentes' | 'archivadas')} 
+                    className="w-full"
+                    aria-label="Filtrar notificaciones"
+                  >
+                    <TabsList className="mb-4" role="tablist">
+                      <TabsTrigger value="todas" role="tab" aria-selected={notificationTab === 'todas'}>
+                        Todas
+                        <span className="sr-only">, ver todas las notificaciones</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="urgentes" role="tab" aria-selected={notificationTab === 'urgentes'}> 
+                        Urgentes
+                        <span className="sr-only">, ver solo notificaciones urgentes</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="archivadas" role="tab" aria-selected={notificationTab === 'archivadas'}>
+                        Archivadas
+                        <span className="sr-only">, ver notificaciones archivadas</span>
+                      </TabsTrigger>
                     </TabsList>
                     <TabsContent value="todas">
                       <div className="max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar space-y-6">
@@ -533,26 +569,66 @@ const Dashboard: React.FC = () => {
                               <div className="text-xs font-bold text-blue-700 uppercase mb-1 mt-2">{prio === 'urgente' ? 'Urgentes' : prio.charAt(0).toUpperCase() + prio.slice(1)}</div>
                             )}
                             {notifications.filter(n => n.prioridad === prio && !n.archivada).map(n => (
-                              <div key={n.id} className={`flex items-start gap-4 rounded-2xl p-4 shadow border-l-8 ${
-                                prio === 'urgente' ? 'bg-red-50 border-red-500' :
-                                prio === 'alta' ? 'bg-yellow-50 border-yellow-400' :
-                                prio === 'media' ? 'bg-blue-50 border-blue-400' :
-                                'bg-gray-50 border-gray-200'} animate-pulse-slow relative`}>
+                              <div 
+                                key={n.id} 
+                                className={`flex items-start gap-4 rounded-2xl p-4 shadow border-l-8 ${
+                                  prio === 'urgente' ? 'bg-red-50 border-red-500' :
+                                  prio === 'alta' ? 'bg-yellow-50 border-yellow-500' :
+                                  prio === 'media' ? 'bg-blue-50 border-blue-400' :
+                                  'bg-gray-50 border-gray-200'} animate-pulse-slow relative`}
+                                role="article"
+                                aria-labelledby={`notification-${n.id}-title`}
+                                aria-describedby={`notification-${n.id}-desc`}
+                              >
                               <div className="flex-shrink-0">
-                                {prio === 'urgente' ? <AlertTriangle className="h-7 w-7 text-red-500" /> :
-                                 prio === 'alta' ? <AlertTriangle className="h-7 w-7 text-yellow-500" /> :
-                                 prio === 'media' ? <Info className="h-7 w-7 text-blue-500" /> :
-                                 <Bell className="h-7 w-7 text-gray-400" />}
+                                {prio === 'urgente' ? (
+                                  <AlertTriangle className="h-7 w-7 text-red-500" aria-hidden="true" />
+                                ) : prio === 'alta' ? (
+                                  <AlertTriangle className="h-7 w-7 text-yellow-500" aria-hidden="true" />
+                                ) : prio === 'media' ? (
+                                  <Info className="h-7 w-7 text-blue-500" aria-hidden="true" />
+                                ) : (
+                                  <Bell className="h-7 w-7 text-gray-400" aria-hidden="true" />
+                                )}
+                                <span className="sr-only">
+                                  {prio === 'urgente' ? 'Urgente: ' : 
+                                   prio === 'alta' ? 'Alta prioridad: ' : 
+                                   prio === 'media' ? 'Media prioridad: ' : ''}
+                                </span>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <span className="block font-bold text-base mb-1 text-gray-900">{n.titulo}</span>
-                                <span className="block text-gray-700 text-sm mb-1">{n.mensaje}</span>
-                                <span className="block text-xs text-gray-400 mt-1">{formatDate(n.fecha)}</span>
+                                <h3 id={`notification-${n.id}-title`} className="block font-bold text-base mb-1 text-gray-900">
+                                  {n.titulo}
+                                </h3>
+                                <p id={`notification-${n.id}-desc`} className="block text-gray-700 text-sm mb-1">
+                                  {n.mensaje}
+                                </p>
+                                <time dateTime={new Date(n.fecha).toISOString()} className="block text-xs text-gray-500 mt-1">
+                                  {formatDate(n.fecha)}
+                                </time>
                               </div>
                               <div className="flex flex-col gap-2 items-end">
-                                {!n.leida && <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" title="No leída"></span>}
-                                <Button size="icon" variant="ghost" onClick={() => markAsRead(n.id)} title="Marcar como leída"><CheckCircle className="h-5 w-5 text-green-500" /></Button>
-                                <Button size="icon" variant="ghost" onClick={() => archiveNotification(n.id)} title="Archivar"><Archive className="h-5 w-5 text-gray-400" /></Button>
+                                {!n.leida && (
+                                  <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" aria-label="No leída">
+                                    <span className="sr-only">No leída</span>
+                                  </span>
+                                )}
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  onClick={() => markAsRead(n.id)}
+                                  aria-label={`Marcar '${n.titulo}' como leída`}
+                                >
+                                  <CheckCircle className="h-5 w-5 text-green-600" aria-hidden="true" />
+                                </Button>
+                                <Button 
+                                  size="icon" 
+                                  variant="ghost" 
+                                  onClick={() => archiveNotification(n.id)}
+                                  aria-label={`Archivar notificación '${n.titulo}'`}
+                                >
+                                  <Archive className="h-5 w-5 text-gray-500" aria-hidden="true" />
+                                </Button>
                               </div>
                             </div>
                           ))}

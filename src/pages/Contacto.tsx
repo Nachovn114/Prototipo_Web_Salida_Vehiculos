@@ -131,7 +131,7 @@ const Contacto: React.FC = () => {
   const isFormValid = formData.nombre && formData.email && formData.asunto && formData.mensaje;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 p-4 sm:p-8">
       {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-6xl mx-auto py-12 px-4">

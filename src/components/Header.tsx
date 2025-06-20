@@ -110,136 +110,84 @@ export const Header: React.FC<HeaderProps> = ({ unreadCount, notifications, mark
           {/* Actions */}
           <div className="flex items-center gap-2 md:gap-4 min-w-fit">
             {/* Language Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
+            <Button 
+              variant="ghost" 
+              size="icon" 
               onClick={toggleLanguage}
-              className="text-blue-900 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+              aria-label={`Cambiar idioma (actual: ${language === 'es' ? 'Español' : 'Inglés'})`}
+              title={`Cambiar idioma (${language === 'es' ? 'ES' : 'EN'})`}
             >
-              <Globe className="h-4 w-4 mr-1" />
-              {language.toUpperCase()}
+              <Globe className="h-5 w-5" aria-hidden="true" />
+              <span className="sr-only">
+                {language === 'es' ? 'Español' : 'English'}
+              </span>
             </Button>
 
             {/* Notifications */}
-            <div className="relative">
-              <button 
-                onClick={() => setShowNotifications(true)}
-                className="relative p-2 text-gray-600 hover:text-blue-600 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full"
-              >
-                <Bell className="h-5 w-5" />
-                {useNotificationsNotifications?.length > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse transition-all duration-300">
-                    {useNotificationsNotifications.length}
-                  </span>
-                )}
-              </button>
-              <Dialog open={showNotifications} onOpenChange={setShowNotifications}>
-                <DialogContent className="max-w-xl w-full p-0 rounded-2xl">
-                  <DialogHeader className="flex flex-row items-center justify-between px-6 pt-6 pb-2 border-b">
-                    <DialogTitle className="text-2xl font-bold">Notificaciones</DialogTitle>
-                    <button className="text-blue-700 text-sm font-medium hover:underline" onClick={() => markAllAsRead()}>
-                      Marcar todas como leídas
-                    </button>
-                  </DialogHeader>
-                  <div className="px-6 pt-4 pb-2">
-                    <Tabs value={notificationTab} onValueChange={value => setNotificationTab(value as 'todas' | 'archivadas')} className="w-full">
-                      <TabsList className="mb-4">
-                        <TabsTrigger value="todas">Todas</TabsTrigger>
-                        <TabsTrigger value="archivadas">Archivadas</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="todas">
-                        {/* Alertas importantes agrupadas */}
-                        {useNotificationsNotifications.filter(n => !n.archivada && n.prioridad === 'urgente').length > 0 && (
-                          <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded-lg mb-4 p-3 flex flex-col gap-2 shadow-sm">
-                            {useNotificationsNotifications.filter(n => !n.archivada && n.prioridad === 'urgente').map(n => (
-                              <div key={n.id} className="flex items-start gap-3">
-                                <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                                <span className="font-semibold text-yellow-900 leading-snug">{n.titulo}: {n.mensaje}</span>
-                                <button className="ml-auto text-gray-400 hover:text-blue-600" title="Archivar" onClick={() => archiveNotification(n.id)}>
-                                  <Archive className="h-4 w-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        {/* Notificaciones normales */}
-                        {useNotificationsNotifications.filter(n => !n.archivada && n.prioridad !== 'urgente').length === 0 ? (
-                          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                            <Bell className="h-16 w-16 mb-4" />
-                            <span className="text-lg font-semibold">No hay notificaciones</span>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            {useNotificationsNotifications.filter(n => !n.archivada && n.prioridad !== 'urgente').map(n => (
-                              <div key={n.id} className={`flex items-start gap-3 rounded-lg px-4 py-3 bg-white border shadow-sm relative`}>
-                                <CheckCircle className="h-5 w-5 text-blue-500 mt-1" />
-                                <div className="flex-1">
-                                  <span className="block font-medium text-gray-900">{n.titulo}</span>
-                                  <span className="block text-gray-600 text-sm">{n.mensaje}</span>
-                                  <span className="block text-xs text-gray-400 mt-1">{new Date(n.fecha).toLocaleString()}</span>
-                                </div>
-                                <button className="ml-2 text-gray-400 hover:text-blue-600" title="Archivar" onClick={() => archiveNotification(n.id)}>
-                                  <Archive className="h-4 w-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </TabsContent>
-                      <TabsContent value="archivadas">
-                        {useNotificationsNotifications.filter(n => n.archivada).length === 0 ? (
-                          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                            <Bell className="h-16 w-16 mb-4" />
-                            <span className="text-lg font-semibold">No hay notificaciones archivadas</span>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            {useNotificationsNotifications.filter(n => n.archivada).map(n => (
-                              <div key={n.id} className={`flex items-start gap-3 rounded-lg px-4 py-3 bg-gray-50 border shadow-sm relative`}>
-                                {n.prioridad === 'urgente' ? (
-                                  <AlertTriangle className="h-5 w-5 text-yellow-500 mt-1" />
-                                ) : (
-                                  <CheckCircle className="h-5 w-5 text-blue-500 mt-1" />
-                                )}
-                                <div className="flex-1">
-                                  <span className="block font-medium text-gray-900">{n.titulo}</span>
-                                  <span className="block text-gray-600 text-sm">{n.mensaje}</span>
-                                  <span className="block text-xs text-gray-400 mt-1">{new Date(n.fecha).toLocaleString()}</span>
-                                </div>
-                                <button className="ml-2 text-gray-400 hover:text-blue-600" title="Desarchivar" onClick={() => unarchiveNotification(n.id)}>
-                                  <Archive className="h-4 w-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </TabsContent>
-                    </Tabs>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            {/* Dark Mode Switch */}
             <Button
               variant="ghost"
-              size="sm"
-              onClick={toggleDarkMode}
-              className="text-blue-900 hover:bg-blue-50 hover:text-blue-700 transition-colors"
-              aria-label="Alternar modo oscuro"
+              size="icon"
+              className="relative"
+              onClick={() => setShowNotifications(!showNotifications)}
+              aria-label={`Notificaciones ${unreadCount > 0 ? `(${unreadCount} sin leer)` : ''}`}
+              aria-expanded={showNotifications}
+              aria-haspopup="dialog"
+              title={unreadCount > 0 ? `${unreadCount} notificaciones sin leer` : 'Ver notificaciones'}
             >
-              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              <Bell className="h-5 w-5" aria-hidden="true" />
+              {unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+                  <span className="sr-only">{unreadCount} notificaciones sin leer</span>
+                  <span aria-hidden="true">{unreadCount}</span>
+                </span>
+              )}
+            </Button>
+
+            {/* Dark Mode Switch */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setIsDark(!isDark)}
+              aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+              title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            >
+              {isDark ? (
+                <Sun className="h-5 w-5" aria-hidden="true" />
+              ) : (
+                <Moon className="h-5 w-5" aria-hidden="true" />
+              )}
             </Button>
 
             {/* User Profile */}
-            <Button variant="ghost" size="sm" className="text-blue-900 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center">
-              <User className="h-5 w-5 mr-2" />
-              <span className="hidden sm:inline font-semibold">{userName} <span className="text-xs text-blue-500 font-normal ml-2">({userRole.charAt(0).toUpperCase() + userRole.slice(1)})</span></span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-blue-900 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center"
+              aria-label={`Perfil de ${userName}`}
+              title={`Perfil de ${userName} (${userRole})`}
+            >
+              <User className="h-5 w-5 mr-2" aria-hidden="true" />
+              <span className="hidden sm:inline font-semibold">
+                {userName} 
+                <span className="sr-only">, {userRole}</span>
+                <span aria-hidden="true" className="text-xs text-blue-500 font-normal ml-2">
+                  ({userRole.charAt(0).toUpperCase() + userRole.slice(1)})
+                </span>
+              </span>
             </Button>
 
             {/* Mobile Menu */}
-            <Button variant="ghost" size="sm" className="md:hidden text-blue-900 hover:bg-blue-50 hover:text-blue-700 transition-colors">
-              <Menu className="h-5 w-5" />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="md:hidden text-blue-900 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+              aria-label="Menú principal"
+              aria-expanded={false}
+              aria-haspopup="menu"
+              title="Menú principal"
+            >
+              <Menu className="h-5 w-5" aria-hidden="true" />
+              <span className="sr-only">Abrir menú principal</span>
             </Button>
 
             {/* Global Search */}
@@ -247,10 +195,19 @@ export const Header: React.FC<HeaderProps> = ({ unreadCount, notifications, mark
               className="ml-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-900 shadow hover:bg-blue-50 dark:hover:bg-blue-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 transition-all"
               onClick={() => setShowGlobalSearch(true)}
               title="Buscar en todo el sistema (Ctrl+K)"
+              aria-label="Buscar en el sistema"
+              aria-expanded={showGlobalSearch}
+              aria-controls="global-search-dialog"
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-5 w-5" aria-hidden="true" />
               <span className="hidden md:inline font-medium">Buscar</span>
-              <kbd className="ml-2 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-300 border border-gray-300 dark:border-gray-700">Ctrl+K</kbd>
+              <kbd 
+                className="ml-2 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-300 border border-gray-300 dark:border-gray-700"
+                aria-hidden="true"
+              >
+                Ctrl+K
+              </kbd>
+              <span className="sr-only">, abre el diálogo de búsqueda global</span>
             </button>
           </div>
         </div>

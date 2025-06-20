@@ -198,13 +198,7 @@ const Login = () => {
   }, []);
 
   return (
-    <motion.div 
-      className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-900/90 via-blue-900/90 to-red-900/90 relative overflow-hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      style={{ willChange: 'auto' }}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-200 p-4 sm:p-8">
       {/* Indicador de estado del sistema */}
       <motion.div 
         className="fixed top-4 right-4 z-50"
@@ -1061,7 +1055,7 @@ const Login = () => {
         isVisible={showLoadingScreen} 
         onComplete={handleLoadingComplete} 
       />
-    </motion.div>
+    </div>
   );
 };
 

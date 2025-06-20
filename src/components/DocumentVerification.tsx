@@ -1,15 +1,18 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Upload, CheckCircle, AlertCircle, Search, Eye, XCircle, Image as ImageIcon } from 'lucide-react';
+import { FileText, Upload, CheckCircle, AlertCircle, Search, Eye, XCircle, Image as ImageIcon, Loader2, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import Tesseract from 'tesseract.js';
 import { notifyDocumentValidation } from '@/services/notificationService';
+import { format, parse, isAfter, isBefore, subYears, addYears, isWithinInterval } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
-export const DocumentVerification: React.FC = () => {
+const DocumentVerification = () => {
   const [documents, setDocuments] = useState([
     { id: 1, name: 'Permiso de Circulación', status: 'verified', expiryDate: '2024-12-15', file: null },
     { id: 2, name: 'Revisión Técnica', status: 'pending', expiryDate: '2024-08-20', file: null },
@@ -27,59 +30,164 @@ export const DocumentVerification: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const extractExpiryDateFromFile = async (file: File): Promise<string | null> => {
-    const { data: { text } } = await Tesseract.recognize(file, 'spa');
-    const match = text.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})/);
-    return match ? match[1] : null;
+  const extractExpiryDateFromFile = async (file: File): Promise<{date: Date | null, rawText: string}> => {
+    try {
+      const { data: { text } } = await Tesseract.recognize(file, 'spa');
+      
+      // Mejores patrones para fechas
+      const datePatterns = [
+        // dd/mm/yyyy o dd-mm-yyyy
+        /(\d{2}[\/\-]\d{2}[\/\-]\d{4})/,
+        // yyyy-mm-dd
+        /(\d{4}[\-]\d{2}[\-]\d{2})/,
+        // Texto con mes en español (ej: 15 de enero de 2023)
+        /(\d{1,2}\s+(?:de\s+)?(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)[a-z]*\s+(?:de\s+)?\d{4})/i,
+        // Menciones de vencimiento
+        /venc(?:e|imiento|imiento:?)\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i
+      ];
+
+      let bestDate: Date | null = null;
+      
+      // Procesar cada patrón
+      for (const pattern of datePatterns) {
+        const match = text.match(pattern);
+        if (match) {
+          let dateStr = match[1] || match[0];
+          let parsedDate: Date | null = null;
+          
+          try {
+            // Intentar diferentes formatos de fecha
+            const formats = [
+              'dd/MM/yyyy',
+              'dd-MM-yyyy',
+              'yyyy-MM-dd',
+              "d 'de' MMMM 'de' yyyy",
+              "d 'de' MMM 'de' yyyy"
+            ];
+            
+            for (const fmt of formats) {
+              parsedDate = parse(dateStr, fmt, new Date(), { locale: es });
+              if (!isNaN(parsedDate.getTime())) break;
+            }
+            
+            // Validar que la fecha sea razonable (no en el pasado lejano ni futuro lejano)
+            if (parsedDate && !isNaN(parsedDate.getTime())) {
+              const today = new Date();
+              const minDate = subYears(today, 10);
+              const maxDate = addYears(today, 20);
+              
+              if (isWithinInterval(parsedDate, { start: minDate, end: maxDate })) {
+                bestDate = parsedDate;
+                break;
+              }
+            }
+          } catch (e) {
+            console.warn('Error al parsear fecha:', dateStr, e);
+          }
+        }
+      }
+      
+      return { date: bestDate, rawText: text };
+    } catch (error) {
+      console.error('Error en OCR:', error);
+      return { date: null, rawText: '' };
+    }
   };
 
   const handleDocumentUpload = async (id: number, file: File) => {
     // Optimistic UI update
     const previewUrl = URL.createObjectURL(file);
-    setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, file, status: 'pending', previewUrl } : doc));
+    setLoading(true);
+    setError('');
+    setOcrText('');
+    setDateFound(null);
+    setIsExpired(null);
+    
+    setDocuments(prev => prev.map(doc => 
+      doc.id === id 
+        ? { ...doc, file, status: 'processing', previewUrl, ocrResult: null } 
+        : doc
+    ));
     setSelectedDocId(id);
 
-    toast.info('Procesando documento...', {
-      description: 'La lectura OCR puede tardar unos segundos.',
+    const processingToast = toast.loading('Procesando documento...', {
+      description: 'Analizando el documento con OCR. Por favor espere.',
     });
 
     try {
-      if (file.type.startsWith('image/')) {
-        const { data: { text } } = await Tesseract.recognize(file, 'spa', {
-          logger: m => console.log(m),
-        });
-        
-        // Regex mejorada para dd/mm/yyyy o dd-mm-yyyy
-        const match = text.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})/);
-        const expiry = match ? match[1].replace(/-/g, '/') : null;
+      // Verificar tipo de archivo
+      const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+      if (!validTypes.includes(file.type)) {
+        throw new Error('Formato de archivo no soportado');
+      }
 
-        if (expiry) {
-          const isExpired = new Date(expiry.split('/').reverse().join('-')) < new Date();
-          const status = isExpired ? 'expired' : 'verified';
-          setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, expiryDate: expiry, status } : doc));
-          
-          if (isExpired) {
-            toast.error('Documento Vencido', { description: `Fecha detectada: ${expiry}` });
-            notifyDocumentValidation(file.name, 'Vencido');
-          } else {
-            toast.success('Documento Verificado', { description: `Fecha detectada: ${expiry}` });
-            notifyDocumentValidation(file.name, 'Válido');
-          }
+      // Procesar con OCR
+      const { date: expiryDate, rawText } = await extractExpiryDateFromFile(file);
+      setOcrText(rawText.substring(0, 500) + (rawText.length > 500 ? '...' : ''));
+      
+      let status = 'manual';
+      let statusMessage = 'Verificación Manual Requerida';
+      let description = 'No se pudo determinar la fecha de vencimiento automáticamente.';
+      
+      if (expiryDate) {
+        const formattedDate = format(expiryDate, "PPP", { locale: es });
+        setDateFound(formattedDate);
+        
+        const today = new Date();
+        const isDocExpired = isBefore(expiryDate, today);
+        setIsExpired(isDocExpired);
+        
+        if (isDocExpired) {
+          status = 'expired';
+          statusMessage = 'Documento Vencido';
+          description = `El documento venció el ${formattedDate}.`;
+          notifyDocumentValidation(file.name, 'Vencido', formattedDate);
         } else {
-          setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, status: 'manual' } : doc));
-          toast.warning('Verificación Manual Requerida', { description: 'No se pudo detectar una fecha de vencimiento.' });
-          notifyDocumentValidation(file.name, 'Error');
+          status = 'verified';
+          statusMessage = 'Documento Verificado';
+          description = `Válido hasta el ${formattedDate}.`;
+          notifyDocumentValidation(file.name, 'Válido', formattedDate);
         }
       } else {
-        // Para PDFs u otros tipos de archivo, requerir verificación manual
-        setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, status: 'manual' } : doc));
-        toast.warning('Verificación Manual Requerida', { description: 'La previsualización de este archivo no es compatible con OCR.'});
+        statusMessage = 'Verificación Manual Requerida';
+        description = 'No se pudo detectar una fecha de vencimiento. Se requiere revisión manual.';
+        notifyDocumentValidation(file.name, 'Revisión Manual', 'No se detectó fecha');
       }
+      
+      // Actualizar estado del documento
+      setDocuments(prev => prev.map(doc => 
+        doc.id === id 
+          ? { 
+              ...doc, 
+              status,
+              expiryDate: expiryDate ? expiryDate.toISOString().split('T')[0] : doc.expiryDate,
+              ocrResult: { text: rawText, date: expiryDate }
+            } 
+          : doc
+      ));
+      
+      // Mostrar notificación apropiada
+      if (status === 'expired') {
+        toast.error(statusMessage, { description });
+      } else if (status === 'verified') {
+        toast.success(statusMessage, { description });
+      } else {
+        toast.warning(statusMessage, { description });
+      }
+      
     } catch (error) {
-      console.error('Error de OCR:', error);
-      setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, status: 'manual' } : doc));
-      toast.error('Error de OCR', { description: 'No se pudo procesar el documento.' });
-      notifyDocumentValidation(file.name, 'Error');
+      console.error('Error en el procesamiento del documento:', error);
+      setError('Error al procesar el documento. Por favor, intente con una imagen más clara.');
+      setDocuments(prev => prev.map(doc => 
+        doc.id === id ? { ...doc, status: 'error' } : doc
+      ));
+      toast.error('Error de Procesamiento', { 
+        description: 'No se pudo procesar el documento. ' + (error.message || 'Por favor, intente nuevamente.') 
+      });
+      notifyDocumentValidation(file?.name || 'Documento', 'Error de Procesamiento', error.message || 'Error desconocido');
+    } finally {
+      setLoading(false);
+      toast.dismiss(processingToast);
     }
   };
 
@@ -96,59 +204,42 @@ export const DocumentVerification: React.FC = () => {
     setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, file: null, status: 'pending' } : doc));
     setPreviewUrl(null);
     setSelectedDocId(null);
-    toast.error('Documento eliminado', { description: 'El archivo fue quitado de la solicitud.' });
+    toast.error('Documento eliminado', { 
+      description: 'El archivo fue quitado de la solicitud.',
+      duration: 3000,
+      position: 'top-center'
+    });
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'verified':
         return (
-          <Badge className="bg-green-100 text-green-800 border-green-200 animate-pulse">
-            <CheckCircle className="h-3 w-3 mr-1" />
+          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
             Verificado
           </Badge>
         );
       case 'pending':
         return (
-          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 animate-pulse">
-            <AlertCircle className="h-3 w-3 mr-1" />
+          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
             Pendiente
           </Badge>
         );
       case 'expired':
         return (
-          <Badge className="bg-red-100 text-red-800 border-red-200 animate-pulse">
-            <AlertCircle className="h-3 w-3 mr-1" />
-            Vencido
+          <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+            Expirado
           </Badge>
         );
       case 'manual':
         return (
-          <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-            <Eye className="h-3 w-3 mr-1" />
-            Verificar
+          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+            Verificación Manual
           </Badge>
         );
       default:
-        return (
-          <Badge variant="outline">
-            Desconocido
-          </Badge>
-        );
+        return null;
     }
-  };
-
-  const isDocumentExpiringSoon = (expiryDate: string) => {
-    const today = new Date();
-    const expiry = new Date(expiryDate);
-    const diffTime = expiry.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 30;
-  };
-
-  const handleFileInputClick = (id: number) => {
-    setSelectedDocId(id);
-    fileInputRef.current?.click();
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -206,18 +297,28 @@ export const DocumentVerification: React.FC = () => {
     setLoading(false);
   };
 
+  const isDocumentExpiringSoon = (expiryDate: string): boolean => {
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(today.getDate() + 30);
+    return isAfter(expiry, today) && isBefore(expiry, thirtyDaysFromNow);
+  };
+
+  const handleFileInputClick = (docId: number) => {
+    setSelectedDocId(docId);
+    fileInputRef.current?.click();
+  };
+
   return (
-    <Card className="modern-card">
+    <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <FileText className="h-5 w-5 text-green-600" />
-          <span>Verificación de Documentos</span>
-        </CardTitle>
+        <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">Verificación de Documentos</CardTitle>
         <CardDescription>
-          Control documental y validación digital
+          Sube y verifica los documentos requeridos para el control vehicular
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent>
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -237,7 +338,29 @@ export const DocumentVerification: React.FC = () => {
               <div key={doc.id} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-900 flex flex-col gap-2 transition-all duration-300">
                 <div className="flex items-center justify-between mb-2">
                   <h5 className="font-medium text-sm flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-blue-500" /> {doc.name}
+                    <FileText className="h-4 w-4 text-blue-500" aria-hidden="true" />
+                    <span>{doc.name}</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button 
+                            type="button" 
+                            className="text-gray-400 hover:text-gray-600"
+                            aria-label={`Información sobre ${doc.name}`}
+                          >
+                            <Info className="h-3.5 w-3.5" aria-hidden="true" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-xs">
+                          <p className="text-sm">
+                            {doc.name === 'Permiso de Circulación' && 'Documento oficial que acredita que el vehículo está autorizado para circular.'}
+                            {doc.name === 'Revisión Técnica' && 'Certificado que acredita que el vehículo cumple con los requisitos técnicos y de emisiones.'}
+                            {doc.name === 'Seguro Obligatorio' && 'Seguro que cubre daños a terceros en caso de accidentes de tránsito.'}
+                            {doc.name === 'Cédula de Identidad' && 'Documento de identificación oficial del conductor.'}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </h5>
                   {getStatusBadge(doc.status)}
                 </div>
@@ -259,7 +382,12 @@ export const DocumentVerification: React.FC = () => {
                       <Button variant="outline" size="sm" onClick={() => setPreviewUrl(URL.createObjectURL(doc.file!))}>
                         <Eye className="h-4 w-4 mr-1" /> Ver
                       </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleRemoveFile(doc.id)}>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={() => handleRemoveFile(doc.id)}
+                        aria-label="Eliminar documento"
+                      >
                         <XCircle className="h-4 w-4 mr-1" /> Quitar
                       </Button>
                     </>
@@ -270,6 +398,7 @@ export const DocumentVerification: React.FC = () => {
                     accept="image/*,application/pdf"
                     className="hidden"
                     onChange={handleFileChange}
+                    aria-label="Seleccionar archivo para subir"
                   />
                 </div>
                 {doc.file && previewUrl && selectedDocId === doc.id && (
@@ -348,3 +477,5 @@ export const DocumentVerification: React.FC = () => {
     </Card>
   );
 };
+
+export default DocumentVerification;

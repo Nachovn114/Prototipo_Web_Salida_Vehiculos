@@ -51,31 +51,81 @@ export const notifyHighRiskVehicle = (solicitudId: string, riskLevel: 'alta' | '
 
 /**
  * Notificación sobre el resultado de la validación de un documento.
+ * @param fileName Nombre del archivo del documento
+ * @param status Estado de la validación
+ * @param details Detalles adicionales como la fecha de vencimiento detectada
+ * @param documentType Tipo de documento (opcional)
  */
-export const notifyDocumentValidation = (fileName: string, status: 'Válido' | 'Vencido' | 'Error') => {
-    let tipo: NotificationType = 'info';
-    let titulo = 'Validación de Documento';
-    let mensaje = `El documento ${fileName} ha sido procesado.`;
-    let prioridad: 'baja' | 'media' | 'alta' = 'media';
+export const notifyDocumentValidation = (
+  fileName: string, 
+  status: 'Válido' | 'Vencido' | 'Error' | 'Revisión Manual' | 'Error de Procesamiento',
+  details: string = '',
+  documentType?: string
+) => {
+    const statusConfig = {
+        'Válido': {
+            message: 'El documento ha sido validado correctamente.',
+            type: 'success' as NotificationType,
+            priority: 'normal' as const
+        },
+        'Vencido': {
+            message: `¡Atención! El documento ha vencido.${details ? `\nFecha de vencimiento: ${details}` : ''}`,
+            type: 'warning' as NotificationType,
+            priority: 'alta' as const
+        },
+        'Revisión Manual': {
+            message: `No se pudo validar automáticamente. Se requiere revisión manual.${details ? `\nRazón: ${details}` : ''}`,
+            type: 'warning' as NotificationType,
+            priority: 'media' as const
+        },
+        'Error': {
+            message: 'Error en la validación del documento. Se requiere revisión manual.',
+            type: 'error' as NotificationType,
+            priority: 'alta' as const
+        },
+        'Error de Procesamiento': {
+            message: `No se pudo procesar el documento.${details ? `\nError: ${details}` : ''}`,
+            type: 'error' as NotificationType,
+            priority: 'alta' as const
+        }
+    };
 
-    if (status === 'Vencido') {
-        tipo = 'error';
-        titulo = 'Documento Vencido';
-        mensaje = `El documento ${fileName} parece haber expirado. Por favor, revise manualmente.`;
-        prioridad = 'alta';
-    } else if (status === 'Válido') {
-        tipo = 'aprobacion';
-        titulo = 'Documento Válido';
-        mensaje = `El documento ${fileName} fue validado correctamente por OCR.`;
-        prioridad = 'baja';
-    } else if (status === 'Error') {
-        tipo = 'warning';
-        titulo = 'Error de Lectura OCR';
-        mensaje = `No se pudo leer la fecha de vencimiento del documento ${fileName}. Se requiere verificación manual.`;
-        prioridad = 'media';
-    }
-  
-    createNotification({ tipo, titulo, mensaje, prioridad });
+    const config = statusConfig[status] || statusConfig['Error'];
+    const title = documentType 
+        ? `${documentType}: ${status}` 
+        : `Validación de Documento: ${status}`;
+
+    createNotification({
+        tipo: config.type,
+        titulo: title,
+        mensaje: `Archivo: ${fileName}\n${config.message}`,
+        prioridad: config.priority,
+        timestamp: new Date(),
+        acciones: [
+            {
+                label: 'Ver Documento',
+                action: () => {
+                    notificationStore?.navigate?.('/documentos');
+                },
+                variant: 'default' as const
+            },
+            ...(status === 'Vencido' ? [{
+                label: 'Solicitar Renovación',
+                action: () => {
+                    // Lógica para solicitar renovación
+                    console.log(`Solicitando renovación para ${fileName}`);
+                },
+                variant: 'outline' as const
+            }] : [])
+        ],
+        metadata: {
+            documentName: fileName,
+            validationStatus: status,
+            validationDate: new Date().toISOString(),
+            ...(details && { validationDetails: details }),
+            ...(documentType && { documentType })
+        }
+    });
 };
 
 /**

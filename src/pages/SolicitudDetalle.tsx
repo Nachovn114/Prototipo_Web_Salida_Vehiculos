@@ -187,8 +187,8 @@ const SolicitudDetalle = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-10">
-      <div className="bg-white/90 shadow-xl rounded-3xl px-8 py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border border-blue-100 mb-8">
+    <div className="max-w-4xl mx-auto mt-6 p-2 sm:p-6">
+      <div className="bg-white/90 shadow-xl rounded-3xl px-4 sm:px-8 py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border border-blue-100 mb-8">
         <div>
           <div className="flex items-center gap-4 mb-1">
             <FileText className="h-9 w-9 text-blue-700" />
@@ -211,7 +211,7 @@ const SolicitudDetalle = () => {
         </TooltipProvider>
       </div>
 
-      <div className="bg-white shadow-lg rounded-2xl p-6 space-y-8 border border-blue-100">
+      <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-6 space-y-8 border border-blue-100">
         <Accordion type="multiple" className="w-full space-y-4">
           <AccordionItem value="conductor">
             <AccordionTrigger>
@@ -443,14 +443,14 @@ const SolicitudDetalle = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow-lg rounded-2xl p-6 mt-8 border border-blue-100">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-xl font-bold text-blue-900 uppercase tracking-wide flex items-center gap-2">
+      <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-6 mt-8 border border-blue-100">
+        <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
+          <span className="text-xl font-bold text-blue-900 uppercase tracking-wide flex items-center gap-2 text-center md:text-left">
             <Clock className="h-6 w-6 text-blue-600" /> Bitácora de Acciones
           </span>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={exportBitacoraCSV} className="border-blue-300 text-blue-800 hover:bg-blue-50">Exportar CSV</Button>
-            <Button size="sm" variant="outline" onClick={exportBitacoraPDF} className="border-blue-300 text-blue-800 hover:bg-blue-50">Exportar PDF</Button>
+          <div className="flex gap-2 w-full md:w-auto justify-end">
+            <Button size="sm" variant="outline" onClick={exportBitacoraCSV} className="border-blue-300 text-blue-800 hover:bg-blue-50 w-full md:w-auto">Exportar CSV</Button>
+            <Button size="sm" variant="outline" onClick={exportBitacoraPDF} className="border-blue-300 text-blue-800 hover:bg-blue-50 w-full md:w-auto">Exportar PDF</Button>
           </div>
         </div>
         <div className="overflow-x-auto">

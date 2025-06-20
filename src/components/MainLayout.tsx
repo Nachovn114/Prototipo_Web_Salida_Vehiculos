@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   DashboardOutlined,
   FileTextOutlined,
@@ -176,77 +176,64 @@ const MainLayout: React.FC = () => {
   return (
     <TooltipProvider>
       <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
-        <div className="flex flex-1">
-          {/* Sidebar responsive */}
-          {/* Desktop/Tablet sidebar */}
-          <aside className={`hidden md:flex flex-col w-64 min-h-screen bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700 shadow-xl px-4 py-8 gap-8 transition-transform duration-300 z-30`}>
-            {/* Branding */}
-            <div className="flex items-center gap-3 mb-10 px-2">
-              <div className="bg-white/20 rounded-xl flex items-center justify-center shadow-md h-20 w-60">
-                <img src="/assets/frontera-digital-logo.png" alt="Frontera Digital Logo" className="w-full h-full object-contain drop-shadow" />
+        <div className="flex flex-1 min-w-0">
+          {/* Sidebar escritorio */}
+          <aside className="hidden md:flex flex-col w-72 min-h-screen bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700 shadow-2xl px-4 md:px-6 py-6 md:py-10 gap-8 transition-transform duration-300 z-30">
+            {/* Logo y título */}
+            <div className="flex flex-col items-center mb-10">
+              <Link to="/" className="bg-white/20 rounded-2xl flex items-center justify-center shadow-lg h-20 w-20 mb-3">
+                <img src="/assets/frontera-digital-logo.png" alt="Frontera Digital Logo" className="h-14 w-14 object-contain drop-shadow transition-transform duration-300 hover:scale-110 hover:rotate-6" />
+              </Link>
+              <h1 className="text-white text-2xl font-extrabold tracking-widest text-center leading-tight drop-shadow">Frontera<br/>Digital</h1>
+            </div>
+            {/* Buscador */}
+            <div className="mb-6">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-blue-200" />
+                <input
+                  type="text"
+                  placeholder="Buscar..."
+                  className="w-full pl-12 pr-4 py-2 rounded-xl bg-white/10 text-white placeholder-blue-200 border border-white/20 focus:border-blue-400 focus:bg-white/20 focus:outline-none transition-all shadow-inner"
+                />
+                <kbd className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded bg-white/10 text-xs text-blue-100 border border-white/20">⌘K</kbd>
               </div>
-              <span className="text-white text-2xl font-extrabold tracking-widest ml-1">Frontera Digital</span>
             </div>
-            
-            {/* Búsqueda global */}
-            <div className="px-2 mb-4" data-tour="search">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setShowGlobalSearch(true)}
-                    className="w-full justify-start text-white hover:bg-white/10 border border-white/20"
-                    aria-label="Búsqueda global (Ctrl+K)"
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    <span className="text-sm">Buscar...</span>
-                    <span className="ml-auto text-xs opacity-60">⌘K</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>Búsqueda global (Ctrl+K)</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            
+            {/* Separador */}
+            <div className="border-t border-white/15 mb-4" />
             {/* Menú principal */}
             <nav className="flex flex-col gap-2 mb-8" role="navigation" aria-label="Navegación principal">
               {menuItems.map((item) => (
-                <Tooltip key={item.key}>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => { navigate(item.key); setSidebarOpen(false); }}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition-all duration-200
-                        ${location.pathname === item.key ? 'bg-white text-blue-900 shadow-lg' : 'text-white hover:bg-white/10 hover:pl-6'}`}
-                      aria-label={`Ir a ${item.label}`}
-                      aria-current={location.pathname === item.key ? 'page' : undefined}
-                      data-tour={item.tourId}
-                    >
-                      <span className="flex items-center justify-center h-6 w-6" aria-hidden="true">
-                        {item.icon}
-                      </span>
-                      <span className="tracking-wide">{item.label}</span>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p>{item.label}</p>
-                  </TooltipContent>
-                </Tooltip>
+                <button
+                  key={item.key}
+                  onClick={() => { navigate(item.key); setSidebarOpen(false); }}
+                  className={`flex items-center gap-4 px-5 py-3 rounded-2xl text-base font-semibold transition-all duration-200
+                    ${location.pathname === item.key ? 'bg-white text-blue-900 shadow-lg scale-105' : 'text-white hover:bg-white/10 hover:scale-105'}`}
+                  aria-label={`Ir a ${item.label}`}
+                  aria-current={location.pathname === item.key ? 'page' : undefined}
+                  data-tour={item.tourId}
+                >
+                  <span className={`flex items-center justify-center h-7 w-7 ${location.pathname === item.key ? 'text-blue-700' : 'text-blue-100'}`} aria-hidden="true">
+                    {item.icon}
+                  </span>
+                  <span className="tracking-wide text-left">{item.label}</span>
+                </button>
               ))}
             </nav>
+            {/* Separador */}
+            <div className="border-t border-white/15 my-4" />
             {/* Usuario y acciones rápidas */}
-            <div className="mt-auto flex flex-col gap-4 px-2">
-              <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md rounded-2xl px-4 py-3 shadow-inner border border-white/20">
-                <User className="h-7 w-7 text-blue-100" aria-hidden="true" />
-                <div>
-                  <div className="text-white font-bold leading-tight text-base">{userName}</div>
-                  <div className="text-xs text-blue-200 opacity-80">{userRole.charAt(0).toUpperCase() + userRole.slice(1)}</div>
+            <div className="mt-auto flex flex-col gap-6 items-center">
+              <div className="flex flex-col items-center bg-white/20 backdrop-blur-xl rounded-3xl px-6 py-6 shadow-2xl border border-white/30 transition-all duration-300 hover:shadow-blue-200 w-full">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="bg-gradient-to-br from-blue-400 via-blue-700 to-blue-900 rounded-full p-1 shadow-lg mb-2">
+                    <User className="h-12 w-12 text-white bg-blue-800 rounded-full p-2 shadow-md" aria-hidden="true" />
+                  </div>
+                  <div className="text-white font-extrabold text-lg tracking-tight drop-shadow text-center">{userName}</div>
+                  <div className="text-xs font-semibold text-blue-100 bg-blue-800/60 px-3 py-1 rounded-full shadow-sm uppercase tracking-widest mt-1" style={{letterSpacing: '0.08em'}}>{userRole.charAt(0).toUpperCase() + userRole.slice(1)}</div>
                 </div>
               </div>
-              {/* Separador */}
-              <div className="border-t border-white/20 my-2" />
               {/* Acciones rápidas ordenadas */}
-              <div className="flex flex-row items-center justify-center gap-4 pb-2">
+              <div className="flex flex-row items-center justify-center gap-3 pb-2 w-full">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DropdownMenu>
@@ -254,11 +241,10 @@ const MainLayout: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="text-white hover:bg-blue-800 hover:text-blue-200 flex items-center gap-1"
+                          className="glass-btn"
                           aria-label="Cambiar idioma"
                         >
                           <Globe className="h-5 w-5" />
-                          <span className="ml-1 font-bold text-xs">{i18n.language === 'es' ? 'ES' : 'EN'}</span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -272,7 +258,7 @@ const MainLayout: React.FC = () => {
                     </DropdownMenu>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Cambiar idioma</p>
+                    <p>Idioma: {i18n.language === 'es' ? 'Español' : 'English'}</p>
                   </TooltipContent>
                 </Tooltip>
                 <Tooltip>
@@ -281,7 +267,7 @@ const MainLayout: React.FC = () => {
                       variant="ghost"
                       size="icon"
                       onClick={toggleDarkMode}
-                      className="text-white hover:bg-blue-800 hover:text-blue-200"
+                      className="glass-btn"
                       aria-label="Alternar modo oscuro"
                     >
                       {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
@@ -296,7 +282,7 @@ const MainLayout: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-white hover:bg-blue-800 hover:text-blue-200"
+                      className="glass-btn"
                       aria-label="Ayuda"
                       onClick={() => navigate('/ayuda')}
                     >
@@ -312,7 +298,7 @@ const MainLayout: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-white hover:bg-blue-800 hover:text-blue-200"
+                      className="glass-btn"
                       aria-label="Soporte"
                       onClick={() => window.open('mailto:soporte.frontera@aduana.cl')}
                     >
@@ -326,14 +312,14 @@ const MainLayout: React.FC = () => {
               </div>
             </div>
           </aside>
-          {/* Mobile sidebar (drawer) */}
+          {/* Sidebar móvil (drawer) */}
           <aside className={`fixed inset-0 z-40 flex md:hidden transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`} style={{ pointerEvents: sidebarOpen ? 'auto' : 'none' }}>
-            <div className="w-64 min-h-screen bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700 shadow-xl px-4 py-8 gap-8 flex flex-col">
+            <div className="w-72 min-h-screen bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700 shadow-2xl px-4 py-8 gap-8 flex flex-col">
               {/* Branding */}
               <div className="flex items-center gap-3 mb-10 px-2">
-                <div className="bg-white/20 rounded-xl flex items-center justify-center shadow-md h-40 w-40">
-                  <img src="/assets/frontera-digital-logo.png" alt="Frontera Digital Logo" className="w-full h-full object-contain drop-shadow" />
-                </div>
+                <Link to="/" className="bg-white/20 rounded-xl flex items-center justify-center shadow-md h-40 w-40">
+                  <img src="/assets/frontera-digital-logo.png" alt="Frontera Digital Logo" className="w-full h-full object-contain drop-shadow transition-transform duration-300 hover:scale-110 hover:rotate-6" />
+                </Link>
                 <span className="text-white text-2xl font-extrabold tracking-widest ml-1">Frontera Digital</span>
               </div>
               
@@ -369,28 +355,29 @@ const MainLayout: React.FC = () => {
                 ))}
               </nav>
               {/* Usuario y acciones rápidas */}
-              <div className="mt-auto flex flex-col gap-4 px-2">
-                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md rounded-2xl px-4 py-3 shadow-inner border border-white/20">
-                  <User className="h-7 w-7 text-blue-100" aria-hidden="true" />
-                  <div>
-                    <div className="text-white font-bold leading-tight text-base">{userName}</div>
-                    <div className="text-xs text-blue-200 opacity-80">{userRole.charAt(0).toUpperCase() + userRole.slice(1)}</div>
+              <div className="mt-auto flex flex-col gap-6 px-2">
+                <div className="flex flex-col items-center bg-white/20 backdrop-blur-xl rounded-3xl px-6 py-6 shadow-2xl border border-white/30 transition-all duration-300 hover:shadow-blue-200">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="bg-gradient-to-br from-blue-400 via-blue-700 to-blue-900 rounded-full p-1 shadow-lg mb-2">
+                      <User className="h-12 w-12 text-white bg-blue-800 rounded-full p-2 shadow-md" aria-hidden="true" />
+                    </div>
+                    <div className="text-white font-extrabold text-lg tracking-tight drop-shadow">{userName}</div>
+                    <div className="text-xs font-semibold text-blue-100 bg-blue-800/60 px-3 py-1 rounded-full shadow-sm uppercase tracking-widest mt-1" style={{letterSpacing: '0.08em'}}>{userRole.charAt(0).toUpperCase() + userRole.slice(1)}</div>
                   </div>
                 </div>
                 {/* Separador */}
                 <div className="border-t border-white/20 my-2" />
                 {/* Acciones rápidas ordenadas */}
-                <div className="flex flex-row items-center justify-center gap-4 pb-2">
+                <div className="flex flex-row items-center justify-center gap-3 pb-2">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-white hover:bg-blue-800 hover:text-blue-200 flex items-center gap-1"
+                        className="glass-btn"
                         aria-label="Cambiar idioma"
                       >
                         <Globe className="h-5 w-5" />
-                        <span className="ml-1 font-bold text-xs">{i18n.language === 'es' ? 'ES' : 'EN'}</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -406,50 +393,36 @@ const MainLayout: React.FC = () => {
                     variant="ghost"
                     size="icon"
                     onClick={toggleDarkMode}
-                    className="text-white hover:bg-blue-800 hover:text-blue-200"
+                    className="glass-btn"
                     aria-label="Alternar modo oscuro"
                   >
                     {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                   </Button>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-white hover:bg-blue-800 hover:text-blue-200"
-                        aria-label="Ayuda"
-                        onClick={() => navigate('/ayuda')}
-                      >
-                        <HelpCircle className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Ayuda</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-white hover:bg-blue-800 hover:text-blue-200"
-                        aria-label="Soporte"
-                        onClick={() => window.open('mailto:soporte.frontera@aduana.cl')}
-                      >
-                        <Mail className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Soporte</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="glass-btn"
+                    aria-label="Ayuda"
+                    onClick={() => navigate('/ayuda')}
+                  >
+                    <HelpCircle className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="glass-btn"
+                    aria-label="Soporte"
+                    onClick={() => window.open('mailto:soporte.frontera@aduana.cl')}
+                  >
+                    <Mail className="h-5 w-5" />
+                  </Button>
                 </div>
               </div>
             </div>
             {/* Overlay para cerrar el drawer */}
             <div className="flex-1 bg-black bg-opacity-30" onClick={() => setSidebarOpen(false)} />
           </aside>
-          {/* Botón menú hamburguesa en móvil */}
+          {/* Botón menú hamburguesa móvil */}
           <button
             className="fixed top-4 left-4 z-50 md:hidden bg-blue-700 text-white p-2 rounded-lg shadow-lg hover:bg-blue-800 transition-all"
             onClick={() => setSidebarOpen(true)}
@@ -458,13 +431,11 @@ const MainLayout: React.FC = () => {
             <Menu className="h-6 w-6" aria-hidden="true" />
           </button>
           {/* Contenido principal */}
-          <div className="flex-1 flex flex-col min-w-0">
-            {/* Contenido principal */}
-            <MainContent />
-            
-            {/* Footer institucional */}
-            <Footer />
-          </div>
+          <main className="flex-1 flex flex-col min-w-0">
+            <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto min-w-0">
+              <Outlet />
+            </div>
+          </main>
           
           {/* Búsqueda global */}
           <GlobalSearch 

@@ -58,10 +58,10 @@ const Calidad = () => {
 
   return (
     <>
-      <h2 className="text-3xl font-bold text-blue-900 mb-6 flex items-center gap-2">
+      <h2 className="text-3xl font-bold text-blue-900 mb-6 flex items-center gap-2 text-center sm:text-left">
         <BarChart className="h-7 w-7 text-blue-700" /> Calidad del Sistema (ISO 25000)
       </h2>
-      <div className="w-full max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-8">
+      <div className="w-full max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-8 p-4 sm:p-8">
         {indicadores.map((ind, i) => {
           let statusIcon = null;
           if (ind.titulo === 'Disponibilidad' && parseFloat(ind.valor) >= 99) {
