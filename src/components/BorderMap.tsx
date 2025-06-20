@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 // Datos simulados de congestión
 const pasos = [
@@ -33,6 +34,15 @@ const estadoColor = {
   'Alto': 'red'
 };
 
+const customIcon = new L.Icon({
+  iconUrl: '/assets/marker-icon.png',
+  shadowUrl: '/assets/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
 export const BorderMap: React.FC = () => {
   return (
     <div className="w-full h-[400px] rounded-lg overflow-hidden shadow">
@@ -42,7 +52,7 @@ export const BorderMap: React.FC = () => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {pasos.map((p, i) => (
-          <Marker key={i} position={[p.lat, p.lng]}>
+          <Marker key={i} position={[p.lat, p.lng]} icon={customIcon}>
             <Popup>
               <div>
                 <strong>{p.nombre}</strong><br />
