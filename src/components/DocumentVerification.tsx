@@ -20,6 +20,12 @@ export const DocumentVerification: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [ocrText, setOcrText] = useState('');
+  const [dateFound, setDateFound] = useState<string | null>(null);
+  const [isExpired, setIsExpired] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const extractExpiryDateFromFile = async (file: File): Promise<string | null> => {
     const { data: { text } } = await Tesseract.recognize(file, 'spa');
@@ -146,9 +152,61 @@ export const DocumentVerification: React.FC = () => {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && selectedDocId) {
-      handleDocumentUpload(selectedDocId, e.target.files[0]);
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+      setOcrText('');
+      setDateFound(null);
+      setIsExpired(null);
+      setError('');
     }
+  };
+
+  const extractDate = (text: string): string | null => {
+    // Busca fechas en formato dd/mm/yyyy, dd-mm-yyyy, yyyy-mm-dd, yyyy/mm/dd
+    const regex = /(\d{2}[\/\-]\d{2}[\/\-]\d{4})|(\d{4}[\/\-]\d{2}[\/\-]\d{2})/g;
+    const matches = text.match(regex);
+    return matches ? matches[0] : null;
+  };
+
+  const checkIfExpired = (dateStr: string): boolean => {
+    let parts;
+    let date;
+    if (dateStr.includes('/')) {
+      parts = dateStr.split('/');
+    } else {
+      parts = dateStr.split('-');
+    }
+    if (parts[0].length === 4) {
+      // yyyy-mm-dd
+      date = new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]);
+    } else {
+      // dd-mm-yyyy
+      date = new Date(parts[2], parseInt(parts[1], 10) - 1, parts[0]);
+    }
+    return date < new Date();
+  };
+
+  const handleAnalyze = async () => {
+    if (!file) return;
+    setLoading(true);
+    setOcrText('');
+    setDateFound(null);
+    setIsExpired(null);
+    setError('');
+    try {
+      const { data } = await Tesseract.recognize(file, 'spa', {
+        logger: m => {},
+      });
+      setOcrText(data.text);
+      const date = extractDate(data.text);
+      setDateFound(date);
+      if (date) {
+        setIsExpired(checkIfExpired(date));
+      }
+    } catch (err) {
+      setError('Error al analizar el documento.');
+    }
+    setLoading(false);
   };
 
   return (
@@ -288,6 +346,33 @@ export const DocumentVerification: React.FC = () => {
               {Math.round((documents.filter(d => d.status === 'verified').length / documents.length) * 100)}% Verificado
             </Badge>
           </div>
+        </div>
+
+        <div className="max-w-lg mx-auto p-4 bg-white rounded shadow">
+          <h2 className="text-lg font-bold mb-2">Validación Inteligente de Documentos</h2>
+          <input type="file" accept="image/*,.pdf" onChange={handleFileChange} className="mb-2" />
+          <button
+            onClick={handleAnalyze}
+            disabled={!file || loading}
+            className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            {loading ? 'Analizando...' : 'Analizar Documento'}
+          </button>
+          {error && <div className="text-red-600 mt-2">{error}</div>}
+          {ocrText && (
+            <div className="mt-4">
+              <div className="font-semibold">Texto extraído:</div>
+              <pre className="bg-gray-100 p-2 rounded text-xs max-h-40 overflow-y-auto">{ocrText}</pre>
+            </div>
+          )}
+          {dateFound && (
+            <div className="mt-2">
+              <span className="font-semibold">Fecha detectada:</span> {dateFound}
+              <span className={isExpired ? 'text-red-600 font-bold ml-2' : 'text-green-600 font-bold ml-2'}>
+                {isExpired ? 'VENCIDO' : 'VIGENTE'}
+              </span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

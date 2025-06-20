@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Send, X, Bot, User, BookOpen } from 'lucide-react';
+import { MessageSquare, Send, X, Bot, User, BookOpen, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -33,6 +33,19 @@ const knowledgeBase = [
     q: /predicci[oó]n.*flujo|congesti[oó]n/i,
     a: (role) => role === 'admin' ? 'Puedes ver el panel predictivo de congestión en el Dashboard, donde se muestran las horas pico y sugerencias de recursos.' : null
   },
+  // Ejemplos adicionales
+  {
+    q: /observad[oa]/i,
+    a: (role) => '“Observado” significa que tu solicitud tiene detalles pendientes o requiere revisión adicional. Consulta la sección de observaciones para más información.'
+  },
+  {
+    q: /faltante.*documento/i,
+    a: (role) => 'Si falta un documento, revisa la lista de requisitos y adjunta el archivo correspondiente en la sección Documentos.'
+  },
+  {
+    q: /ayuda|soporte/i,
+    a: (role) => 'Puedes contactar al soporte institucional desde la sección Contacto o escribir tu duda aquí.'
+  },
   // Respuesta por defecto
   {
     q: /.*/,
@@ -40,28 +53,49 @@ const knowledgeBase = [
   }
 ];
 
-const getBotResponse = (input, role) => {
+const getBotResponse = async (input, role, useAI = false) => {
+  if (useAI) {
+    // Estructura para conectar a una API real de IA (ejemplo OpenAI, requiere endpoint y API key)
+    try {
+      const res = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: input, role })
+      });
+      const data = await res.json();
+      return data?.response || 'No se pudo obtener respuesta de la IA.';
+    } catch {
+      return 'Error al conectar con el asistente inteligente.';
+    }
+  }
   for (const entry of knowledgeBase) {
     const res = entry.a(role);
     if (entry.q.test(input) && res) return res;
   }
-  // Si ninguna respuesta específica, usar la genérica
   return knowledgeBase[knowledgeBase.length - 1].a(role);
 };
 
 export const AduanaChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { from: 'bot', text: '¡Hola! Soy el Asistente Aduanero IA. Pregúntame sobre normativas, validaciones o procedimientos.' }
-  ]);
+  const [messages, setMessages] = useState(() => {
+    // Cargar historial de localStorage
+    const saved = localStorage.getItem('aduanaChatHistory');
+    return saved ? JSON.parse(saved) : [
+      { from: 'bot', text: '¡Hola! Soy el Asistente Aduanero IA. Pregúntame sobre normativas, validaciones o procedimientos.' }
+    ];
+  });
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [useAI, setUseAI] = useState(false); // Permite alternar entre base local y API real
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [feedback, setFeedback] = useState({}); // {msgIndex: 'up'|'down'}
 
   useEffect(() => {
     if (isOpen && chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
+    // Guardar historial
+    localStorage.setItem('aduanaChatHistory', JSON.stringify(messages));
   }, [messages, isOpen]);
 
   const userRole = localStorage.getItem('userRole') || 'conductor';
@@ -71,15 +105,15 @@ export const AduanaChatbot: React.FC = () => {
     setMessages((msgs) => [...msgs, { from: 'user', text: input }]);
     setIsThinking(true);
     setInput('');
-    setTimeout(() => {
-      const response = getBotResponse(input, userRole);
-      setMessages((msgs) => [...msgs, { from: 'bot', text: response }]);
-      setIsThinking(false);
-    }, 800);
+    const response = await getBotResponse(input, userRole, useAI);
+    setMessages((msgs) => [...msgs, { from: 'bot', text: response }]);
+    setIsThinking(false);
   };
 
-  // Solo visible para roles internos
-  if (userRole === 'conductor') return null;
+  const handleFeedback = (idx, type) => {
+    setFeedback((f) => ({ ...f, [idx]: type }));
+    // Aquí podrías enviar feedback a un backend si lo deseas
+  };
 
   return (
     <>
@@ -134,6 +168,27 @@ export const AduanaChatbot: React.FC = () => {
                     <div key={i} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-xs px-4 py-2 rounded-2xl shadow text-sm ${msg.from === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none border border-blue-100 dark:border-blue-900'}`}>
                         {msg.text}
+                        {/* Feedback solo para respuestas del bot */}
+                        {msg.from === 'bot' && i !== 0 && (
+                          <div className="flex gap-1 mt-1">
+                            <button
+                              className={`p-1 rounded-full ${feedback[i] === 'up' ? 'bg-green-200' : 'hover:bg-gray-200'}`}
+                              onClick={() => handleFeedback(i, 'up')}
+                              title="Respuesta útil"
+                              type="button"
+                            >
+                              <ThumbsUp className="h-4 w-4 text-green-600" />
+                            </button>
+                            <button
+                              className={`p-1 rounded-full ${feedback[i] === 'down' ? 'bg-red-200' : 'hover:bg-gray-200'}`}
+                              onClick={() => handleFeedback(i, 'down')}
+                              title="Respuesta poco útil"
+                              type="button"
+                            >
+                              <ThumbsDown className="h-4 w-4 text-red-600" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -163,8 +218,13 @@ export const AduanaChatbot: React.FC = () => {
                     <Send className="h-4 w-4" />
                   </Button>
                 </form>
-                <div className="px-6 pb-3 text-xs text-gray-400 text-right">
-                  <BookOpen className="inline h-4 w-4 mr-1" /> Respuestas basadas en normativa y ayuda institucional
+                <div className="px-6 pb-3 text-xs text-gray-400 text-right flex items-center gap-2">
+                  <BookOpen className="inline h-4 w-4 mr-1" />
+                  Respuestas basadas en normativa y ayuda institucional
+                  <label className="ml-auto flex items-center gap-1 cursor-pointer text-blue-700">
+                    <input type="checkbox" checked={useAI} onChange={e => setUseAI(e.target.checked)} />
+                    IA real
+                  </label>
                 </div>
               </div>
             </motion.div>
