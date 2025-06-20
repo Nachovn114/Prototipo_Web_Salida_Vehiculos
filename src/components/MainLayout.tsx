@@ -10,10 +10,12 @@ import {
 } from '@ant-design/icons';
 import { Header as CustomHeader } from './Header';
 import { useNotifications } from '../hooks/useNotifications';
-import { Bell, Globe, User, Moon, Sun, Menu, Shield, Zap, Search } from 'lucide-react';
+import { Bell, Globe, User, Moon, Sun, Menu, Shield, Zap, Search, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationPanel } from './NotificationPanel';
 import { GlobalSearch } from './GlobalSearch';
+import { TourGuide, useTour } from './TourGuide';
+import { FeedbackButton } from './FeedbackButton';
 import Footer from './Footer';
 import {
   Tooltip,
@@ -21,37 +23,45 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useTranslation } from 'react-i18next';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const menuItems = [
   {
     key: '/',
     icon: <DashboardOutlined />,
     label: 'Dashboard',
+    tourId: 'dashboard'
   },
   {
     key: '/inspecciones',
     icon: <CarOutlined />,
     label: 'Inspecciones',
+    tourId: 'inspections'
   },
   {
     key: '/documentos',
     icon: <FileTextOutlined />,
     label: 'Documentos',
+    tourId: 'documents'
   },
   {
     key: '/reportes',
     icon: <BarChartOutlined />,
     label: 'Reportes',
+    tourId: 'reports'
   },
   {
     key: '/calidad',
     icon: <SettingOutlined />,
     label: 'Calidad',
+    tourId: 'quality'
   },
   {
     key: '/ayuda',
     icon: <QuestionCircleOutlined />,
     label: 'Ayuda',
+    tourId: 'help'
   },
 ];
 
@@ -68,6 +78,7 @@ const MainLayout: React.FC = () => {
     clearAll, 
     executeAction 
   } = useNotifications();
+  const { isTourOpen, hasSeenTour, startTour, closeTour } = useTour();
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showGlobalSearch, setShowGlobalSearch] = React.useState(false);
   const [language, setLanguage] = React.useState('es');
@@ -80,6 +91,7 @@ const MainLayout: React.FC = () => {
   const notificationRef = React.useRef<HTMLDivElement>(null);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const { t, i18n } = useTranslation();
   
   React.useEffect(() => {
     if (!showNotifications) return;
@@ -110,7 +122,11 @@ const MainLayout: React.FC = () => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
   
-  const toggleLanguage = () => setLanguage(prev => prev === 'es' ? 'en' : 'es');
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'es' ? 'en' : 'es';
+    i18n.changeLanguage(newLang);
+    setLanguage(newLang);
+  };
   const toggleDarkMode = () => {
     setIsDark((prev) => {
       const newValue = !prev;
@@ -165,7 +181,7 @@ const MainLayout: React.FC = () => {
           </div>
           
           {/* Búsqueda global */}
-          <div className="px-2 mb-4">
+          <div className="px-2 mb-4" data-tour="search">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -196,6 +212,7 @@ const MainLayout: React.FC = () => {
                       ${location.pathname === item.key ? 'bg-white text-blue-900 shadow-lg' : 'text-white hover:bg-white/10 hover:pl-6'}`}
                     aria-label={`Ir a ${item.label}`}
                     aria-current={location.pathname === item.key ? 'page' : undefined}
+                    data-tour={item.tourId}
                   >
                     <span className="flex items-center justify-center h-6 w-6" aria-hidden="true">
                       {item.icon}
@@ -224,15 +241,27 @@ const MainLayout: React.FC = () => {
             <div className="flex flex-row items-center justify-center gap-4 pb-2">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggleLanguage}
-                    className="text-white hover:bg-blue-800 hover:text-blue-200"
-                    aria-label="Cambiar idioma"
-                  >
-                    <Globe className="h-5 w-5" />
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-white hover:bg-blue-800 hover:text-blue-200 flex items-center gap-1"
+                        aria-label="Cambiar idioma"
+                      >
+                        <Globe className="h-5 w-5" />
+                        <span className="ml-1 font-bold text-xs">{i18n.language === 'es' ? 'ES' : 'EN'}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => { i18n.changeLanguage('es'); setLanguage('es'); }}>
+                        🇪🇸 Español {i18n.language === 'es' && <span className="ml-2 text-blue-600 font-bold">✓</span>}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { i18n.changeLanguage('en'); setLanguage('en'); }}>
+                        🇺🇸 English {i18n.language === 'en' && <span className="ml-2 text-blue-600 font-bold">✓</span>}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Cambiar idioma</p>
@@ -256,7 +285,7 @@ const MainLayout: React.FC = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="group relative" ref={notificationRef}>
+                  <div className="group relative" ref={notificationRef} data-tour="notifications">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -273,6 +302,26 @@ const MainLayout: React.FC = () => {
                   <p>Notificaciones {urgentCount > 0 && `(${urgentCount} urgentes)`}</p>
                 </TooltipContent>
               </Tooltip>
+              
+              {/* Botón del Tour */}
+              {!hasSeenTour && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={startTour}
+                      className="text-white hover:bg-blue-800 hover:text-blue-200 relative animate-pulse"
+                      aria-label="Iniciar tour interactivo"
+                    >
+                      <HelpCircle className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Tour interactivo</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </div>
           </div>
         </aside>
@@ -331,15 +380,27 @@ const MainLayout: React.FC = () => {
               <div className="border-t border-white/20 my-2" />
               {/* Acciones rápidas ordenadas */}
               <div className="flex flex-row items-center justify-center gap-4 pb-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={toggleLanguage}
-                  className="text-white hover:bg-blue-800 hover:text-blue-200"
-                  aria-label="Cambiar idioma"
-                >
-                  <Globe className="h-5 w-5" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-white hover:bg-blue-800 hover:text-blue-200 flex items-center gap-1"
+                      aria-label="Cambiar idioma"
+                    >
+                      <Globe className="h-5 w-5" />
+                      <span className="ml-1 font-bold text-xs">{i18n.language === 'es' ? 'ES' : 'EN'}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => { i18n.changeLanguage('es'); setLanguage('es'); }}>
+                      🇪🇸 Español {i18n.language === 'es' && <span className="ml-2 text-blue-600 font-bold">✓</span>}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { i18n.changeLanguage('en'); setLanguage('en'); }}>
+                      🇺🇸 English {i18n.language === 'en' && <span className="ml-2 text-blue-600 font-bold">✓</span>}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -421,6 +482,15 @@ const MainLayout: React.FC = () => {
           isOpen={showGlobalSearch} 
           onClose={() => setShowGlobalSearch(false)} 
         />
+        
+        {/* Tour interactivo */}
+        <TourGuide 
+          isOpen={isTourOpen} 
+          onClose={closeTour} 
+        />
+
+        {/* Botón de feedback */}
+        <FeedbackButton />
       </div>
     </TooltipProvider>
   );

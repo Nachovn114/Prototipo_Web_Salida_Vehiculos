@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import FeatureDemo from '../components/FeatureDemo';
 import LoadingScreen from '../components/LoadingScreen';
+import { useTranslation } from 'react-i18next';
 
 const roles = [
   { value: 'conductor', label: 'Conductor', icon: <User className="h-5 w-5 mr-2" />, placeholder: '12.345.678-9' },
@@ -14,6 +15,7 @@ const roles = [
 ];
 
 const Login = () => {
+  const { t } = useTranslation();
   const [rut, setRut] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('conductor');
@@ -294,7 +296,7 @@ const Login = () => {
             transition={{ duration: 0.3, delay: 0.1 }}
             style={{ willChange: 'auto' }}
           >
-            Frontera Digital
+            {t('Bienvenido a Frontera Digital')}
           </motion.h1>
           <motion.h2 
             className="text-xl text-white/90 font-medium text-center drop-shadow"
