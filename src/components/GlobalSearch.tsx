@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { getReportData } from '../services/reportService';
 
 interface SearchResult {
   id: string;
@@ -15,60 +16,8 @@ interface SearchResult {
   icon: React.ReactNode;
   timestamp?: string;
   status?: string;
+  risk?: string;
 }
-
-// Datos de ejemplo para la búsqueda
-const mockSearchData: SearchResult[] = [
-  {
-    id: '1',
-    title: 'Solicitud ABCD-12',
-    description: 'Toyota Corolla - Juan Pérez González',
-    type: 'solicitud',
-    url: '/solicitud/1',
-    icon: <FileText className="h-4 w-4" />,
-    timestamp: 'Hace 2 horas',
-    status: 'Pendiente'
-  },
-  {
-    id: '2',
-    title: 'Documento SOAP',
-    description: 'Seguro Obligatorio - ABCD-12',
-    type: 'documento',
-    url: '/documentos',
-    icon: <FileText className="h-4 w-4" />,
-    timestamp: 'Hace 1 día',
-    status: 'Válido'
-  },
-  {
-    id: '3',
-    title: 'Vehículo EFGH-34',
-    description: 'Ford Ranger - María Silva',
-    type: 'vehiculo',
-    url: '/inspecciones',
-    icon: <Car className="h-4 w-4" />,
-    timestamp: 'Hace 3 horas',
-    status: 'En revisión'
-  },
-  {
-    id: '4',
-    title: 'Inspector García',
-    description: 'Inspector de vehículos',
-    type: 'usuario',
-    url: '/usuarios',
-    icon: <User className="h-4 w-4" />,
-    timestamp: 'Activo',
-    status: 'En línea'
-  },
-  {
-    id: '5',
-    title: 'Configuración del Sistema',
-    description: 'Ajustes generales y preferencias',
-    type: 'configuracion',
-    url: '/configuracion',
-    icon: <Settings className="h-4 w-4" />,
-    timestamp: 'Última modificación: hace 1 semana'
-  }
-];
 
 const getTypeColor = (type: SearchResult['type']) => {
   switch (type) {
@@ -105,35 +54,58 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
   const [activeFilter, setActiveFilter] = useState<string>('todos');
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const [lastQuery, setLastQuery] = useState('');
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  const loaderTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // Filtrar resultados basados en la consulta
+  // useEffect optimizado con debounce y loader diferido
   useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      return;
-    }
-
-    setIsLoading(true);
-    
-    // Simular búsqueda con delay
-    const timeoutId = setTimeout(() => {
-      const filtered = mockSearchData.filter(item => {
-        const searchTerm = query.toLowerCase();
-        const matchesQuery = 
-          item.title.toLowerCase().includes(searchTerm) ||
-          item.description.toLowerCase().includes(searchTerm);
-        
-        const matchesFilter = activeFilter === 'todos' || item.type === activeFilter;
-        
-        return matchesQuery && matchesFilter;
+    if (query === lastQuery && results.length > 0) return;
+    setLastQuery(query);
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    if (loaderTimeout.current) clearTimeout(loaderTimeout.current);
+    // Loader diferido
+    loaderTimeout.current = setTimeout(() => setIsLoading(true), 200);
+    debounceTimeout.current = setTimeout(() => {
+      getReportData().then((data) => {
+        let filtered = data;
+        if (query.trim()) {
+          filtered = data.filter(d =>
+            d.id.toLowerCase().includes(query.toLowerCase()) ||
+            d.inspector.toLowerCase().includes(query.toLowerCase()) ||
+            d.tipoVehiculo.toLowerCase().includes(query.toLowerCase()) ||
+            d.paisOrigen.toLowerCase().includes(query.toLowerCase()) ||
+            d.puntoControl.toLowerCase().includes(query.toLowerCase())
+          );
+        } else {
+          filtered = data.slice(0, 10);
+        }
+        const realResults = filtered.map(d => ({
+          id: d.id,
+          title: `Solicitud ${d.id.substring(0, 8)}`,
+          description: `${d.tipoVehiculo} - ${d.paisOrigen} - Inspector: ${d.inspector}`,
+          type: 'solicitud',
+          url: `/solicitud/${d.id}`,
+          icon: <FileText className="h-4 w-4" />,
+          timestamp: d.fecha.toLocaleString(),
+          status: d.resultadoInspeccion,
+          risk: d.nivelRiesgo
+        }));
+        setResults(realResults);
+        setSelectedIndex(0);
+        setIsLoading(false);
+        if (loaderTimeout.current) clearTimeout(loaderTimeout.current);
+      }).catch(() => {
+        setIsLoading(false);
+        if (loaderTimeout.current) clearTimeout(loaderTimeout.current);
       });
-      
-      setResults(filtered);
-      setSelectedIndex(0);
-      setIsLoading(false);
     }, 300);
-
-    return () => clearTimeout(timeoutId);
+    // Cleanup
+    return () => {
+      if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+      if (loaderTimeout.current) clearTimeout(loaderTimeout.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, activeFilter]);
 
   // Manejar navegación con teclado
@@ -191,33 +163,40 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
     setSelectedIndex(0);
   };
 
+  // Actualiza los filtros para que cuenten sobre results
   const filters = [
-    { key: 'todos', label: 'Todos', count: mockSearchData.length },
-    { key: 'solicitud', label: 'Solicitudes', count: mockSearchData.filter(item => item.type === 'solicitud').length },
-    { key: 'documento', label: 'Documentos', count: mockSearchData.filter(item => item.type === 'documento').length },
-    { key: 'vehiculo', label: 'Vehículos', count: mockSearchData.filter(item => item.type === 'vehiculo').length },
-    { key: 'usuario', label: 'Usuarios', count: mockSearchData.filter(item => item.type === 'usuario').length },
+    { key: 'todos', label: 'Todos', count: results.length },
+    { key: 'solicitud', label: 'Solicitudes', count: results.filter(item => item.type === 'solicitud').length },
+    { key: 'documento', label: 'Documentos', count: results.filter(item => item.type === 'documento').length },
+    { key: 'vehiculo', label: 'Vehículos', count: results.filter(item => item.type === 'vehiculo').length },
+    { key: 'usuario', label: 'Usuarios', count: results.filter(item => item.type === 'usuario').length },
+  ];
+
+  // Sugerencias inteligentes sin 'Configuración'
+  const smartSuggestions = [
+    { id: 's1', title: 'Ir a Dashboard', icon: <ArrowRight className="h-5 w-5 text-blue-500" />, action: () => navigate('/') },
+    { id: 's2', title: 'Nueva Solicitud', icon: <FileText className="h-5 w-5 text-green-500" />, action: () => navigate('/predeclaracion') },
+    { id: 's3', title: 'Contactar Soporte', icon: <User className="h-5 w-5 text-orange-500" />, action: () => window.open('mailto:soporte@frontera.cl') },
+    { id: 's4', title: 'Ver Reportes', icon: <FileText className="h-5 w-5 text-purple-500" />, action: () => navigate('/reportes') },
   ];
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Overlay */}
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={handleClose}
+        >
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50"
-            onClick={handleClose}
-          />
-          
-          {/* Modal de búsqueda */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="fixed top-20 left-1/2 transform -translate-x-1/2 w-full max-w-2xl z-50"
+            className="w-full max-w-2xl mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 p-0"
+            initial={{ scale: 0.99, y: 20, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            exit={{ scale: 0.99, y: 20, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 600, damping: 40, duration: 0.18 }}
+            onClick={e => e.stopPropagation()}
           >
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               {/* Header */}
@@ -279,83 +258,45 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                     <p className="text-sm text-gray-400 mt-1">Intenta con otros términos</p>
                   </div>
                 ) : !query.trim() ? (
-                  <div className="p-8 text-center text-gray-500">
-                    <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>Escribe para buscar</p>
-                    <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-gray-400">
-                      <div className="flex items-center gap-1">
-                        <ArrowRight className="h-3 w-3" />
-                        <span>Navegar resultados</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <ArrowRight className="h-3 w-3" />
-                        <span>Enter para abrir</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <ArrowRight className="h-3 w-3" />
-                        <span>ESC para cerrar</span>
-                      </div>
-                    </div>
+                  <div className="py-2 px-2 space-y-2">
+                    {smartSuggestions.map(s => (
+                      <button key={s.id} onClick={() => { s.action(); onClose(); }} className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900 transition-all shadow border border-transparent hover:border-blue-300">
+                        {s.icon}
+                        <span className="font-medium text-gray-800 dark:text-gray-100">{s.title}</span>
+                      </button>
+                    ))}
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {results.map((result, index) => (
-                      <motion.div
-                        key={result.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className={`p-4 cursor-pointer transition-colors ${
-                          index === selectedIndex
-                            ? 'bg-blue-50 dark:bg-blue-900/20'
-                            : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                        }`}
-                        onClick={() => handleResultClick(result)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0 mt-1">
-                            {result.icon}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <h3 className="font-medium text-gray-900 dark:text-white truncate">
-                                {result.title}
-                              </h3>
-                              <Badge 
-                                variant="outline" 
-                                className={`text-xs ${getTypeColor(result.type)}`}
-                              >
-                                {getTypeLabel(result.type)}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                              {result.description}
-                            </p>
-                            <div className="flex items-center gap-4 text-xs text-gray-400">
-                              {result.timestamp && (
-                                <div className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  <span>{result.timestamp}</span>
-                                </div>
-                              )}
-                              {result.status && (
-                                <div className="flex items-center gap-1">
-                                  <MapPin className="h-3 w-3" />
-                                  <span>{result.status}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0 mt-1" />
+                  <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                    {results.map((result, idx) => (
+                      <li key={result.id} className={`flex items-center gap-4 px-4 py-3 cursor-pointer rounded-xl transition-all ${selectedIndex === idx ? 'bg-blue-50 dark:bg-blue-900 shadow-lg scale-[1.02]' : 'hover:bg-gray-50 dark:hover:bg-gray-800'} group`} onClick={() => handleResultClick(result)}>
+                        <div className="flex-shrink-0">
+                          {result.icon}
                         </div>
-                      </motion.div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-base text-gray-900 dark:text-gray-100">{result.title}</span>
+                            {/* Badge de estado */}
+                            {result.status && <Badge className="ml-2" variant="outline">{result.status}</Badge>}
+                            {/* Badge de riesgo si aplica */}
+                            {result.risk && <Badge className="ml-2 bg-red-100 text-red-700 border-red-200">Riesgo: {result.risk}</Badge>}
+                          </div>
+                          <span className="block text-gray-600 dark:text-gray-300 text-sm">{result.description}</span>
+                          {result.timestamp && <span className="block text-xs text-gray-400 dark:text-gray-500 mt-1">{result.timestamp}</span>}
+                        </div>
+                        {/* Acciones rápidas */}
+                        <div className="flex flex-col gap-2 items-end">
+                          {result.type === 'solicitud' && <Button size="sm" variant="outline" onClick={e => { e.stopPropagation(); navigate(`/solicitud/${result.id}/exportar`); }}>Exportar</Button>}
+                          {result.type === 'documento' && <Button size="sm" variant="outline" onClick={e => { e.stopPropagation(); navigate(`/documentos/${result.id}`); }}>Ver</Button>}
+                        </div>
+                      </li>
                     ))}
                   </div>
                 )}
               </div>
             </div>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );

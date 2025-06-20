@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Menu, Globe, Shield, User, Moon, Sun, Archive, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Bell, Menu, Globe, Shield, User, Moon, Sun, Archive, CheckCircle, AlertTriangle, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Notification } from '../hooks/useNotifications';
@@ -8,6 +8,7 @@ import { NavLink } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useNotifications } from '../hooks/useNotifications';
+import { GlobalSearch } from './GlobalSearch';
 
 interface HeaderProps {
   unreadCount: number;
@@ -25,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({ unreadCount, notifications, mark
     }
     return false;
   });
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
   const notificationRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -51,6 +53,17 @@ export const Header: React.FC<HeaderProps> = ({ unreadCount, notifications, mark
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showNotifications]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setShowGlobalSearch(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const toggleLanguage = () => {
     setLanguage(prev => prev === 'es' ? 'en' : 'es');
@@ -228,9 +241,23 @@ export const Header: React.FC<HeaderProps> = ({ unreadCount, notifications, mark
             <Button variant="ghost" size="sm" className="md:hidden text-blue-900 hover:bg-blue-50 hover:text-blue-700 transition-colors">
               <Menu className="h-5 w-5" />
             </Button>
+
+            {/* Global Search */}
+            <button
+              className="ml-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-900 shadow hover:bg-blue-50 dark:hover:bg-blue-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 transition-all"
+              onClick={() => setShowGlobalSearch(true)}
+              title="Buscar en todo el sistema (Ctrl+K)"
+            >
+              <Search className="h-5 w-5" />
+              <span className="hidden md:inline font-medium">Buscar</span>
+              <kbd className="ml-2 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-300 border border-gray-300 dark:border-gray-700">Ctrl+K</kbd>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Global Search Modal */}
+      <GlobalSearch isOpen={showGlobalSearch} onClose={() => setShowGlobalSearch(false)} />
     </header>
   );
 };

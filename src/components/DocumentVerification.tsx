@@ -162,7 +162,6 @@ export const DocumentVerification: React.FC = () => {
   };
 
   const extractDate = (text: string): string | null => {
-    // Busca fechas en formato dd/mm/yyyy, dd-mm-yyyy, yyyy-mm-dd, yyyy/mm/dd
     const regex = /(\d{2}[\/\-]\d{2}[\/\-]\d{4})|(\d{4}[\/\-]\d{2}[\/\-]\d{2})/g;
     const matches = text.match(regex);
     return matches ? matches[0] : null;
@@ -177,10 +176,8 @@ export const DocumentVerification: React.FC = () => {
       parts = dateStr.split('-');
     }
     if (parts[0].length === 4) {
-      // yyyy-mm-dd
       date = new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]);
     } else {
-      // dd-mm-yyyy
       date = new Date(parts[2], parseInt(parts[1], 10) - 1, parts[0]);
     }
     return date < new Date();
@@ -348,31 +345,43 @@ export const DocumentVerification: React.FC = () => {
           </div>
         </div>
 
-        <div className="max-w-lg mx-auto p-4 bg-white rounded shadow">
-          <h2 className="text-lg font-bold mb-2">Validación Inteligente de Documentos</h2>
-          <input type="file" accept="image/*,.pdf" onChange={handleFileChange} className="mb-2" />
-          <button
-            onClick={handleAnalyze}
-            disabled={!file || loading}
-            className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-          >
-            {loading ? 'Analizando...' : 'Analizar Documento'}
-          </button>
-          {error && <div className="text-red-600 mt-2">{error}</div>}
-          {ocrText && (
-            <div className="mt-4">
-              <div className="font-semibold">Texto extraído:</div>
-              <pre className="bg-gray-100 p-2 rounded text-xs max-h-40 overflow-y-auto">{ocrText}</pre>
+        <div className="max-w-lg mx-auto p-0">
+          <div className="bg-white/90 rounded-3xl shadow-2xl border border-blue-100 px-8 py-8 flex flex-col gap-6 items-center">
+            <h2 className="text-2xl font-extrabold text-blue-800 flex items-center gap-2 mb-2 text-center">
+              <span className="bg-blue-100 rounded-full p-2"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg></span>
+              Validación Inteligente de Documentos
+            </h2>
+            <div className="w-full flex flex-col gap-3 items-center">
+              <input type="file" accept="image/*,.pdf" onChange={handleFileChange} className="rounded-lg border border-blue-200 px-3 py-2 focus:ring-2 focus:ring-blue-400 transition w-full" />
+              <button
+                onClick={handleAnalyze}
+                disabled={!file || loading}
+                className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-6 py-2 rounded-xl font-bold shadow-md transition disabled:opacity-50 w-full"
+              >
+                {loading ? 'Analizando...' : 'Analizar Documento'}
+              </button>
             </div>
-          )}
-          {dateFound && (
-            <div className="mt-2">
-              <span className="font-semibold">Fecha detectada:</span> {dateFound}
-              <span className={isExpired ? 'text-red-600 font-bold ml-2' : 'text-green-600 font-bold ml-2'}>
-                {isExpired ? 'VENCIDO' : 'VIGENTE'}
-              </span>
-            </div>
-          )}
+            {error && <div className="text-red-600 font-semibold text-center animate-pulse w-full">{error}</div>}
+            {ocrText && (
+              <div className="w-full">
+                <div className="font-semibold text-blue-700 mb-1">Texto extraído:</div>
+                <pre className="bg-blue-50 p-3 rounded-xl text-sm max-h-40 overflow-y-auto border border-blue-100 text-gray-800 w-full">{ocrText}</pre>
+              </div>
+            )}
+            {dateFound && (
+              <div className="mt-4 flex flex-col items-center gap-3 w-full">
+                <div className={`flex items-center gap-2 px-6 py-3 rounded-full text-xl font-bold shadow-lg border-2 ${isExpired ? 'bg-red-100 text-red-700 border-red-300 animate-pulse' : 'bg-green-100 text-green-700 border-green-300 animate-pulse-slow'}`}>
+                  {isExpired ? 'VENCIDO' : 'VIGENTE'}
+                </div>
+                <div className="text-center">
+                  <span className="font-semibold text-gray-700">Fecha detectada:</span> <span className="font-mono text-base">{dateFound}</span>
+                  {isExpired && (
+                    <div className="text-red-600 font-bold mt-1 animate-bounce flex items-center gap-1 justify-center">⚠️ Documento vencido, no es válido</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -46,6 +46,7 @@ import Reportes from '../pages/Reportes';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useNotifications } from '../hooks/useNotifications';
+import { useNavigate } from 'react-router-dom';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend);
 
 // Animaciones para tarjetas y contenedores (debe estar antes del componente)
@@ -76,15 +77,6 @@ const cardVariants = {
 // Datos de métricas
 const metrics = [
   {
-    title: 'Solicitudes Pendientes',
-    value: '24',
-    trend: 12.5,
-    icon: FileText,
-    iconBg: 'bg-blue-100',
-    iconColor: 'text-blue-600',
-    cardBg: 'bg-blue-50',
-  },
-  {
     title: 'Aprobadas Hoy',
     value: '156',
     trend: 8.3,
@@ -92,6 +84,15 @@ const metrics = [
     iconBg: 'bg-green-100',
     iconColor: 'text-green-600',
     cardBg: 'bg-green-50',
+  },
+  {
+    title: 'Solicitudes Pendientes',
+    value: '24',
+    trend: 12.5,
+    icon: FileText,
+    iconBg: 'bg-blue-100',
+    iconColor: 'text-blue-600',
+    cardBg: 'bg-blue-50',
   },
   {
     title: 'En Revisión',
@@ -313,6 +314,46 @@ const notificaciones = [
   }
 ];
 
+// Datos simulados de solicitudes por hora para predicción
+const flujoPorHora = [5, 12, 25, 40, 38, 30, 22, 15, 8];
+const horas = ['6:00', '7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00'];
+const maxFlujo = Math.max(...flujoPorHora);
+const horaPico = horas[flujoPorHora.indexOf(maxFlujo)];
+const prediccionMensaje = maxFlujo > 30
+  ? `Se estima alto flujo este viernes entre ${horaPico} y ${horas[flujoPorHora.indexOf(maxFlujo)+1] || ''}`
+  : 'No se esperan congestiones significativas en las próximas horas.';
+
+// Generar alertas dinámicas según los datos de predicción
+const flujoIA = congestionData.datasets[1].data;
+const alertas = flujoIA.map((valor, idx) => {
+  if (valor > 50) {
+    return {
+      tipo: 'critica',
+      mensaje: `Flujo vehicular crítico previsto entre ${horas[idx]} y ${horas[idx + 1] || ''}. Priorice inspección rápida.`,
+      hora: `${horas[idx]} - ${horas[idx + 1] || ''}`,
+      color: 'red',
+    };
+  } else if (valor > 30) {
+    return {
+      tipo: 'moderada',
+      mensaje: `Se prevé congestión entre ${horas[idx]} y ${horas[idx + 1] || ''}. Refuerce personal en el control.`,
+      hora: `${horas[idx]} - ${horas[idx + 1] || ''}`,
+      color: 'yellow',
+    };
+  }
+  return null;
+}).filter(Boolean);
+
+// Limitar la cantidad de alertas a máximo 3, priorizando las críticas
+const alertasOrdenadas = [
+  ...alertas.filter(a => a.tipo === 'critica'),
+  ...alertas.filter(a => a.tipo === 'moderada')
+];
+
+// Limitar el total de tarjetas (predicción + alertas) a 3
+const mostrarPrediccion = !!prediccionMensaje;
+const alertasMostradas = mostrarPrediccion ? alertasOrdenadas.slice(0, 2) : alertasOrdenadas.slice(0, 3);
+
 // Función para obtener el color y texto del riesgo (debe estar antes del componente)
 const getRiskBadge = (riesgo: 'bajo' | 'medio' | 'alto') => {
   switch (riesgo) {
@@ -366,6 +407,17 @@ const estadoIcon = {
   'Alto': <AlertTriangle className="h-5 w-5 text-red-500 animate-pulse" />
 };
 
+// Widget compacto de predicción de flujo
+const WidgetPrediccionFlujo = () => (
+  <div className="rounded-xl bg-gradient-to-r from-yellow-50 to-blue-50 border-l-4 border-yellow-400 shadow flex items-center gap-2 px-4 py-2">
+    <AlertTriangle className="h-5 w-5 text-yellow-500 animate-bounce" />
+    <div>
+      <div className="text-xs font-bold text-yellow-800">Flujo Vehicular</div>
+      <div className="text-xs text-gray-700 font-semibold leading-tight">{prediccionMensaje}</div>
+    </div>
+  </div>
+);
+
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const [notificacionesState, setNotificacionesState] = React.useState(notificaciones);
@@ -375,7 +427,7 @@ const Dashboard: React.FC = () => {
   };
 
   const [showNotifications, setShowNotifications] = React.useState(false);
-  const [notificationTab, setNotificationTab] = React.useState<'todas' | 'archivadas'>('todas');
+  const [notificationTab, setNotificationTab] = React.useState<'todas' | 'urgentes' | 'archivadas'>('todas');
   const {
     notifications,
     markAllAsRead,
@@ -389,6 +441,8 @@ const Dashboard: React.FC = () => {
   // Filtrar alertas urgentes (ancladas)
   const alertasAncladas = notifications.filter(n => !n.archivada && (n.prioridad === 'urgente' || n.prioridad === 'alta'));
   const notificacionesNormales = notifications.filter(n => !n.archivada && n.prioridad !== 'urgente' && n.prioridad !== 'alta');
+
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     const hasShownWelcome = sessionStorage.getItem('welcomeNotificationShown');
@@ -456,7 +510,7 @@ const Dashboard: React.FC = () => {
               )}
             </button>
             <Dialog open={showNotifications} onOpenChange={setShowNotifications}>
-              <DialogContent className="max-w-xl w-full p-0 rounded-2xl">
+              <DialogContent className="max-w-2xl w-full p-0 rounded-2xl">
                 <DialogHeader className="flex flex-row items-center justify-between px-6 pt-6 pb-2 border-b">
                   <DialogTitle className="text-2xl font-bold">Notificaciones</DialogTitle>
                   <button className="text-blue-700 text-sm font-medium hover:underline" onClick={() => markAllAsRead()}>
@@ -464,97 +518,46 @@ const Dashboard: React.FC = () => {
                   </button>
                 </DialogHeader>
                 <div className="px-6 pt-4 pb-2">
-                  <Tabs value={notificationTab} onValueChange={value => setNotificationTab(value as 'todas' | 'archivadas')} className="w-full">
+                  <Tabs value={notificationTab} onValueChange={value => setNotificationTab(value as 'todas' | 'urgentes' | 'archivadas')} className="w-full">
                     <TabsList className="mb-4">
                       <TabsTrigger value="todas">Todas</TabsTrigger>
+                      <TabsTrigger value="urgentes">Urgentes</TabsTrigger>
                       <TabsTrigger value="archivadas">Archivadas</TabsTrigger>
                     </TabsList>
                     <TabsContent value="todas">
-                      <div className="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                        {/* Alertas urgentes ancladas */}
-                        {alertasAncladas.length > 0 && (
-                          <div className="mb-6">
-                            {alertasAncladas.map(n => (
-                              <div key={n.id} className={`flex items-start gap-3 rounded-xl ${n.prioridad === 'urgente' ? 'bg-yellow-50 border-l-8 border-yellow-400' : 'bg-red-50 border-l-8 border-red-500'} animate-pulse-slow p-4 mb-3 shadow-sm relative`}>
-                                <AlertTriangle className={`h-7 w-7 mt-1 flex-shrink-0 ${n.prioridad === 'urgente' ? 'text-yellow-500' : 'text-red-500'}`} />
-                                <div className="flex-1">
-                                  <span className={`block font-bold ${n.prioridad === 'urgente' ? 'text-yellow-900' : 'text-red-900'} text-base mb-1`}>{n.titulo}</span>
-                                  <span className={`block ${n.prioridad === 'urgente' ? 'text-yellow-900' : 'text-red-900'} text-sm font-medium`}>{n.mensaje}</span>
-                                  <span className={`block text-xs mt-1 ${n.prioridad === 'urgente' ? 'text-yellow-700' : 'text-red-700'}`}>{formatDate(n.fecha)}</span>
-                                </div>
-                                {/* Sin botón de archivar */}
+                      <div className="max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar space-y-6">
+                        {/* Agrupa por prioridad */}
+                        {['urgente', 'alta', 'media', 'baja'].map(prio => (
+                          <div key={prio} className="space-y-3">
+                            {notifications.filter(n => n.prioridad === prio && !n.archivada).length > 0 && (
+                              <div className="text-xs font-bold text-blue-700 uppercase mb-1 mt-2">{prio === 'urgente' ? 'Urgentes' : prio.charAt(0).toUpperCase() + prio.slice(1)}</div>
+                            )}
+                            {notifications.filter(n => n.prioridad === prio && !n.archivada).map(n => (
+                              <div key={n.id} className={`flex items-start gap-4 rounded-2xl p-4 shadow border-l-8 ${
+                                prio === 'urgente' ? 'bg-red-50 border-red-500' :
+                                prio === 'alta' ? 'bg-yellow-50 border-yellow-400' :
+                                prio === 'media' ? 'bg-blue-50 border-blue-400' :
+                                'bg-gray-50 border-gray-200'} animate-pulse-slow relative`}>
+                              <div className="flex-shrink-0">
+                                {prio === 'urgente' ? <AlertTriangle className="h-7 w-7 text-red-500" /> :
+                                 prio === 'alta' ? <AlertTriangle className="h-7 w-7 text-yellow-500" /> :
+                                 prio === 'media' ? <Info className="h-7 w-7 text-blue-500" /> :
+                                 <Bell className="h-7 w-7 text-gray-400" />}
                               </div>
-                            ))}
-                          </div>
-                        )}
-                        {/* Separador visual si hay alertas y normales */}
-                        {alertasAncladas.length > 0 && notificacionesNormales.length > 0 && (
-                          <div className="h-2" />
-                        )}
-                        {/* Notificaciones normales */}
-                        {notificacionesNormales.length === 0 ? (
-                          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                            <Bell className="h-16 w-16 mb-4" />
-                            <span className="text-lg font-semibold">No hay notificaciones</span>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {notificacionesNormales.map(n => (
-                              <div key={n.id} className={`flex items-start gap-3 rounded-xl bg-white border border-gray-200 shadow-sm px-4 py-3 relative group transition-all hover:shadow-lg cursor-pointer`} onClick={() => !n.leida && markAsRead(n.id)}>
-                                <CheckCircle className={`h-6 w-6 mt-1 flex-shrink-0 ${n.leida ? 'text-gray-300' : 'text-blue-500'}`} />
-                                <div className="flex-1">
-                                  <span className="block font-bold text-gray-900 text-base mb-1">{n.titulo}</span>
-                                  <span className="block text-gray-600 text-sm">{n.mensaje}</span>
-                                  <span className="block text-xs text-gray-400 mt-1">{formatDate(n.fecha)}</span>
-                                </div>
-                                {!n.leida && <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-blue-500 animate-pulse" title="No leída"></span>}
-                                <UITooltip>
-                                  <TooltipTrigger asChild>
-                                    <button className="ml-2 text-gray-400 hover:text-blue-600 transition-colors opacity-80 group-hover:opacity-100" title="Archivar" onClick={e => { e.stopPropagation(); archiveNotification(n.id); }}>
-                                      <Archive className="h-5 w-5" />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Archivar</TooltipContent>
-                                </UITooltip>
+                              <div className="flex-1 min-w-0">
+                                <span className="block font-bold text-base mb-1 text-gray-900">{n.titulo}</span>
+                                <span className="block text-gray-700 text-sm mb-1">{n.mensaje}</span>
+                                <span className="block text-xs text-gray-400 mt-1">{formatDate(n.fecha)}</span>
                               </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="archivadas">
-                      <div className="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                        {notifications.filter(n => n.archivada).length === 0 ? (
-                          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                            <Bell className="h-16 w-16 mb-4" />
-                            <span className="text-lg font-semibold">No hay notificaciones archivadas</span>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {notifications.filter(n => n.archivada).map(n => (
-                              <div key={n.id} className={`flex items-start gap-3 rounded-xl bg-gray-50 border border-gray-200 shadow-sm px-4 py-3 relative group transition-all hover:shadow-lg`}>
-                                {n.prioridad === 'urgente' ? (
-                                  <AlertTriangle className="h-6 w-6 mt-1 text-yellow-500 flex-shrink-0" />
-                                ) : (
-                                  <CheckCircle className="h-6 w-6 mt-1 text-blue-500 flex-shrink-0" />
-                                )}
-                                <div className="flex-1">
-                                  <span className="block font-bold text-gray-900 text-base mb-1">{n.titulo}</span>
-                                  <span className="block text-gray-600 text-sm">{n.mensaje}</span>
-                                  <span className="block text-xs text-gray-400 mt-1">{formatDate(n.fecha)}</span>
-                                </div>
-                                <UITooltip>
-                                  <TooltipTrigger asChild>
-                                    <button className="ml-2 text-gray-400 hover:text-blue-600 transition-colors opacity-80 group-hover:opacity-100" title="Desarchivar" onClick={() => unarchiveNotification(n.id)}>
-                                      <Archive className="h-5 w-5" />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Desarchivar</TooltipContent>
-                                </UITooltip>
+                              <div className="flex flex-col gap-2 items-end">
+                                {!n.leida && <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" title="No leída"></span>}
+                                <Button size="icon" variant="ghost" onClick={() => markAsRead(n.id)} title="Marcar como leída"><CheckCircle className="h-5 w-5 text-green-500" /></Button>
+                                <Button size="icon" variant="ghost" onClick={() => archiveNotification(n.id)} title="Archivar"><Archive className="h-5 w-5 text-gray-400" /></Button>
                               </div>
-                            ))}
+                            </div>
+                          ))}
                           </div>
-                        )}
+                        ))}
                       </div>
                     </TabsContent>
                   </Tabs>
@@ -574,43 +577,45 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Métricas principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metrics.map((metric, index) => (
-          <motion.div
-            key={metric.title}
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            className={`rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 ${metric.cardBg} transition-colors duration-300`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  {metric.title}
-                </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {metric.value}
-                </p>
-                <div className="flex items-center mt-2">
-                  {metric.trend > 0 ? (
-                    <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
-                  ) : (
-                    <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
-                  )}
-                  <span className={`text-sm font-medium ${
-                    metric.trend > 0 ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {Math.abs(metric.trend)}%
-                  </span>
-                  <span className="text-sm text-gray-500 ml-1">vs mes anterior</span>
+      <div className="w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {metrics.map((metric, index) => (
+            <motion.div
+              key={metric.title}
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              className={`rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 h-full ${metric.cardBg} transition-colors duration-300 flex flex-col justify-between`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    {metric.title}
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {metric.value}
+                  </p>
+                  <div className="flex items-center mt-2">
+                    {metric.trend > 0 ? (
+                      <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
+                    ) : (
+                      <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
+                    )}
+                    <span className={`text-sm font-medium ${
+                      metric.trend > 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {Math.abs(metric.trend)}%
+                    </span>
+                    <span className="text-sm text-gray-500 ml-1">vs mes anterior</span>
+                  </div>
+                </div>
+                <div className={`p-3 rounded-lg ${metric.iconBg}`}>
+                  <metric.icon className={`h-6 w-6 ${metric.iconColor}`} />
                 </div>
               </div>
-              <div className={`p-3 rounded-lg ${metric.iconBg}`}>
-                <metric.icon className={`h-6 w-6 ${metric.iconColor}`} />
-              </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))}
+        </div>
       </div>
 
       {/* Contenido principal con tabs */}
@@ -622,50 +627,71 @@ const Dashboard: React.FC = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {userRole === 'admin' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    <span>Predicción de Congestión</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Line data={congestionData} options={{ responsive: true, maintainAspectRatio: false }} height={300} />
-          </CardContent>
-        </Card>
-              <AnomalyDetectionWidget />
-            </div>
-          )}
-
           {/* Gráficos y estadísticas */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Gráfico de solicitudes por estado */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Estado de Solicitudes
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {requestStatus.map((status) => (
-                  <div key={status.status} className="space-y-2">
-            <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${status.color}`}></div>
-                        <span className="text-sm font-medium">{status.status}</span>
+            {/* Columna izquierda: Estado + Predicción */}
+            <div className="flex flex-col gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Estado de Solicitudes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {requestStatus.map((status) => (
+                    <div key={status.status} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-3 h-3 rounded-full ${status.color}`}></div>
+                          <span className="text-sm font-medium">{status.status}</span>
+                        </div>
+                        <span className="text-sm text-gray-600">{status.count}</span>
+                      </div>
+                      <Progress value={status.percentage} className="h-2" />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+              {/* Tarjeta de predicción de flujo vehicular y alertas inteligentes */}
+              <div className="max-w-3xl mx-auto mb-6">
+                {/* Predicción */}
+                <div className="rounded-xl bg-gradient-to-r from-yellow-50 to-blue-50 border-l-4 border-yellow-400 shadow flex items-center gap-2 px-4 py-3">
+                  <AlertTriangle className="h-6 w-6 text-yellow-500 animate-bounce" />
+                  <div>
+                    <div className="text-sm font-bold text-yellow-800">Predicción de Flujo Vehicular</div>
+                    <div className="text-sm text-gray-700 font-semibold leading-tight">{prediccionMensaje}</div>
+                  </div>
+                </div>
+                {/* Línea divisoria sutil */}
+                {alertasMostradas.length > 0 && <div className="my-3 border-t border-gray-200" />}
+                {/* Alertas inteligentes */}
+                <div className="space-y-3">
+                  {alertasMostradas.map((alerta, idx) => (
+                    <div
+                      key={idx}
+                      className={`rounded-xl shadow flex items-center gap-2 px-4 py-3 ${
+                        alerta.tipo === 'critica'
+                          ? 'bg-red-50 border-l-4 border-red-500 animate-pulse'
+                          : 'bg-yellow-50 border-l-4 border-yellow-400 animate-pulse-slow'
+                      }`}
+                    >
+                      <AlertTriangle className={`h-5 w-5 ${alerta.tipo === 'critica' ? 'text-red-500' : 'text-yellow-500'}`} />
+                      <div>
+                        <div className={`text-sm font-bold ${alerta.tipo === 'critica' ? 'text-red-800' : 'text-yellow-800'}`}>{
+                          alerta.tipo === 'critica' ? 'Alerta Crítica: Congestión Alta' : 'Alerta: Congestión Moderada'
+                        }</div>
+                        <div className="text-sm text-gray-700 font-semibold">{alerta.mensaje}</div>
+                      </div>
+                      {alerta.tipo === 'critica' && (
+                        <Button className="ml-auto" size="sm" variant="destructive">Notificar equipo</Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-                      <span className="text-sm text-gray-600">{status.count}</span>
-              </div>
-                    <Progress value={status.percentage} className="h-2" />
             </div>
-                ))}
-          </CardContent>
-        </Card>
-
-            {/* Actividad reciente */}
+            {/* Columna derecha: Actividad Reciente */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -685,7 +711,7 @@ const Dashboard: React.FC = () => {
                     >
                       <div className={`p-2 rounded-full ${activity.iconBg}`}>
                         <activity.icon className={`h-4 w-4 ${activity.iconColor}`} />
-              </div>
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {activity.title}
@@ -696,23 +722,23 @@ const Dashboard: React.FC = () => {
                         <p className="text-xs text-gray-500 mt-1">
                           {activity.time}
                         </p>
-              </div>
+                      </div>
                     </motion.div>
                   ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Tabla de solicitudes recientes */}
           <Card>
-        <CardHeader>
+            <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
                 Solicitudes Recientes
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -773,7 +799,7 @@ const Dashboard: React.FC = () => {
                           {request.date}
                         </td>
                         <td className="py-3 px-4">
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => navigate(`/solicitud/${request.id}`)}>
                             Ver detalles
                           </Button>
                         </td>
@@ -825,106 +851,75 @@ const Dashboard: React.FC = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-6">
-          {/* Analíticas: tres gráficos/widgets en layout de 1 columna en mobile, 3 en desktop */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {/* Gráfico de solicitudes por estado */}
-            <Card>
+        <TabsContent value="analytics" className="space-y-10">
+          {/* Analíticas: dos filas, dos columnas en desktop */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Gráfico de flujo de solicitudes por día/hora */}
+            <Card className="bg-white shadow-lg rounded-2xl p-6">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Estado de Solicitudes
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {requestStatus.map((status) => (
-                  <div key={status.status} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${status.color}`}></div>
-                        <span className="text-sm font-medium">{status.status}</span>
-                      </div>
-                      <span className="text-sm text-gray-600">{status.count}</span>
-                    </div>
-                    <Progress value={status.percentage} className="h-2" />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-            {/* Widget de tiempos de espera promedio por horario */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Tiempos de Espera Promedio por Horario
+                <CardTitle className="flex items-center gap-3 text-xl font-bold text-blue-900">
+                  <BarChart3 className="h-6 w-6 text-blue-600" /> Flujo de Solicitudes
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Bar data={esperaPorHora} options={{
-                  responsive: true,
-                  plugins: {
-                    legend: { display: false },
-                    title: { display: false }
-                  },
-                  scales: {
-                    y: {
-                      beginAtZero: true,
-                      title: { display: true, text: 'Minutos' }
-                    }
-                  }
-                }} height={300} />
+                <Bar data={congestionData} options={{ maintainAspectRatio: false, responsive: true }} height={300} />
               </CardContent>
             </Card>
             {/* Gráfico de torta: distribución de riesgo */}
-            <Card>
+            <Card className="bg-white shadow-lg rounded-2xl p-6">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Distribución de Riesgo
+                <CardTitle className="flex items-center gap-3 text-xl font-bold text-blue-900">
+                  <Activity className="h-6 w-6 text-yellow-600" /> Distribución de Riesgo
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Pie data={riesgoData} options={{
-                  responsive: true,
-                  plugins: {
-                    legend: { position: 'top' },
-                    title: { display: false }
-                  }
-                }} height={300} />
+                <Pie data={riesgoData} options={{ maintainAspectRatio: false, responsive: true, plugins: { legend: { position: 'top' } } }} height={300} />
               </CardContent>
             </Card>
           </div>
-          {/* Ranking de Inspectores y Aduaneros */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Ranking de Inspectores y Aduaneros
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-2 px-4 font-medium text-gray-900 dark:text-white">Nombre</th>
-                      <th className="text-left py-2 px-4 font-medium text-gray-900 dark:text-white">Rol</th>
-                      <th className="text-left py-2 px-4 font-medium text-gray-900 dark:text-white">Solicitudes Procesadas</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rankingInspectores.map((inspector, idx) => (
-                      <tr key={inspector.nombre} className="border-b border-gray-100 dark:border-gray-800">
-                        <td className="py-2 px-4 text-sm text-gray-900 dark:text-white font-semibold">{idx + 1}. {inspector.nombre}</td>
-                        <td className="py-2 px-4 text-sm text-gray-600 dark:text-gray-400">{inspector.rol}</td>
-                        <td className="py-2 px-4 text-sm text-blue-700 dark:text-blue-300 font-bold">{inspector.solicitudes}</td>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Gráfico de barras: tiempos de espera promedio */}
+            <Card className="bg-white shadow-lg rounded-2xl p-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-xl font-bold text-blue-900">
+                  <Clock className="h-6 w-6 text-blue-600" /> Tiempos de Espera Promedio
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Bar data={esperaPorHora} options={{ maintainAspectRatio: false, responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Minutos' } } } }} height={300} />
+              </CardContent>
+            </Card>
+            {/* Ranking de Inspectores y Aduaneros */}
+            <Card className="bg-white shadow-lg rounded-2xl p-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-xl font-bold text-blue-900">
+                  <Users className="h-6 w-6 text-blue-600" /> Ranking de Inspectores
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-2 px-4 font-semibold text-blue-900">Nombre</th>
+                        <th className="text-left py-2 px-4 font-semibold text-blue-900">Rol</th>
+                        <th className="text-left py-2 px-4 font-semibold text-blue-900">Solicitudes Procesadas</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {rankingInspectores.map((inspector, idx) => (
+                        <tr key={inspector.nombre} className="border-b border-gray-100">
+                          <td className="py-2 px-4 text-sm text-gray-900 font-semibold">{idx + 1}. {inspector.nombre}</td>
+                          <td className="py-2 px-4 text-sm text-gray-600">{inspector.rol}</td>
+                          <td className="py-2 px-4 text-sm text-blue-700 font-bold">{inspector.solicitudes}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
         </TabsContent>
       </Tabs>
     </div>
