@@ -4,11 +4,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, XCircle, User, Users, Car, FileText, Fingerprint, Package, PenTool, Eye, Upload, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, User, Users, Car, FileText, Fingerprint, Package, PenTool, Eye, Upload, AlertCircle, Info } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 const mockSolicitud = {
   id: 1,
@@ -122,6 +123,18 @@ const SolicitudDetalle = () => {
   const totalValor = mercancias.reduce((acc, m) => acc + Number(m.valor), 0);
   const arancel = Math.round(totalValor * 0.1 * 100) / 100; // 10% simulado
 
+  // Función para obtener el color y texto del riesgo
+  const getRiskBadge = (riesgo: 'bajo' | 'medio' | 'alto') => {
+    switch (riesgo) {
+      case 'alto':
+        return <Badge className="bg-red-100 text-red-800 border-red-200 animate-pulse">Alto</Badge>;
+      case 'medio':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 animate-pulse">Medio</Badge>;
+      default:
+        return <Badge className="bg-green-100 text-green-800 border-green-200">Bajo</Badge>;
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto py-8 space-y-8 px-0">
@@ -142,6 +155,21 @@ const SolicitudDetalle = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-2xl text-blue-900 dark:text-blue-200">
             <FileText className="h-6 w-6 text-blue-700" /> Solicitud #{id}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>{getRiskBadge(solicitud.riesgo || 'bajo')}</span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <div className="flex items-center gap-2">
+                    <Info className="h-4 w-4 text-blue-500" />
+                    <span>
+                      Nivel de riesgo calculado automáticamente según prioridad, documentos y observaciones.
+                    </span>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </CardTitle>
           <CardDescription className="text-blue-700 dark:text-blue-300">Detalle completo de la solicitud</CardDescription>
         </CardHeader>

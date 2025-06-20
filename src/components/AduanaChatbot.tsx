@@ -3,43 +3,50 @@ import { MessageSquare, Send, X, Bot, User, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Base de conocimiento local (puedes expandirla fácilmente)
+// Base de conocimiento local (expandida y contextual por rol)
 const knowledgeBase = [
-  {
-    q: /documentos.*motocicleta/i,
-    a: 'Para motocicletas es obligatorio presentar SOAP vigente y Licencia clase C, según resolución N° 813-2024.'
-  },
-  {
-    q: /qué hacer.*rechazo/i,
-    a: 'Si una solicitud es rechazada, se debe notificar al conductor y solicitar la corrección o recarga de documentos.'
-  },
-  {
-    q: /firmar digital/i,
-    a: 'Para firmar digitalmente una autorización, asegúrese de tener su certificado vigente y siga el flujo en la sección de inspección.'
-  },
-  {
-    q: /SOAP.*vencido/i,
-    a: 'Si el SOAP está vencido, la solicitud debe ser rechazada y se debe pedir al conductor que cargue un documento vigente.'
-  },
-  {
-    q: /normativa/i,
-    a: 'Puedes consultar la normativa completa en el Centro de Ayuda o escribiendo tu pregunta específica aquí.'
-  },
+  // Respuestas generales
   {
     q: /hola|buenas/i,
-    a: '¡Hola! Soy el Asistente Aduanero IA. ¿En qué puedo ayudarte hoy?'
+    a: (role) => `¡Hola! Soy el Asistente Aduanero IA. ¿En qué puedo ayudarte${role ? ' (' + role + ')' : ''}?`
+  },
+  // Conductor
+  {
+    q: /documento.*vencid[oa]/i,
+    a: (role) => role === 'conductor' ? 'Si tienes un documento vencido, debes cargar uno vigente en la sección Documentos antes de continuar con tu solicitud.' : null
   },
   {
+    q: /cómo.*registrar.*carga/i,
+    a: (role) => role === 'conductor' ? 'Para registrar una carga, dirígete a la sección "Carga" y completa los datos requeridos. Adjunta los documentos de respaldo.' : null
+  },
+  // Inspector
+  {
+    q: /firmar digital/i,
+    a: (role) => role === 'inspector' ? 'Para firmar digitalmente, asegúrate de tener tu certificado vigente y haz clic en "Firmar" al finalizar la inspección.' : null
+  },
+  {
+    q: /qué hacer.*documento.*vencid[oa]/i,
+    a: (role) => role === 'inspector' ? 'Si detectas un documento vencido, rechaza la solicitud y notifica al conductor para que cargue uno vigente.' : null
+  },
+  // Admin
+  {
+    q: /predicci[oó]n.*flujo|congesti[oó]n/i,
+    a: (role) => role === 'admin' ? 'Puedes ver el panel predictivo de congestión en el Dashboard, donde se muestran las horas pico y sugerencias de recursos.' : null
+  },
+  // Respuesta por defecto
+  {
     q: /.*/,
-    a: 'No tengo una respuesta exacta para tu consulta, pero puedes revisar el Centro de Ayuda o ser más específico.'
+    a: (role) => 'No tengo una respuesta exacta para tu consulta, pero puedes revisar el Centro de Ayuda o ser más específico.'
   }
 ];
 
-const getBotResponse = (input: string) => {
+const getBotResponse = (input, role) => {
   for (const entry of knowledgeBase) {
-    if (entry.q.test(input)) return entry.a;
+    const res = entry.a(role);
+    if (entry.q.test(input) && res) return res;
   }
-  return knowledgeBase[knowledgeBase.length - 1].a;
+  // Si ninguna respuesta específica, usar la genérica
+  return knowledgeBase[knowledgeBase.length - 1].a(role);
 };
 
 export const AduanaChatbot: React.FC = () => {
@@ -57,20 +64,21 @@ export const AduanaChatbot: React.FC = () => {
     }
   }, [messages, isOpen]);
 
+  const userRole = localStorage.getItem('userRole') || 'conductor';
+
   const handleSend = async () => {
     if (!input.trim()) return;
     setMessages((msgs) => [...msgs, { from: 'user', text: input }]);
     setIsThinking(true);
     setInput('');
     setTimeout(() => {
-      const response = getBotResponse(input);
+      const response = getBotResponse(input, userRole);
       setMessages((msgs) => [...msgs, { from: 'bot', text: response }]);
       setIsThinking(false);
     }, 800);
   };
 
   // Solo visible para roles internos
-  const userRole = localStorage.getItem('userRole');
   if (userRole === 'conductor') return null;
 
   return (

@@ -3,6 +3,7 @@ import MainLayout from './components/MainLayout';
 import Dashboard from './components/Dashboard';
 import ValidacionDocumental from './components/ValidacionDocumental';
 import RevisionCarga from './components/RevisionCarga';
+import LiveTracking from './components/LiveTracking';
 import Reportes from './pages/Reportes';
 import Calidad from './pages/Calidad';
 import SolicitudDetalle from './pages/SolicitudDetalle';
@@ -13,6 +14,7 @@ import Contacto from './pages/Contacto';
 import Login from './pages/Login';
 import Ayuda from './pages/Ayuda';
 import SplashScreen from './components/SplashScreen';
+import PreDeclaracion from './pages/PreDeclaracion';
 import { useEffect, useState } from 'react';
 
 function App() {
@@ -53,6 +55,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Dashboard />} />
+          <Route path="pre-declaracion" element={<PreDeclaracion />} />
           <Route path="validacion" element={<ValidacionDocumental />} />
           <Route path="revision-carga" element={<RevisionCarga />} />
           <Route path="reportes" element={<Reportes />} />

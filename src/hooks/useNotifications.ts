@@ -24,6 +24,7 @@ export interface Notification {
   mensaje: string;
   fecha: string;
   leida: boolean;
+  archivada?: boolean;
   acciones?: NotificationAction[];
   data?: Record<string, any>;
   expira?: string;
@@ -35,52 +36,203 @@ const STORAGE_KEY = 'frontera_notifications';
 const initialNotifications: Notification[] = [
   {
     id: 1,
-    tipo: 'aprobacion',
-    titulo: 'Solicitud Aprobada',
-    mensaje: 'Su solicitud ABCD-12 ha sido aprobada exitosamente',
-    fecha: new Date().toISOString(),
-    leida: false,
-    prioridad: 'alta',
-    acciones: [
-      { label: 'Ver Detalles', action: () => console.log('Ver detalles'), variant: 'default' },
-      { label: 'Descargar PDF', action: () => console.log('Descargar PDF'), variant: 'outline' }
-    ]
-  },
-  {
-    id: 2,
-    tipo: 'documento',
-    titulo: 'Documento Requerido',
-    mensaje: 'Falta subir Revisión Técnica para EFGH-34',
-    fecha: new Date(Date.now() - 3600000).toISOString(),
-    leida: false,
-    prioridad: 'media',
-    acciones: [
-      { label: 'Subir Ahora', action: () => console.log('Subir documento'), variant: 'default' },
-      { label: 'Más Tarde', action: () => console.log('Más tarde'), variant: 'secondary' }
-    ]
-  },
-  {
-    id: 3,
-    tipo: 'sistema',
-    titulo: 'Mantenimiento Programado',
-    mensaje: 'El sistema estará en mantenimiento el 25/06 de 02:00 a 04:00',
-    fecha: new Date(Date.now() - 7200000).toISOString(),
-    leida: false,
-    prioridad: 'baja',
-    expira: new Date(Date.now() + 86400000).toISOString() // Expira en 24h
-  },
-  {
-    id: 4,
     tipo: 'urgente',
-    titulo: 'Error de Conexión',
-    mensaje: 'Se ha perdido la conexión con el servidor. Los datos se guardarán localmente.',
+    titulo: 'Alerta de Congestión',
+    mensaje: 'Congestión alta detectada en Paso Los Libertadores. Tiempo estimado de espera: 2 horas.',
     fecha: new Date().toISOString(),
     leida: false,
     prioridad: 'urgente',
-    acciones: [
-      { label: 'Reintentar', action: () => console.log('Reintentar conexión'), variant: 'default' },
-      { label: 'Modo Offline', action: () => console.log('Modo offline'), variant: 'outline' }
-    ]
+    archivada: false
+  },
+  {
+    id: 2,
+    tipo: 'aprobacion',
+    titulo: 'Solicitud de Cruce Aprobada',
+    mensaje: 'La solicitud #2024-123 para el vehículo BZRT-45 ha sido aprobada. Puede presentarse en el control.',
+    fecha: new Date(Date.now() - 60000).toISOString(),
+    leida: false,
+    prioridad: 'alta',
+    archivada: false
+  },
+  {
+    id: 3,
+    tipo: 'documento',
+    titulo: 'Documento Faltante',
+    mensaje: 'Falta subir el Seguro Obligatorio para el vehículo KJHG-12.',
+    fecha: new Date(Date.now() - 120000).toISOString(),
+    leida: false,
+    prioridad: 'media',
+    archivada: false
+  },
+  {
+    id: 4,
+    tipo: 'warning',
+    titulo: 'Inspección Vehicular Pendiente',
+    mensaje: 'El vehículo FJTR-88 debe presentarse a inspección física antes de las 16:00 hrs.',
+    fecha: new Date(Date.now() - 180000).toISOString(),
+    leida: false,
+    prioridad: 'alta',
+    archivada: false
+  },
+  {
+    id: 5,
+    tipo: 'info',
+    titulo: 'Nuevo Mensaje de Aduana',
+    mensaje: 'Recuerde declarar todos los bienes electrónicos al cruzar la frontera.',
+    fecha: new Date(Date.now() - 240000).toISOString(),
+    leida: false,
+    prioridad: 'media',
+    archivada: false
+  },
+  {
+    id: 6,
+    tipo: 'sistema',
+    titulo: 'Mantenimiento Programado',
+    mensaje: 'El sistema estará en mantenimiento el 25/06 de 02:00 a 04:00. Planifique su cruce.',
+    fecha: new Date(Date.now() - 300000).toISOString(),
+    leida: false,
+    prioridad: 'baja',
+    archivada: false
+  },
+  {
+    id: 7,
+    tipo: 'aprobacion',
+    titulo: 'Pre-Declaración Recibida',
+    mensaje: 'Su pre-declaración para el viaje a Mendoza ha sido recibida correctamente.',
+    fecha: new Date(Date.now() - 360000).toISOString(),
+    leida: false,
+    prioridad: 'media',
+    archivada: false
+  },
+  {
+    id: 8,
+    tipo: 'error',
+    titulo: 'Error en Validación Documental',
+    mensaje: 'El archivo de revisión técnica subido está ilegible. Por favor, vuelva a cargarlo.',
+    fecha: new Date(Date.now() - 420000).toISOString(),
+    leida: false,
+    prioridad: 'alta',
+    archivada: false
+  },
+  {
+    id: 9,
+    tipo: 'info',
+    titulo: 'Nuevo Reporte Disponible',
+    mensaje: 'Ya puede descargar el reporte de cruces del mes de mayo.',
+    fecha: new Date(Date.now() - 480000).toISOString(),
+    leida: false,
+    prioridad: 'baja',
+    archivada: false
+  },
+  {
+    id: 10,
+    tipo: 'usuario',
+    titulo: 'Actualización de Perfil',
+    mensaje: 'Sus datos personales han sido actualizados exitosamente.',
+    fecha: new Date(Date.now() - 540000).toISOString(),
+    leida: false,
+    prioridad: 'baja',
+    archivada: false
+  },
+  {
+    id: 11,
+    tipo: 'anomaly',
+    titulo: 'Anomalía Detectada',
+    mensaje: 'Se detectó un patrón inusual en las solicitudes de cruce. Revise el panel de analíticas.',
+    fecha: new Date(Date.now() - 600000).toISOString(),
+    leida: false,
+    prioridad: 'alta',
+    archivada: false
+  },
+  {
+    id: 12,
+    tipo: 'calidad',
+    titulo: 'Encuesta de Satisfacción',
+    mensaje: 'Por favor, califique su experiencia en el paso fronterizo Los Libertadores.',
+    fecha: new Date(Date.now() - 660000).toISOString(),
+    leida: false,
+    prioridad: 'media',
+    archivada: false
+  },
+  {
+    id: 13,
+    tipo: 'info',
+    titulo: 'Nuevo Horario de Atención',
+    mensaje: 'El horario de atención en Uspallata se extiende hasta las 20:00 hrs.',
+    fecha: new Date(Date.now() - 720000).toISOString(),
+    leida: false,
+    prioridad: 'baja',
+    archivada: false
+  },
+  {
+    id: 14,
+    tipo: 'warning',
+    titulo: 'Condiciones Meteorológicas',
+    mensaje: 'Se pronostica nieve en la cordillera. Revise el estado del paso antes de viajar.',
+    fecha: new Date(Date.now() - 780000).toISOString(),
+    leida: false,
+    prioridad: 'alta',
+    archivada: false
+  },
+  {
+    id: 15,
+    tipo: 'info',
+    titulo: 'Solicitud Archivada',
+    mensaje: 'La solicitud #2024-099 fue archivada por inactividad.',
+    fecha: new Date(Date.now() - 840000).toISOString(),
+    leida: true,
+    prioridad: 'baja',
+    archivada: true
+  },
+  {
+    id: 16,
+    tipo: 'urgente',
+    titulo: 'Alerta de Seguridad',
+    mensaje: 'Se reportó un incidente en el área de control secundario. Siga instrucciones del personal.',
+    fecha: new Date(Date.now() - 900000).toISOString(),
+    leida: false,
+    prioridad: 'urgente',
+    archivada: false
+  },
+  {
+    id: 17,
+    tipo: 'info',
+    titulo: 'Nuevo Mensaje de Inspector',
+    mensaje: 'El inspector Rojas ha dejado un comentario en su solicitud.',
+    fecha: new Date(Date.now() - 960000).toISOString(),
+    leida: false,
+    prioridad: 'media',
+    archivada: false
+  },
+  {
+    id: 18,
+    tipo: 'documento',
+    titulo: 'Documento Vencido',
+    mensaje: 'El permiso de circulación del vehículo BZRT-45 ha vencido. Actualícelo para continuar.',
+    fecha: new Date(Date.now() - 1020000).toISOString(),
+    leida: false,
+    prioridad: 'alta',
+    archivada: false
+  },
+  {
+    id: 19,
+    tipo: 'info',
+    titulo: 'Recordatorio de Declaración',
+    mensaje: 'Recuerde completar la declaración jurada antes de su viaje.',
+    fecha: new Date(Date.now() - 1080000).toISOString(),
+    leida: false,
+    prioridad: 'media',
+    archivada: false
+  },
+  {
+    id: 20,
+    tipo: 'info',
+    titulo: 'Actualización de Sistema',
+    mensaje: 'Se han mejorado los tiempos de respuesta en el panel de solicitudes.',
+    fecha: new Date(Date.now() - 1140000).toISOString(),
+    leida: false,
+    prioridad: 'baja',
+    archivada: false
   }
 ];
 
@@ -127,26 +279,11 @@ export const useNotifications = () => {
     prioridad?: string;
   }>({});
 
-  // Cargar notificaciones desde localStorage al inicializar
+  // Cargar notificaciones de prueba SIEMPRE al inicializar (modo demo)
   useEffect(() => {
-    const savedNotifications = localStorage.getItem(STORAGE_KEY);
-    if (savedNotifications) {
-      try {
-        const parsed = JSON.parse(savedNotifications);
-        setNotifications(parsed);
-      } catch (error) {
-        console.error('Error al cargar notificaciones:', error);
-        setNotifications(initialNotifications);
-      }
-    } else {
-      setNotifications(initialNotifications);
-    }
+    setNotifications(initialNotifications);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialNotifications));
   }, []);
-
-  // Guardar notificaciones en localStorage cuando cambien
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
-  }, [notifications]);
 
   // Solicitar permisos de notificación push
   useEffect(() => {
@@ -197,7 +334,13 @@ export const useNotifications = () => {
   }, []);
 
   const removeNotification = useCallback((id: number) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
+    setNotifications(prev => prev.filter(notification => {
+      // No permitir eliminar alertas importantes (urgente o alta)
+      if (notification.id === id && (notification.prioridad === 'urgente' || notification.prioridad === 'alta')) {
+        return true; // No eliminar
+      }
+      return notification.id !== id;
+    }));
   }, []);
 
   const clearAll = useCallback(() => {
@@ -211,6 +354,25 @@ export const useNotifications = () => {
       markAsRead(notificationId);
     }
   }, [notifications, markAsRead]);
+
+  const archiveNotification = useCallback((id: number) => {
+    setNotifications(prev => prev.map(notification =>
+      notification.id === id ? { ...notification, archivada: true } : notification
+    ));
+  }, []);
+
+  const unarchiveNotification = useCallback((id: number) => {
+    setNotifications(prev => prev.map(notification =>
+      notification.id === id ? { ...notification, archivada: false } : notification
+    ));
+  }, []);
+
+  const getNotificationsByFilter = useCallback((filter: 'todas' | 'archivadas') => {
+    if (filter === 'archivadas') {
+      return notifications.filter(n => n.archivada);
+    }
+    return notifications.filter(n => !n.archivada);
+  }, [notifications]);
 
   // Filtrar notificaciones
   const filteredNotifications = notifications.filter(notification => {
@@ -235,6 +397,9 @@ export const useNotifications = () => {
     addNotification,
     removeNotification,
     clearAll,
-    executeAction
+    executeAction,
+    archiveNotification,
+    unarchiveNotification,
+    getNotificationsByFilter
   };
 };

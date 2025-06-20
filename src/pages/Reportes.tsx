@@ -1,159 +1,253 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Bar, Pie, Line } from 'react-chartjs-2';
-import { Chart, CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend } from 'chart.js';
-import { FileText, Download, BarChart2, CheckCircle, XCircle } from 'lucide-react';
+import { Chart, CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend, Title } from 'chart.js';
+import { FileText, Download, BarChart2, CheckCircle, XCircle, Calendar as CalendarIcon, Loader2, Share2, FileDown, Clock } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getReportData, ReportData } from '@/services/reportService';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { es } from 'date-fns/locale';
+import { DateRange } from "react-day-picker";
+import { toast } from 'sonner';
 
-Chart.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend);
+// Exportación de utilidades
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import Papa from 'papaparse';
 
-const flujoPorDia = {
-  labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-  datasets: [
-    {
-      label: 'Solicitudes',
-      data: [18, 22, 19, 25, 20, 15, 10],
-      backgroundColor: 'rgba(37, 99, 235, 0.7)',
-      borderRadius: 6,
-    },
-  ],
-};
-
-const aprobacionesVsRechazos = {
-  labels: ['Aprobadas', 'Rechazadas'],
-  datasets: [
-    {
-      data: [120, 15],
-      backgroundColor: ['#22c55e', '#ef4444'],
-      borderWidth: 0,
-    },
-  ],
-};
-
-const tiempoPromedio = {
-  labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-  datasets: [
-    {
-      label: 'Minutos',
-      data: [14, 13, 15, 12, 16, 18, 17],
-      fill: false,
-      borderColor: '#6366f1',
-      backgroundColor: '#6366f1',
-      tension: 0.4,
-    },
-  ],
-};
+Chart.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Tooltip, Legend, Title);
 
 const Reportes = () => {
   const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<ReportData[]>([]);
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: new Date(new Date().setMonth(new Date().getMonth() - 1)),
+    to: new Date(),
+  });
+  const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1200);
-    return () => clearTimeout(timer);
-  }, []);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const result = await getReportData({
+          startDate: date?.from,
+          endDate: date?.to,
+        });
+        setData(result);
+      } catch (error) {
+        console.error("Failed to fetch report data:", error);
+        toast.error("Error al cargar los datos del reporte.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (loading) {
+    fetchData();
+  }, [date]);
+  
+  // --- Lógica de Exportación ---
+  const handleExportPDF = () => {
+    if (!reportRef.current) return;
+    const reportElement = reportRef.current;
+    
+    toast.info("Generando PDF...", {
+      description: "Esto puede tardar unos segundos.",
+    });
+
+    html2canvas(reportElement, {
+      scale: 2, // Mejorar calidad de imagen
+      useCORS: true,
+      backgroundColor: document.documentElement.classList.contains('dark') ? '#1f2937' : '#ffffff',
+    }).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`reporte-frontera-digital-${new Date().toISOString().split('T')[0]}.pdf`);
+      toast.success("¡PDF generado exitosamente!");
+    });
+  };
+
+  const handleExportCSV = () => {
+    if (data.length === 0) {
+      toast.warning("No hay datos para exportar.");
+      return;
+    }
+    const csv = Papa.unparse(data);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `reporte-completo-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("¡CSV exportado exitosamente!");
+  };
+
+  // --- Procesamiento de datos para gráficos ---
+  const processDataForCharts = () => {
+    const kpis = {
+      totalSolicitudes: data.length,
+      aprobadas: data.filter(d => d.resultadoInspeccion === 'Aprobado').length,
+      rechazadas: data.filter(d => d.resultadoInspeccion === 'Rechazado').length,
+      tiempoPromedio: Math.round(data.reduce((acc, d) => acc + d.tiempoCruce, 0) / (data.length || 1)),
+    };
+    
+    const flujoPorDia = data.reduce((acc, d) => {
+      const day = format(d.fecha, 'eee', { locale: es });
+      acc[day] = (acc[day] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const flujoData = {
+      labels: Object.keys(flujoPorDia),
+      datasets: [{
+        label: 'Solicitudes',
+        data: Object.values(flujoPorDia),
+        backgroundColor: 'rgba(37, 99, 235, 0.7)',
+        borderRadius: 4,
+      }]
+    };
+
+    const riesgoData = {
+      labels: ['Bajo', 'Medio', 'Alto'],
+      datasets: [{
+        data: [
+          data.filter(d => d.nivelRiesgo === 'Bajo').length,
+          data.filter(d => d.nivelRiesgo === 'Medio').length,
+          data.filter(d => d.nivelRiesgo === 'Alto').length,
+        ],
+        backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'],
+      }]
+    };
+    
+    return { kpis, flujoData, riesgoData };
+  };
+  
+  const { kpis, flujoData, riesgoData } = processDataForCharts();
+
+  const renderContent = () => {
+    if (loading) {
+      return <Skeleton className="h-[500px] w-full" />;
+    }
+
     return (
-      <div className="max-w-7xl mx-auto py-8 space-y-8 px-0">
-        <Skeleton className="h-12 w-1/2 mb-6" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full" />
-          ))}
+      <div ref={reportRef} className="space-y-8 p-4 md:p-6 bg-card rounded-lg">
+        {/* KPIs */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Solicitudes</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpis.totalSolicitudes}</div>
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Aprobadas</CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpis.aprobadas}</div>
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Rechazadas</CardTitle>
+              <XCircle className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpis.rechazadas}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Tiempo Cruce Promedio</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpis.tiempoPromedio} min</div>
+            </CardContent>
+          </Card>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Skeleton className="h-80 w-full" />
-          <Skeleton className="h-80 w-full" />
+
+        {/* Gráficos */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle>Flujo de Solicitudes</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              <Bar data={flujoData} options={{ maintainAspectRatio: false, responsive: true }} />
+            </CardContent>
+          </Card>
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Distribución de Riesgo</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              <Pie data={riesgoData} options={{ maintainAspectRatio: false, responsive: true }} />
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
-  }
+  };
 
   return (
-    <>
-      <h2 className="text-3xl font-bold text-blue-900 mb-6 flex items-center gap-2">
-        <FileText className="h-7 w-7 text-blue-700" /> Reportes y Estadísticas
-      </h2>
-      <div className="w-full max-w-6xl mx-auto space-y-8">
-        {/* Tarjetas resumen */}
-        <div className="grid grid-cols-3 gap-6">
-          <Card className="shadow-lg rounded-2xl bg-white dark:bg-gray-900 text-foreground dark:text-white flex flex-col items-center py-6 px-4 border border-blue-100 dark:border-blue-800 transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer group">
-            <div className="mb-2 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <BarChart2 className="h-10 w-10 text-blue-600" />
-            </div>
-            <CardHeader>
-              <CardTitle className="text-blue-900 dark:text-blue-200 text-lg text-center">Solicitudes esta semana</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-extrabold text-blue-700 dark:text-blue-300 text-center">129</div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-lg rounded-2xl bg-white dark:bg-gray-900 text-foreground dark:text-white flex flex-col items-center py-6 px-4 border border-green-100 dark:border-green-800 transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer group">
-            <div className="mb-2 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <CheckCircle className="h-10 w-10 text-green-600" />
-            </div>
-            <CardHeader>
-              <CardTitle className="text-green-900 dark:text-green-200 text-lg text-center">Aprobadas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-extrabold text-green-600 dark:text-green-300 text-center">120</div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-lg rounded-2xl bg-white dark:bg-gray-900 text-foreground dark:text-white flex flex-col items-center py-6 px-4 border border-red-100 dark:border-red-800 transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer group">
-            <div className="mb-2 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <XCircle className="h-10 w-10 text-red-600" />
-            </div>
-            <CardHeader>
-              <CardTitle className="text-red-900 dark:text-red-200 text-lg text-center">Rechazadas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-extrabold text-red-600 dark:text-red-300 text-center">15</div>
-            </CardContent>
-          </Card>
-        </div>
-        {/* Gráficos */}
-        <div className="grid grid-cols-2 gap-8">
-          <Card className="shadow-md rounded-2xl bg-white dark:bg-gray-900 text-foreground dark:text-white border border-blue-100 dark:border-blue-800">
-            <CardHeader>
-              <CardTitle>Flujo de Solicitudes por Día</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Bar data={flujoPorDia} options={{ plugins: { legend: { display: false }, tooltip: { backgroundColor: '#2563eb', titleColor: '#fff', bodyColor: '#fff', borderColor: '#1e40af', borderWidth: 1 } }, responsive: true, maintainAspectRatio: false, animation: { duration: 1200, easing: 'easeInOutQuart' } }} height={220} />
-            </CardContent>
-          </Card>
-          <Card className="shadow-md rounded-2xl bg-white dark:bg-gray-900 text-foreground dark:text-white border border-green-100 dark:border-green-800">
-            <CardHeader>
-              <CardTitle>Aprobaciones vs Rechazos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Pie data={aprobacionesVsRechazos} options={{ plugins: { legend: { position: 'bottom', labels: { color: '#1e293b', font: { weight: 'bold' } } }, tooltip: { backgroundColor: '#fff', titleColor: '#1e293b', bodyColor: '#1e293b', borderColor: '#22c55e', borderWidth: 1 } }, responsive: true, maintainAspectRatio: false, animation: { duration: 1200, easing: 'easeInOutQuart' } }} height={220} />
-            </CardContent>
-          </Card>
-        </div>
-        <div className="grid grid-cols-2 gap-8">
-          <Card className="shadow-md rounded-2xl bg-white dark:bg-gray-900 text-foreground dark:text-white border border-purple-100 dark:border-purple-800">
-            <CardHeader>
-              <CardTitle>Tiempo Promedio de Salida (min)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Line data={tiempoPromedio} options={{ plugins: { legend: { display: false }, tooltip: { backgroundColor: '#6366f1', titleColor: '#fff', bodyColor: '#fff', borderColor: '#312e81', borderWidth: 1 } }, responsive: true, maintainAspectRatio: false, animation: { duration: 1200, easing: 'easeInOutQuart' }, elements: { line: { tension: 0.5 } } }} height={220} />
-            </CardContent>
-          </Card>
-          <Card className="shadow-md flex flex-col justify-center items-center rounded-2xl bg-white dark:bg-gray-900 text-foreground dark:text-white border border-blue-100 dark:border-blue-800">
-            <CardHeader>
-              <CardTitle>Exportar Reporte</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center">
-              <Button className="bg-blue-700 hover:bg-blue-800 text-white flex items-center gap-2" onClick={() => alert('Exportación simulada')}>
-                <Download className="h-5 w-5" /> Exportar PDF/Excel
+    <div className="w-full max-w-7xl mx-auto space-y-4">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <h2 className="text-3xl font-bold text-foreground flex items-center gap-2">
+          <BarChart2 className="h-7 w-7" /> Reportes y BI
+        </h2>
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className="w-[280px] justify-start text-left font-normal"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date?.from ? (
+                  date.to ? (
+                    <>
+                      {format(date.from, "LLL dd, y", { locale: es })} -{" "}
+                      {format(date.to, "LLL dd, y", { locale: es })}
+                    </>
+                  ) : (
+                    format(date.from, "LLL dd, y")
+                  )
+                ) : (
+                  <span>Selecciona un rango de fechas</span>
+                )}
               </Button>
-              <span className="text-xs text-gray-500 mt-2">(Función simulada)</span>
-            </CardContent>
-          </Card>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={date?.from}
+                selected={date}
+                onSelect={setDate}
+                numberOfMonths={2}
+                locale={es}
+              />
+            </PopoverContent>
+          </Popover>
+          <Button onClick={handleExportPDF} variant="outline"><Share2 className="mr-2 h-4 w-4" /> Exportar Vista (PDF)</Button>
+          <Button onClick={handleExportCSV}><FileDown className="mr-2 h-4 w-4" /> Exportar Datos (CSV)</Button>
         </div>
       </div>
-    </>
+      {renderContent()}
+    </div>
   );
 };
 

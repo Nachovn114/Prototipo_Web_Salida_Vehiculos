@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Upload, CheckCircle, AlertCircle, Search, Eye, XCircle, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import Tesseract from 'tesseract.js';
+import { notifyDocumentValidation } from '@/services/notificationService';
 
 export const DocumentVerification: React.FC = () => {
   const [documents, setDocuments] = useState([
@@ -19,12 +21,60 @@ export const DocumentVerification: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
 
-  const handleDocumentUpload = (id: number, file: File) => {
-    const url = URL.createObjectURL(file);
-    setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, file, status: 'pending' } : doc));
-    setPreviewUrl(url);
+  const extractExpiryDateFromFile = async (file: File): Promise<string | null> => {
+    const { data: { text } } = await Tesseract.recognize(file, 'spa');
+    const match = text.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})/);
+    return match ? match[1] : null;
+  };
+
+  const handleDocumentUpload = async (id: number, file: File) => {
+    // Optimistic UI update
+    const previewUrl = URL.createObjectURL(file);
+    setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, file, status: 'pending', previewUrl } : doc));
     setSelectedDocId(id);
-    toast.success('Documento cargado correctamente');
+
+    toast.info('Procesando documento...', {
+      description: 'La lectura OCR puede tardar unos segundos.',
+    });
+
+    try {
+      if (file.type.startsWith('image/')) {
+        const { data: { text } } = await Tesseract.recognize(file, 'spa', {
+          logger: m => console.log(m),
+        });
+        
+        // Regex mejorada para dd/mm/yyyy o dd-mm-yyyy
+        const match = text.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})/);
+        const expiry = match ? match[1].replace(/-/g, '/') : null;
+
+        if (expiry) {
+          const isExpired = new Date(expiry.split('/').reverse().join('-')) < new Date();
+          const status = isExpired ? 'expired' : 'verified';
+          setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, expiryDate: expiry, status } : doc));
+          
+          if (isExpired) {
+            toast.error('Documento Vencido', { description: `Fecha detectada: ${expiry}` });
+            notifyDocumentValidation(file.name, 'Vencido');
+          } else {
+            toast.success('Documento Verificado', { description: `Fecha detectada: ${expiry}` });
+            notifyDocumentValidation(file.name, 'Válido');
+          }
+        } else {
+          setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, status: 'manual' } : doc));
+          toast.warning('Verificación Manual Requerida', { description: 'No se pudo detectar una fecha de vencimiento.' });
+          notifyDocumentValidation(file.name, 'Error');
+        }
+      } else {
+        // Para PDFs u otros tipos de archivo, requerir verificación manual
+        setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, status: 'manual' } : doc));
+        toast.warning('Verificación Manual Requerida', { description: 'La previsualización de este archivo no es compatible con OCR.'});
+      }
+    } catch (error) {
+      console.error('Error de OCR:', error);
+      setDocuments(prev => prev.map(doc => doc.id === id ? { ...doc, status: 'manual' } : doc));
+      toast.error('Error de OCR', { description: 'No se pudo procesar el documento.' });
+      notifyDocumentValidation(file.name, 'Error');
+    }
   };
 
   const handleVerifyDocument = (id: number) => {
@@ -57,6 +107,20 @@ export const DocumentVerification: React.FC = () => {
           <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 animate-pulse">
             <AlertCircle className="h-3 w-3 mr-1" />
             Pendiente
+          </Badge>
+        );
+      case 'expired':
+        return (
+          <Badge className="bg-red-100 text-red-800 border-red-200 animate-pulse">
+            <AlertCircle className="h-3 w-3 mr-1" />
+            Vencido
+          </Badge>
+        );
+      case 'manual':
+        return (
+          <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+            <Eye className="h-3 w-3 mr-1" />
+            Verificar
           </Badge>
         );
       default:
