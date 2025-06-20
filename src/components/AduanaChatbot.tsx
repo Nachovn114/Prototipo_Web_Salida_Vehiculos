@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo } from 'react';
 import { MessageSquare, Send, X, Bot, User, BookOpen, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -75,10 +75,20 @@ const getBotResponse = async (input, role, useAI = false) => {
   return knowledgeBase[knowledgeBase.length - 1].a(role);
 };
 
+// Memo para mensajes individuales
+const ChatMessage = memo(({ msg, isUser, children }) => (
+  <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+    <div className={`max-w-xs px-4 py-2 rounded-2xl shadow text-sm ${isUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none border border-blue-100 dark:border-blue-900'}`}>
+      {msg.text}
+      {children}
+    </div>
+  </div>
+));
+
 export const AduanaChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState(() => {
-    // Cargar historial de localStorage
+    // Cargar historial solo una vez
     const saved = localStorage.getItem('aduanaChatHistory');
     return saved ? JSON.parse(saved) : [
       { from: 'bot', text: '¡Hola! Soy el Asistente Aduanero IA. Pregúntame sobre normativas, validaciones o procedimientos.' }
@@ -86,15 +96,18 @@ export const AduanaChatbot: React.FC = () => {
   });
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
-  const [useAI, setUseAI] = useState(false); // Permite alternar entre base local y API real
+  const [useAI, setUseAI] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const [feedback, setFeedback] = useState({}); // {msgIndex: 'up'|'down'}
+  const [feedback, setFeedback] = useState({});
+  const prevMsgCount = useRef(messages.length);
 
+  // Solo hacer scroll si hay nuevos mensajes
   useEffect(() => {
-    if (isOpen && chatEndRef.current) {
+    if (isOpen && chatEndRef.current && messages.length > prevMsgCount.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      prevMsgCount.current = messages.length;
     }
-    // Guardar historial
+    // Guardar historial solo si cambia
     localStorage.setItem('aduanaChatHistory', JSON.stringify(messages));
   }, [messages, isOpen]);
 
@@ -110,18 +123,13 @@ export const AduanaChatbot: React.FC = () => {
     setIsThinking(false);
   };
 
-  const handleFeedback = (idx, type) => {
-    setFeedback((f) => ({ ...f, [idx]: type }));
-    // Aquí podrías enviar feedback a un backend si lo deseas
-  };
-
   return (
     <>
       {/* Botón flotante */}
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        transition={{ delay: 1, type: 'spring', stiffness: 260, damping: 20 }}
+        transition={{ delay: 0.2, type: 'spring', stiffness: 260, damping: 20 }}
         className="fixed bottom-6 right-6 z-40"
       >
         <Button
@@ -146,9 +154,10 @@ export const AduanaChatbot: React.FC = () => {
               onClick={() => setIsOpen(false)}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              initial={{ opacity: 0, scale: 0.97, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 30 }}
+              exit={{ opacity: 0, scale: 0.97, y: 20 }}
+              transition={{ duration: 0.18 }}
               className="fixed bottom-0 right-0 m-8 w-full max-w-md z-50"
             >
               <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col h-[500px]">
@@ -165,32 +174,29 @@ export const AduanaChatbot: React.FC = () => {
                 {/* Mensajes */}
                 <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-gray-50 dark:bg-gray-900/40">
                   {messages.map((msg, i) => (
-                    <div key={i} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-xs px-4 py-2 rounded-2xl shadow text-sm ${msg.from === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none border border-blue-100 dark:border-blue-900'}`}>
-                        {msg.text}
-                        {/* Feedback solo para respuestas del bot */}
-                        {msg.from === 'bot' && i !== 0 && (
-                          <div className="flex gap-1 mt-1">
-                            <button
-                              className={`p-1 rounded-full ${feedback[i] === 'up' ? 'bg-green-200' : 'hover:bg-gray-200'}`}
-                              onClick={() => handleFeedback(i, 'up')}
-                              title="Respuesta útil"
-                              type="button"
-                            >
-                              <ThumbsUp className="h-4 w-4 text-green-600" />
-                            </button>
-                            <button
-                              className={`p-1 rounded-full ${feedback[i] === 'down' ? 'bg-red-200' : 'hover:bg-gray-200'}`}
-                              onClick={() => handleFeedback(i, 'down')}
-                              title="Respuesta poco útil"
-                              type="button"
-                            >
-                              <ThumbsDown className="h-4 w-4 text-red-600" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <ChatMessage key={i} msg={msg} isUser={msg.from === 'user'}>
+                      {/* Feedback solo para respuestas del bot */}
+                      {msg.from === 'bot' && i !== 0 && (
+                        <div className="flex gap-1 mt-1">
+                          <button
+                            className={`p-1 rounded-full ${feedback[i] === 'up' ? 'bg-green-200' : 'hover:bg-gray-200'}`}
+                            onClick={() => setFeedback((f) => ({ ...f, [i]: 'up' }))}
+                            title="Respuesta útil"
+                            type="button"
+                          >
+                            <ThumbsUp className="h-4 w-4 text-green-600" />
+                          </button>
+                          <button
+                            className={`p-1 rounded-full ${feedback[i] === 'down' ? 'bg-red-200' : 'hover:bg-gray-200'}`}
+                            onClick={() => setFeedback((f) => ({ ...f, [i]: 'down' }))}
+                            title="Respuesta poco útil"
+                            type="button"
+                          >
+                            <ThumbsDown className="h-4 w-4 text-red-600" />
+                          </button>
+                        </div>
+                      )}
+                    </ChatMessage>
                   ))}
                   {isThinking && (
                     <div className="flex justify-start">
