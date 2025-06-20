@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { DocumentVerification } from '../components/DocumentVerification';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DocumentVerification } from '../components/DocumentVerification';
 
 const Documentos = () => {
   const [loading, setLoading] = useState(true);

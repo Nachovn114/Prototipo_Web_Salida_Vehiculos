@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import MainLayout from './components/MainLayout';
 import Dashboard from './components/Dashboard';
-import ValidacionDocumental from './components/ValidacionDocumental';
 import RevisionCarga from './components/RevisionCarga';
 import LiveTracking from './components/LiveTracking';
 import Reportes from './pages/Reportes';
@@ -56,7 +55,6 @@ function App() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="pre-declaracion" element={<PreDeclaracion />} />
-          <Route path="validacion" element={<ValidacionDocumental />} />
           <Route path="revision-carga" element={<RevisionCarga />} />
           <Route path="reportes" element={<Reportes />} />
           <Route path="calidad" element={<Calidad />} />
