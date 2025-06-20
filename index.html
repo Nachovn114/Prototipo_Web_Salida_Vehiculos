@@ -2,30 +2,43 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>Frontera Digital</title>
-    <meta name="description" content="Sistema oficial de control de salida vehicular Chile-Argentina" />
-    <meta name="author" content="Gobierno de Chile" />
+    <title>Frontera Digital - Sistema de Control Vehicular Chile-Argentina</title>
+    <meta name="description" content="Sistema oficial del Servicio Nacional de Aduanas para el control de salida vehicular en la frontera Chile-Argentina. Plataforma digital segura y accesible." />
+    <meta name="author" content="Servicio Nacional de Aduanas - Gobierno de Chile" />
+    <meta name="keywords" content="aduana, frontera, vehículos, Chile, Argentina, control, digital, sistema" />
     
     <!-- iOS PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Salida Vehicular">
+    <meta name="apple-mobile-web-app-title" content="Frontera Digital">
     
     <!-- Theme colors for mobile browsers -->
     <meta name="theme-color" content="#1d4ed8">
     <meta name="msapplication-navbutton-color" content="#1d4ed8">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <meta property="og:title" content="Salida Vehicular Chile" />
-    <meta property="og:description" content="Sistema oficial de control de salida vehicular Chile-Argentina" />
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Frontera Digital - Sistema de Control Vehicular" />
+    <meta property="og:description" content="Sistema oficial del Servicio Nacional de Aduanas para el control de salida vehicular Chile-Argentina" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:image" content="/assets/frontera-digital-logo.png" />
+    <meta property="og:url" content="https://frontera-digital.vercel.app" />
+    <meta property="og:site_name" content="Frontera Digital" />
 
+    <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@GobiernodeChile" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:title" content="Frontera Digital - Sistema de Control Vehicular" />
+    <meta name="twitter:description" content="Sistema oficial del Servicio Nacional de Aduanas para el control de salida vehicular Chile-Argentina" />
+    <meta name="twitter:image" content="/assets/frontera-digital-logo.png" />
+    
+    <!-- Accessibility Meta Tags -->
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+    <link rel="canonical" href="https://frontera-digital.vercel.app" />
     
     <!-- Prevent zooming on iOS -->
     <style>
@@ -33,11 +46,61 @@
         -webkit-text-size-adjust: 100%;
         touch-action: manipulation;
       }
+      
+      /* Mejoras de accesibilidad */
+      :focus {
+        outline: 2px solid #2563eb;
+        outline-offset: 2px;
+      }
+      
+      /* Contraste mejorado para accesibilidad */
+      @media (prefers-contrast: high) {
+        :root {
+          --foreground: #000000;
+          --background: #ffffff;
+        }
+      }
+      
+      /* Reducir movimiento para usuarios sensibles */
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
     </style>
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root" role="application" aria-label="Frontera Digital - Sistema de Control Vehicular"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Script para mejorar accesibilidad -->
+    <script>
+      // Mejorar navegación por teclado
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+          document.body.classList.add('keyboard-navigation');
+        }
+      });
+      
+      document.addEventListener('mousedown', function() {
+        document.body.classList.remove('keyboard-navigation');
+      });
+      
+      // Anunciar cambios de página para lectores de pantalla
+      if (window.location.pathname !== '/login') {
+        setTimeout(() => {
+          const announcement = document.createElement('div');
+          announcement.setAttribute('aria-live', 'polite');
+          announcement.setAttribute('aria-atomic', 'true');
+          announcement.className = 'sr-only';
+          announcement.textContent = 'Página cargada correctamente';
+          document.body.appendChild(announcement);
+          setTimeout(() => announcement.remove(), 1000);
+        }, 500);
+      }
+    </script>
   </body>
 </html>

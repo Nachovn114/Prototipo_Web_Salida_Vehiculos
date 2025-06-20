@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import FeatureDemo from '../components/FeatureDemo';
+import LoadingScreen from '../components/LoadingScreen';
 
 const roles = [
   { value: 'conductor', label: 'Conductor', icon: <User className="h-5 w-5 mr-2" />, placeholder: '12.345.678-9' },
@@ -21,6 +22,7 @@ const Login = () => {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [showRegister, setShowRegister] = useState(false);
   const [showFeatureDemo, setShowFeatureDemo] = useState(false);
+  const [showLoadingScreen, setShowLoadingScreen] = useState(false);
   const navigate = useNavigate();
   const [systemStatus, setSystemStatus] = useState<'online' | 'offline' | 'checking'>('checking');
 
@@ -115,11 +117,16 @@ const Login = () => {
     console.log('Login exitoso:', { role, selectedRole: selectedRole?.label });
     console.log('Navegando a /');
 
-    setTimeout(() => {
-      setLoading(false);
-      setLoadingMessage('');
-      navigate('/'); // Cambiar de '/dashboard' a '/' que es donde está el dashboard
-    }, 500);
+    setLoading(false);
+    setLoadingMessage('');
+    
+    // Mostrar pantalla de carga
+    setShowLoadingScreen(true);
+  };
+
+  const handleLoadingComplete = () => {
+    setShowLoadingScreen(false);
+    navigate('/');
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -1069,6 +1076,12 @@ const Login = () => {
       <FeatureDemo 
         isVisible={showFeatureDemo} 
         onClose={() => setShowFeatureDemo(false)} 
+      />
+
+      {/* Componente de pantalla de carga */}
+      <LoadingScreen 
+        isVisible={showLoadingScreen} 
+        onComplete={handleLoadingComplete} 
       />
     </motion.div>
   );

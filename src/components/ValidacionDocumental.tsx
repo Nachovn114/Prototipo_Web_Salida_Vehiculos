@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, Upload, Button, message, Steps, Form, Input } from 'antd';
 import { UploadOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
+import StatusFeedback from './StatusFeedback';
 
 const { Step } = Steps;
 
@@ -19,13 +20,35 @@ const ValidacionDocumental: React.FC = () => {
   ]);
 
   const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [feedback, setFeedback] = useState<{
+    isVisible: boolean;
+    status: 'success' | 'error' | 'warning';
+    message: string;
+  }>({
+    isVisible: false,
+    status: 'success',
+    message: ''
+  });
 
   const handleValidar = (index: number, estado: 'validado' | 'rechazado') => {
     const nuevosDocumentos = [...documentos];
     nuevosDocumentos[index].estado = estado;
     setDocumentos(nuevosDocumentos);
     
+    // Mostrar feedback visual
+    setFeedback({
+      isVisible: true,
+      status: estado === 'validado' ? 'success' : 'error',
+      message: estado === 'validado' 
+        ? `Documento ${documentos[index].tipo} validado correctamente`
+        : `Documento ${documentos[index].tipo} rechazado`
+    });
+    
     message.success(`Documento ${estado === 'validado' ? 'validado' : 'rechazado'} correctamente`);
+  };
+
+  const handleFeedbackComplete = () => {
+    setFeedback(prev => ({ ...prev, isVisible: false }));
   };
 
   const getEstadoIcon = (estado: string) => {
@@ -131,6 +154,14 @@ const ValidacionDocumental: React.FC = () => {
           </div>
         </div>
       </Card>
+
+      {/* Componente de feedback visual */}
+      <StatusFeedback
+        isVisible={feedback.isVisible}
+        status={feedback.status}
+        message={feedback.message}
+        onComplete={handleFeedbackComplete}
+      />
     </div>
   );
 };
