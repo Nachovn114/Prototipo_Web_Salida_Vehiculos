@@ -337,6 +337,35 @@ const formatDate = (dateStr: string) => {
   return date.toLocaleDateString() + ', ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
+// Importa los datos simulados de pasos fronterizos del BorderMap
+const pasos = [
+  {
+    nombre: 'Los Libertadores',
+    estado: 'Medio',
+    tiempo: 25
+  },
+  {
+    nombre: 'Cardenal Samoré',
+    estado: 'Alto',
+    tiempo: 70
+  },
+  {
+    nombre: 'Paso Jama',
+    estado: 'Bajo',
+    tiempo: 10
+  }
+];
+const estadoColor = {
+  'Bajo': 'green',
+  'Medio': 'orange',
+  'Alto': 'red'
+};
+const estadoIcon = {
+  'Bajo': <CheckCircle className="h-5 w-5 text-green-500" />, 
+  'Medio': <AlertTriangle className="h-5 w-5 text-yellow-500 animate-pulse" />, 
+  'Alto': <AlertTriangle className="h-5 w-5 text-red-500 animate-pulse" />
+};
+
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const [notificacionesState, setNotificacionesState] = React.useState(notificaciones);
@@ -586,8 +615,9 @@ const Dashboard: React.FC = () => {
 
       {/* Contenido principal con tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Vista General</TabsTrigger>
+          <TabsTrigger value="mapa">Mapa de Congestión</TabsTrigger>
           <TabsTrigger value="analytics">Analíticas</TabsTrigger>
         </TabsList>
 
@@ -751,6 +781,45 @@ const Dashboard: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="mapa" className="space-y-6">
+          <Card className="bg-gradient-to-br from-blue-50 via-white to-blue-100 shadow-2xl rounded-3xl border-0 hover:shadow-blue-200 transition-shadow duration-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-3 text-2xl font-extrabold text-blue-800">
+                <span className="animate-pulse-slow">
+                  <MapPin className="h-7 w-7 text-blue-500 drop-shadow-lg" />
+                </span>
+                Mapa de Congestión Fronteriza en Tiempo Estimado
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col lg:flex-row gap-6 w-full justify-center items-stretch">
+                <div className="flex-1 min-w-0">
+                  <div className="w-full max-w-3xl p-2 rounded-2xl bg-white/80 shadow-lg border border-blue-100" style={{ boxShadow: '0 0 32px 0 rgba(37,99,235,0.10)' }}>
+                    <BorderMap />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-4 w-full max-w-xs lg:ml-4">
+                  {pasos.map((p, i) => (
+                    <div key={i} className={`rounded-2xl shadow border-l-8 p-4 bg-white flex items-center gap-4 ${p.estado === 'Alto' ? 'border-red-500' : p.estado === 'Medio' ? 'border-yellow-400' : 'border-green-500'}`}>
+                      <div className="flex-shrink-0">
+                        {estadoIcon[p.estado]}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-bold text-lg text-gray-800">{p.nombre}</div>
+                        <div className="text-sm text-gray-500">Estado: <span style={{ color: estadoColor[p.estado] }} className="font-semibold">{p.estado}</span></div>
+                        <div className="text-sm text-gray-700">Tiempo estimado: <span className="font-bold">{p.tiempo} min</span></div>
+                        {p.tiempo > 60 && (
+                          <div className="text-xs text-red-600 font-bold flex items-center gap-1 mt-1"><AlertTriangle className="h-4 w-4" /> Congestión crítica</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
