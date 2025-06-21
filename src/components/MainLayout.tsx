@@ -79,7 +79,7 @@ const menuItems = [
   },
 ];
 
-const MainLayout: React.FC = () => {
+const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { 
@@ -441,7 +441,7 @@ const MainLayout: React.FC = () => {
           {/* Contenido principal */}
           <main className="flex-1 flex flex-col min-w-0">
             <div className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto min-w-0">
-              <Outlet />
+              {children || <Outlet />}
             </div>
           </main>
           

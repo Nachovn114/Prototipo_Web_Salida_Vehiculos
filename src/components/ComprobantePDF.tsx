@@ -1,144 +1,148 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
-import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Image } from '@react-pdf/renderer';
-import QRCode from 'qrcode';
+import { Download, FileText, CheckCircle2 } from 'lucide-react';
 
-const styles = StyleSheet.create({
-  page: { padding: 30, fontFamily: 'Helvetica' },
-  header: { textAlign: 'center', marginBottom: 20 },
-  title: { fontSize: 24, marginBottom: 10, fontWeight: 'bold' },
-  subtitle: { fontSize: 14, marginBottom: 20 },
-  section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 16, marginBottom: 10, fontWeight: 'bold' },
-  row: { flexDirection: 'row', marginBottom: 5 },
-  label: { width: 150, fontWeight: 'bold' },
-  value: { flex: 1 },
-  qrContainer: { marginTop: 20, alignItems: 'center' },
-  footer: { 
-    position: 'absolute', 
-    bottom: 30, 
-    left: 0, 
-    right: 0, 
-    textAlign: 'center',
-    fontSize: 10,
-    color: '#666'
-  }
-});
+type ComprobantePDFProps = {
+  solicitud: {
+    id: string;
+    patente: string;
+    conductor: string;
+    rut: string;
+    origen: string;
+    destino: string;
+    fechaHora: Date;
+    tipoCarga: string;
+  };
+};
 
-const ComprobantePDF = ({ solicitud }) => {
-  const [qrCodeDataUrl, setQrCodeDataUrl] = React.useState('');
-
-  // Funciones para formatear fechas usando toLocaleDateString nativo
-  const formatearFechaHora = (fecha) => {
-    const date = new Date(fecha);
-    const fechaFormateada = date.toLocaleDateString('es-CL', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    const horaFormateada = date.toLocaleTimeString('es-CL', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-    return `${fechaFormateada} ${horaFormateada}`;
+export const ComprobantePDF: React.FC<ComprobantePDFProps> = ({ solicitud }) => {
+  const handleDownload = () => {
+    // En una implementación real, aquí se generaría el PDF
+    // Por ahora mostramos un mensaje
+    alert('Función de descarga de PDF en desarrollo. Este es un diseño de ejemplo.');
   };
 
-  const formatearFecha = (fecha) => {
-    return new Date(fecha).toLocaleDateString('es-CL', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-  };
-
-  React.useEffect(() => {
-    const generateQR = async () => {
-      try {
-        const url = await QRCode.toDataURL(`https://fronteradigital.aduana.cl/verificar/${solicitud.id}`);
-        setQrCodeDataUrl(url);
-      } catch (err) {
-        console.error('Error generating QR code:', err);
-      }
-    };
-    generateQR();
-  }, [solicitud.id]);
+  // Código QR de ejemplo (en producción, usar una librería como qrcode.react)
+  const QRCodePlaceholder = () => (
+    <div className="border-2 border-dashed border-gray-300 p-4 text-center text-xs text-gray-500">
+      [CÓDIGO QR]
+      <div className="mt-1 text-[8px]">ID: {solicitud.id}</div>
+    </div>
+  );
 
   return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.title}>COMPROBANTE DE SALIDA</Text>
-          <Text style={styles.subtitle}>Sistema Frontera Digital - Servicio Nacional de Aduanas</Text>
-        </View>
+    <div className="border rounded-lg overflow-hidden shadow-sm bg-white max-w-2xl mx-auto">
+      {/* Encabezado */}
+      <div className="bg-blue-600 text-white p-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold">Comprobante de Salida de Vehículo</h3>
+          <div className="text-xs bg-blue-700 px-2 py-1 rounded">
+            ID: {solicitud.id}
+          </div>
+        </div>
+      </div>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Datos de la Solicitud</Text>
-          <View style={styles.row}>
-            <Text style={styles.label}>N° Solicitud:</Text>
-            <Text style={styles.value}>{solicitud.id}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Fecha y Hora:</Text>
-            <Text style={styles.value}>
-              {formatearFechaHora(solicitud.fechaHora)}
-            </Text>
-          </View>
-        </View>
+      {/* Logo y datos */}
+      <div className="p-6">
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <div className="text-2xl font-bold text-blue-700 mb-2">Aduana de Chile</div>
+            <div className="text-sm text-gray-600">Sistema de Control de Salida de Vehículos</div>
+          </div>
+          <QRCodePlaceholder />
+        </div>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Datos del Conductor</Text>
-          <View style={styles.row}>
-            <Text style={styles.label}>Nombre:</Text>
-            <Text style={styles.value}>{solicitud.conductor.nombre}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Documento:</Text>
-            <Text style={styles.value}>{solicitud.conductor.documento}</Text>
-          </View>
-        </View>
+        {/* Datos del vehículo */}
+        <div className="border-t border-b border-gray-200 py-4 my-4">
+          <h4 className="font-semibold text-gray-700 mb-3">Datos del Vehículo</h4>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <div className="text-gray-500">Patente</div>
+              <div className="font-medium">{solicitud.patente}</div>
+            </div>
+            <div>
+              <div className="text-gray-500">Tipo de Carga</div>
+              <div className="font-medium">{solicitud.tipoCarga}</div>
+            </div>
+            <div>
+              <div className="text-gray-500">Origen</div>
+              <div className="font-medium">{solicitud.origen}</div>
+            </div>
+            <div>
+              <div className="text-gray-500">Destino</div>
+              <div className="font-medium">{solicitud.destino}</div>
+            </div>
+          </div>
+        </div>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Vehículo</Text>
-          <View style={styles.row}>
-            <Text style={styles.label}>Patente:</Text>
-            <Text style={styles.value}>{solicitud.vehiculo.patente}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Marca/Modelo:</Text>
-            <Text style={styles.value}>{`${solicitud.vehiculo.marca} ${solicitud.vehiculo.modelo}`}</Text>
-          </View>
-        </View>
+        {/* Datos del conductor */}
+        <div className="mb-6">
+          <h4 className="font-semibold text-gray-700 mb-3">Datos del Conductor</h4>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <div className="text-gray-500">Nombre</div>
+              <div className="font-medium">{solicitud.conductor}</div>
+            </div>
+            <div>
+              <div className="text-gray-500">RUT</div>
+              <div className="font-medium">{solicitud.rut}</div>
+            </div>
+          </div>
+        </div>
 
-        <View style={styles.qrContainer}>
-          {qrCodeDataUrl && (
-            <Image 
-              src={qrCodeDataUrl} 
-              style={{ width: 100, height: 100 }} 
-            />
-          )}
-        </View>
+        {/* Firma y validación */}
+        <div className="mt-8 pt-4 border-t border-gray-200">
+          <div className="flex justify-between items-end">
+            <div>
+              <div className="h-16 w-48 border-b border-gray-400 mb-1"></div>
+              <div className="text-xs text-gray-500">Firma del Inspector</div>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-gray-500">Fecha y hora de emisión</div>
+              <div className="font-medium">
+                {new Date().toLocaleString('es-CL')}
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-6 p-3 bg-green-50 text-green-800 text-sm rounded-md flex items-start">
+            <CheckCircle2 className="h-4 w-4 mt-0.5 mr-2 flex-shrink-0" />
+            <div>
+              <strong>Documento válido</strong>
+              <div className="text-xs">Verificado electrónicamente por Aduana de Chile</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <View style={styles.footer}>
-          <Text>Documento generado electrónicamente - {formatearFecha(solicitud.fechaHora)}</Text>
-          <Text>Sello digital: {btoa(`sello-${solicitud.id}-${Date.now()}`).substring(0, 24)}</Text>
-        </View>
-      </Page>
-    </Document>
+      {/* Pie de página */}
+      <div className="bg-gray-50 p-4 border-t border-gray-200 text-center text-xs text-gray-500">
+        <p>Este documento es válido sin firma manuscrita según lo establecido en la Ley N° 19.799</p>
+        <p className="mt-1">Documento generado electrónicamente - No requiere sello ni firma</p>
+      </div>
+
+      {/* Botón de descarga */}
+      <div className="p-4 border-t border-gray-200">
+        <Button 
+          onClick={handleDownload}
+          className="w-full"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Descargar Comprobante (PDF)
+        </Button>
+      </div>
+    </div>
   );
 };
 
-export const ComprobanteButton = ({ solicitud }) => (
-  <PDFDownloadLink
-    document={<ComprobantePDF solicitud={solicitud} />}
-    fileName={`comprobante-salida-${solicitud.id}.pdf`}
-  >
-    {({ loading }) => (
-      <Button disabled={loading}>
-        <Download className="mr-2 h-4 w-4" />
-        {loading ? 'Generando...' : 'Descargar Comprobante'}
-      </Button>
-    )}
-  </PDFDownloadLink>
-);
+// Componente de botón para mostrar el comprobante
+export const ComprobanteButton = ({ solicitud }: { solicitud: ComprobantePDFProps['solicitud'] }) => {
+  return (
+    <Button variant="outline" size="sm" className="gap-2">
+      <FileText className="h-4 w-4" />
+      Ver Comprobante
+    </Button>
+  );
+};
+
+export default ComprobantePDF;

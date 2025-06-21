@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Outlet, Navigate } from 'react-router-dom';
 import MainLayout from './components/MainLayout';
 import Dashboard from './components/Dashboard';
 import RevisionCarga from './components/RevisionCarga';
@@ -15,6 +15,38 @@ import SplashScreen from './components/SplashScreen';
 import PreDeclaracion from './pages/PreDeclaracion';
 import Auditoria from './pages/Auditoria';
 import { useEffect, useState } from 'react';
+
+// Componente para proteger rutas que requieren autenticación
+const ProtectedRoute = ({ children, roles = [] }: { children: React.ReactNode, roles?: string[] }) => {
+  const userRole = localStorage.getItem('userRole') || 'user';
+  
+  // Si no hay roles definidos, cualquier usuario autenticado puede acceder
+  if (roles.length === 0) return <>{children}</>;
+  
+  // Si el usuario tiene uno de los roles permitidos, mostrar el contenido
+  if (roles.includes(userRole)) {
+    return <>{children}</>;
+  }
+  
+  // Si no tiene permiso, redirigir al dashboard
+  return <Navigate to="/" replace />;
+};
+
+// Componente para el layout principal con autenticación
+const AuthenticatedLayout = () => {
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  
+  // Si está en una página de autenticación, no mostrar el layout principal
+  if (isAuthPage) return <Outlet />;
+  
+  // Para el resto de rutas, usar el layout principal
+  return (
+    <MainLayout>
+      <Outlet />
+    </MainLayout>
+  );
+};
 
 function App() {
   const location = useLocation();
@@ -52,7 +84,8 @@ function App() {
       <SplashScreen isVisible={showSplash} onComplete={handleSplashComplete} />
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<MainLayout />}>
+        <Route element={<AuthenticatedLayout />}>
+          {/* Rutas públicas */}
           <Route index element={<Dashboard />} />
           <Route path="pre-declaracion" element={<PreDeclaracion />} />
           <Route path="revision-carga" element={<RevisionCarga />} />
@@ -64,17 +97,23 @@ function App() {
           <Route path="acerca" element={<Acerca />} />
           <Route path="contacto" element={<Contacto />} />
           <Route path="ayuda" element={<Ayuda />} />
-          <Route path="admin/auditoria" element={<Auditoria />} />
+          
+          {/* Ruta de auditoría protegida para administradores */}
+          <Route 
+            path="admin/auditoria" 
+            element={
+              <ProtectedRoute roles={['admin']}>
+                <Auditoria />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Ruta por defecto */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </>
   );
 }
 
-export default function AppWrapper() {
-  return (
-    <Router>
-      <App />
-    </Router>
-  );
-}
+export default App;
