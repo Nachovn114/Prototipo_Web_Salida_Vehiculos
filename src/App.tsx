@@ -61,29 +61,7 @@ const ProtectedRoute = ({ children, roles = [] }: { children: React.ReactNode, r
 
 // Componente para el layout principal con autenticación
 const AuthenticatedLayout = () => {
-  const [showSplash, setShowSplash] = useState(true);
-
-  // Mostrar splash screen solo en la primera carga
-  useEffect(() => {
-    const hasSeenSplash = localStorage.getItem('hasSeenSplash');
-    if (hasSeenSplash) {
-      setShowSplash(false);
-    } else {
-      localStorage.setItem('hasSeenSplash', 'true');
-      const timer = setTimeout(() => setShowSplash(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  if (showSplash) {
-    return <SplashScreen isVisible={showSplash} onComplete={() => setShowSplash(false)} />;
-  }
-
-  return (
-    <MainLayout>
-      <Outlet />
-    </MainLayout>
-  );
+  return <Outlet />;
 };
 
 function App() {
@@ -91,10 +69,12 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       
-      {/* Rutas protegidas */}
+      {/* Rutas protegidas con layout principal */}
       <Route element={
         <ProtectedRoute>
-          <AuthenticatedLayout />
+          <MainLayout>
+            <Outlet />
+          </MainLayout>
         </ProtectedRoute>
       }>
         <Route index element={<Dashboard />} />
@@ -108,17 +88,17 @@ function App() {
         <Route path="acerca" element={<Acerca />} />
         <Route path="contacto" element={<Contacto />} />
         <Route path="ayuda" element={<Ayuda />} />
+        
+        {/* Ruta de administración con protección de roles */}
+        <Route 
+          path="admin/registro-actividad" 
+          element={
+            <ProtectedRoute roles={['admin']}>
+              <RegistroActividad />
+            </ProtectedRoute>
+          } 
+        />
       </Route>
-      
-      {/* Ruta de administración con protección de roles */}
-      <Route 
-        path="admin/registro-actividad" 
-        element={
-          <ProtectedRoute roles={['admin']}>
-            <RegistroActividad />
-          </ProtectedRoute>
-        } 
-      />
       
       {/* Redirección para rutas no encontradas */}
       <Route path="*" element={<Navigate to="/" replace />} />
