@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useTranslation } from 'react-i18next';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { AduanaChatbot } from './AduanaChatbot';
+import AduanaChatbot from './AduanaChatbot';
 import { AnimatePresence } from 'framer-motion';
 import { FileText } from 'lucide-react';
 
