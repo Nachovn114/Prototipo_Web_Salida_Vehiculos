@@ -53,6 +53,137 @@ function generarRut() {
   return `${base.toLocaleString('es-CL')}–${dvStr}`;
 }
 
+// --- Utilidades para inspecciones vehiculares ---
+const estadosInspeccion = ['Aprobado', 'Rechazado', 'Pendiente', 'Aprobado con observaciones'];
+const inspectores = [
+  'Carlos Mendoza', 
+  'María González', 
+  'Pedro Rojas', 
+  'Ana Silva',
+  'Juan Pérez'
+];
+
+const itemsInspeccion = [
+  { id: 'luces', nombre: 'Sistema de iluminación', descripcion: 'Verificación de luces delanteras, traseras y de emergencia' },
+  { id: 'frenos', nombre: 'Sistema de frenos', descripcion: 'Prueba de frenado y estado de pastillas' },
+  { id: 'llantas', nombre: 'Estado de neumáticos', descripcion: 'Profundidad del dibujo y estado general' },
+  { id: 'documentos', nombre: 'Documentación', descripcion: 'Revisión de permisos de circulación y seguro' },
+  { id: 'emisiones', nombre: 'Niveles de emisión', descripcion: 'Control de emisiones contaminantes' },
+  { id: 'chasis', nombre: 'Chasis y carrocería', descripcion: 'Estado estructural del vehículo' },
+  { id: 'seguridad', nombre: 'Elementos de seguridad', descripcion: 'Cinturones, airbags y extintor' },
+  { id: 'vidrios', nombre: 'Vidrios y espejos', descripcion: 'Estado y visibilidad' },
+];
+
+function generarInspeccionAleatoria() {
+  const resultado = {
+    fecha: new Date().toISOString(),
+    inspector: getRandom(inspectores),
+    resultado: getRandom(estadosInspeccion),
+    items: itemsInspeccion.map(item => ({
+      ...item,
+      estado: Math.random() > 0.2 ? 'Aprobado' : 'Rechazado',
+      observaciones: Math.random() > 0.7 ? getRandom([
+        'Sin observaciones',
+        'Revisar en próximo control',
+        'Requiere mantención próxima',
+        'En buen estado'
+      ]) : ''
+    }))
+  };
+  return resultado;
+}
+
+// --- Componente de Inspección ---
+const InspeccionVehicular = () => {
+  const [inspeccion, setInspeccion] = useState(generarInspeccionAleatoria());
+  const [cargando, setCargando] = useState(false);
+
+  const generarNuevaInspeccion = () => {
+    setCargando(true);
+    // Simular tiempo de carga
+    setTimeout(() => {
+      setInspeccion(generarInspeccionAleatoria());
+      setCargando(false);
+    }, 800);
+  };
+
+  return (
+    <Card className="mt-4">
+      <CardHeader>
+        <CardTitle>Inspección Vehicular</CardTitle>
+        <CardDescription>Resultados de la inspección técnica del vehículo</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <p className="text-sm text-muted-foreground">Inspector: {inspeccion.inspector}</p>
+            <p className="text-sm text-muted-foreground">
+              Fecha: {new Date(inspeccion.fecha).toLocaleDateString('es-CL')}
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={generarNuevaInspeccion}
+            disabled={cargando}
+          >
+            {cargando ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generando...
+              </>
+            ) : 'Generar Nueva Inspección'}
+          </Button>
+        </div>
+        
+        <div className="space-y-4">
+          {inspeccion.items.map((item) => (
+            <div key={item.id} className="border rounded-lg p-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-medium">{item.nombre}</h4>
+                  <p className="text-sm text-muted-foreground">{item.descripcion}</p>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  item.estado === 'Aprobado' 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {item.estado}
+                </span>
+              </div>
+              {item.observaciones && (
+                <p className="mt-2 text-sm text-yellow-600">
+                  <strong>Observaciones:</strong> {item.observaciones}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        <div className={`mt-4 p-4 rounded-lg ${
+          inspeccion.resultado === 'Aprobado' 
+            ? 'bg-green-50 text-green-800' 
+            : inspeccion.resultado === 'Rechazado'
+            ? 'bg-red-50 text-red-800'
+            : 'bg-yellow-50 text-yellow-800'
+        }`}>
+          <h4 className="font-medium">Resultado Final: {inspeccion.resultado}</h4>
+          {inspeccion.resultado === 'Aprobado' && (
+            <p className="text-sm">El vehículo cumple con todos los requisitos de seguridad.</p>
+          )}
+          {inspeccion.resultado === 'Rechazado' && (
+            <p className="text-sm">Se encontraron observaciones críticas que impiden la circulación.</p>
+          )}
+          {inspeccion.resultado === 'Aprobado con observaciones' && (
+            <p className="text-sm">El vehículo puede circular pero requiere atención en los ítems marcados.</p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 // --- Componentes de cada paso ---
 
 const Step1 = ({ onNext }: { onNext: (data: any) => void }) => {
@@ -92,20 +223,23 @@ const Step2 = ({ onNext }: { onNext: (data: any) => void }) => {
   };
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-xl font-semibold mb-4">Paso 2: Datos del Vehículo</h2>
-      <div>
-        <Label htmlFor="patente">Patente Chilena</Label>
-        <Input id="patente" value={patente} onChange={e => setPatente(e.target.value)} required />
-      </div>
-      <div>
-        <Label htmlFor="modelo">Marca y Modelo</Label>
-        <Input id="modelo" value={modelo} onChange={e => setModelo(e.target.value)} required />
-      </div>
-       <div className="flex justify-end pt-4">
-        <Button type="submit">Siguiente <ArrowRight className="ml-2 h-4 w-4" /></Button>
-      </div>
-    </form>
+    <>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <h2 className="text-xl font-semibold mb-4">Paso 2: Datos del Vehículo</h2>
+        <div>
+          <Label htmlFor="patente">Patente Chilena</Label>
+          <Input id="patente" value={patente} onChange={e => setPatente(e.target.value)} required />
+        </div>
+        <div>
+          <Label htmlFor="modelo">Marca y Modelo</Label>
+          <Input id="modelo" value={modelo} onChange={e => setModelo(e.target.value)} required />
+        </div>
+        <div className="flex justify-end pt-4">
+          <Button type="submit">Siguiente <ArrowRight className="ml-2 h-4 w-4" /></Button>
+        </div>
+      </form>
+      <InspeccionVehicular />
+    </>
   );
 };
 

@@ -59,9 +59,9 @@ const menuItems = [
     adminOnly: true
   },
   {
-    key: '/admin/auditoria',
+    key: '/admin/registro-actividad',
     icon: <Shield className="h-5 w-5" />,
-    label: 'Auditoría',
+    label: 'Registro de Actividad',
     tourId: 'audit',
     adminOnly: true
   },

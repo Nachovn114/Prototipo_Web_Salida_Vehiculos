@@ -24,7 +24,7 @@ import {
   Bell,
   Archive
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Line, Bar, Pie } from 'react-chartjs-2';
@@ -60,17 +60,22 @@ const containerVariants = {
   }
 };
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.95 },
+// Animation variants for the dashboard cards
+const cardVariants: Variants = {
+  hidden: { 
+    opacity: 0, 
+    y: 20, 
+    scale: 0.98 
+  },
   visible: { 
     opacity: 1, 
     y: 0, 
     scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 15
-    }
+    transition: { 
+      type: "spring" as const,  
+      stiffness: 100, 
+      damping: 10 
+    } 
   }
 };
 
@@ -165,35 +170,40 @@ const recentRequests = [
     driver: 'Juan Pérez',
     vehicle: 'Toyota Hilux 2023',
     status: 'Aprobada',
-    date: '15/01/2024'
+    date: '15/01/2024',
+    riesgo: 'bajo' as const
   },
   {
     id: '2024-002',
     driver: 'María González',
     vehicle: 'Ford Ranger 2022',
     status: 'Pendiente',
-    date: '15/01/2024'
+    date: '15/01/2024',
+    riesgo: 'medio' as const
   },
   {
     id: '2024-003',
-    driver: 'Carlos Rodríguez',
+    driver: 'Carlos Muñoz',
     vehicle: 'Chevrolet S10 2021',
     status: 'Rechazada',
-    date: '14/01/2024'
+    date: '14/01/2024',
+    riesgo: 'alto' as const
   },
   {
     id: '2024-004',
     driver: 'Ana Silva',
     vehicle: 'Nissan Frontier 2023',
-    status: 'En Revisión',
-    date: '14/01/2024'
+    status: 'Aprobada',
+    date: '14/01/2024',
+    riesgo: 'bajo' as const
   },
   {
     id: '2024-005',
-    driver: 'Luis Martínez',
+    driver: 'Luis Rojas',
     vehicle: 'Mitsubishi L200 2022',
-    status: 'Aprobada',
-    date: '14/01/2024'
+    status: 'Pendiente',
+    date: '14/01/2024',
+    riesgo: 'medio' as const
   }
 ];
 
@@ -420,27 +430,18 @@ const WidgetPrediccionFlujo = () => (
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
-  const [notificacionesState, setNotificacionesState] = React.useState(notificaciones);
-  const notificacionesNoLeidas = notificacionesState.filter(n => !n.leida).length;
-  const handleRefresh = () => {
-    toast.success('Datos actualizados', { description: 'Panel refrescado correctamente' });
-  };
-
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [notificationTab, setNotificationTab] = React.useState<'todas' | 'urgentes' | 'archivadas'>('todas');
   const {
     notifications,
+    markAsRead,
     markAllAsRead,
     archiveNotification,
     unarchiveNotification,
   } = useNotifications();
 
-  // Calcular el número de notificaciones no archivadas
+  // Use notifications from the hook instead of local state
   const notificacionesNoArchivadas = notifications.filter(n => !n.archivada).length;
-
-  // Filtrar alertas urgentes (ancladas)
-  const alertasAncladas = notifications.filter(n => !n.archivada && (n.prioridad === 'urgente' || n.prioridad === 'alta'));
-  const notificacionesNormales = notifications.filter(n => !n.archivada && n.prioridad !== 'urgente' && n.prioridad !== 'alta');
 
   const navigate = useNavigate();
 
@@ -473,17 +474,22 @@ const Dashboard: React.FC = () => {
       anomalies.forEach(anomaly => {
         if (anomaly.severity === 'Alta') {
           // Generar notificación urgente anclada
-          archiveNotification({
-            tipo: 'urgente',
-            titulo: anomaly.title,
-            mensaje: anomaly.description,
-            prioridad: 'urgente',
-            archivada: false
-          });
+          const notificationId = Date.now(); // o anomaly.id si está disponible
+          archiveNotification(notificationId);
         }
       });
     });
   }, []);
+
+  const filteredNotifications = React.useMemo(() => {
+    return notifications.filter(notification => {
+      if (notification.archivada) return false;
+      if (notificationTab === 'urgentes') {
+        return notification.prioridad === 'urgente' || notification.prioridad === 'alta';
+      }
+      return true;
+    });
+  }, [notifications, notificationTab]);
 
   return (
     <div className="space-y-6">
@@ -565,10 +571,10 @@ const Dashboard: React.FC = () => {
                         {/* Agrupa por prioridad */}
                         {['urgente', 'alta', 'media', 'baja'].map(prio => (
                           <div key={prio} className="space-y-3">
-                            {notifications.filter(n => n.prioridad === prio && !n.archivada).length > 0 && (
+                            {filteredNotifications.filter(n => n.prioridad === prio).length > 0 && (
                               <div className="text-xs font-bold text-blue-700 uppercase mb-1 mt-2">{prio === 'urgente' ? 'Urgentes' : prio.charAt(0).toUpperCase() + prio.slice(1)}</div>
                             )}
-                            {notifications.filter(n => n.prioridad === prio && !n.archivada).map(n => (
+                            {filteredNotifications.filter(n => n.prioridad === prio).map(n => (
                               <div 
                                 key={n.id} 
                                 className={`flex items-start gap-4 rounded-2xl p-4 shadow border-l-8 ${

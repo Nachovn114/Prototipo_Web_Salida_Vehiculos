@@ -129,59 +129,65 @@ const Reportes = () => {
       <div ref={reportRef} className="space-y-8 p-4 md:p-6 bg-card rounded-lg">
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Solicitudes</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-blue-800">Total Solicitudes</CardTitle>
+              <FileText className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{kpis.totalSolicitudes}</div>
+              <div className="text-2xl font-bold text-blue-900">{kpis.totalSolicitudes}</div>
+              <p className="text-xs text-blue-600 mt-1">+12% vs mes anterior</p>
             </CardContent>
           </Card>
-           <Card>
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Aprobadas</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-sm font-medium text-green-800">Aprobadas</CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{kpis.aprobadas}</div>
+              <div className="text-2xl font-bold text-green-900">{kpis.aprobadas}</div>
+              <p className="text-xs text-green-600 mt-1">Tasa de aprobación: {Math.round((kpis.aprobadas / kpis.totalSolicitudes) * 100) || 0}%</p>
             </CardContent>
           </Card>
-           <Card>
+          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Rechazadas</CardTitle>
-              <XCircle className="h-4 w-4 text-red-500" />
+              <CardTitle className="text-sm font-medium text-red-800">Rechazadas</CardTitle>
+              <XCircle className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{kpis.rechazadas}</div>
+              <div className="text-2xl font-bold text-red-900">{kpis.rechazadas}</div>
+              <p className="text-xs text-red-600 mt-1">Revisar detalles</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tiempo Cruce Promedio</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-purple-800">Tiempo Promedio</CardTitle>
+              <Clock className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{kpis.tiempoPromedio} min</div>
+              <div className="text-2xl font-bold text-purple-900">{kpis.tiempoPromedio} min</div>
+              <p className="text-xs text-purple-600 mt-1">Duración media</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Gráficos */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-          <Card className="lg:col-span-3">
-            <CardHeader>
-              <CardTitle>Flujo de Solicitudes</CardTitle>
+          <Card className="lg:col-span-3 bg-white border border-gray-200 shadow-sm">
+            <CardHeader className="border-b border-gray-100">
+              <CardTitle className="text-lg font-semibold text-gray-800">Flujo de Solicitudes</CardTitle>
+              <p className="text-sm text-gray-500">Solicitudes por día de la semana</p>
             </CardHeader>
-            <CardContent className="h-[300px]">
+            <CardContent className="h-[300px] p-4">
               <Bar data={flujoData} options={{ maintainAspectRatio: false, responsive: true }} />
             </CardContent>
           </Card>
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Distribución de Riesgo</CardTitle>
+          <Card className="lg:col-span-2 bg-white border border-gray-200 shadow-sm">
+            <CardHeader className="border-b border-gray-100">
+              <CardTitle className="text-lg font-semibold text-gray-800">Distribución de Riesgo</CardTitle>
+              <p className="text-sm text-gray-500">Nivel de riesgo de las inspecciones</p>
             </CardHeader>
-            <CardContent className="h-[300px]">
+            <CardContent className="h-[300px] p-4">
               <Pie data={riesgoData} options={{ maintainAspectRatio: false, responsive: true }} />
             </CardContent>
           </Card>

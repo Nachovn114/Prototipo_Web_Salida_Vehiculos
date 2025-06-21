@@ -13,7 +13,7 @@ import Login from './pages/Login';
 import Ayuda from './pages/Ayuda';
 import SplashScreen from './components/SplashScreen';
 import PreDeclaracion from './pages/PreDeclaracion';
-import Auditoria from './pages/Auditoria';
+import RegistroActividad from './pages/RegistroActividad';
 import { useEffect, useState } from 'react';
 
 // Componente para proteger rutas que requieren autenticación
@@ -108,10 +108,10 @@ function App() {
         <Route path="contacto" element={<Contacto />} />
         <Route path="ayuda" element={<Ayuda />} />
         <Route 
-          path="admin/auditoria" 
+          path="admin/registro-actividad" 
           element={
             <ProtectedRoute roles={['admin']}>
-              <Auditoria />
+              <RegistroActividad />
             </ProtectedRoute>
           } 
         />
