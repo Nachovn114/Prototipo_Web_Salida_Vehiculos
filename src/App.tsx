@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Outle
 import MainLayout from './components/MainLayout';
 import Dashboard from './components/Dashboard';
 import RevisionCarga from './components/RevisionCarga';
-import LiveTracking from './components/LiveTracking';
 import Reportes from './pages/Reportes';
 import Calidad from './pages/Calidad';
 import SolicitudDetalle from './pages/SolicitudDetalle';
@@ -14,6 +13,7 @@ import Login from './pages/Login';
 import Ayuda from './pages/Ayuda';
 import SplashScreen from './components/SplashScreen';
 import PreDeclaracion from './pages/PreDeclaracion';
+import Auditoria from './pages/Auditoria';
 import { useEffect, useState } from 'react';
 
 function App() {
@@ -64,6 +64,7 @@ function App() {
           <Route path="acerca" element={<Acerca />} />
           <Route path="contacto" element={<Contacto />} />
           <Route path="ayuda" element={<Ayuda />} />
+          <Route path="admin/auditoria" element={<Auditoria />} />
         </Route>
       </Routes>
     </>

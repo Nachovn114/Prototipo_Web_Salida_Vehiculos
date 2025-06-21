@@ -55,7 +55,15 @@ const menuItems = [
     key: '/reportes',
     icon: <BarChartOutlined />,
     label: 'Reportes',
-    tourId: 'reports'
+    tourId: 'reports',
+    adminOnly: true
+  },
+  {
+    key: '/admin/auditoria',
+    icon: <Shield className="h-5 w-5" />,
+    label: 'Auditoría',
+    tourId: 'audit',
+    adminOnly: true
   },
   {
     key: '/calidad',

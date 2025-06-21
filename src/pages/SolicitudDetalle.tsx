@@ -4,12 +4,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, XCircle, User, Users, Car, FileText, Fingerprint, Package, PenTool, Eye, Upload, AlertCircle, Info, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, User, Users, Car, FileText, Fingerprint, Package, PenTool, Eye, Upload, AlertCircle, Info, Clock, Download } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { ComprobanteButton } from '@/components/ComprobantePDF';
+import { BitacoraExporter } from '@/components/BitacoraExporter';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -41,6 +43,7 @@ const mockSolicitud = {
   ],
   observaciones: '',
   estado: 'Pendiente',
+  riesgo: 'bajo',
 };
 
 const SolicitudDetalle = () => {
@@ -199,7 +202,7 @@ const SolicitudDetalle = () => {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="ml-auto">{getRiskBadge(solicitud.riesgo || 'bajo')}</span>
+              <span className="ml-auto">{getRiskBadge((solicitud.riesgo || 'bajo') as 'bajo' | 'medio' | 'alto')}</span>
             </TooltipTrigger>
             <TooltipContent side="top">
               <div className="flex items-center gap-2">
@@ -209,6 +212,7 @@ const SolicitudDetalle = () => {
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+        <ComprobanteButton solicitud={solicitud} />
       </div>
 
       <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-6 space-y-8 border border-blue-100">
@@ -266,9 +270,9 @@ const SolicitudDetalle = () => {
                   <div key={doc.id} className="p-5 border rounded-2xl bg-gray-50 flex flex-col gap-3 shadow-md">
                     <span className="font-semibold text-blue-900 text-lg">{doc.nombre}</span>
                     <div className="flex items-center gap-3">
-                      {doc.estado === 'Válido' && <Badge className="bg-green-100 text-green-800 border-green-200 text-base px-3 py-1 animate-pulse"><CheckCircle className="h-4 w-4 mr-1" />Válido</Badge>}
-                      {doc.estado === 'Pendiente' && <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 text-base px-3 py-1 animate-pulse"><AlertCircle className="h-4 w-4 mr-1" />Pendiente</Badge>}
-                      {doc.estado === 'Observado' && <Badge className="bg-red-100 text-red-800 border-red-200 text-base px-3 py-1 animate-pulse"><XCircle className="h-4 w-4 mr-1" />Observado</Badge>}
+                      {doc.estado === 'Válido' && <Badge className="bg-green-100 text-green-800 border-green-200 animate-pulse"><CheckCircle className="h-4 w-4 mr-1" />Válido</Badge>}
+                      {doc.estado === 'Pendiente' && <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 animate-pulse"><AlertCircle className="h-4 w-4 mr-1" />Pendiente</Badge>}
+                      {doc.estado === 'Observado' && <Badge className="bg-red-100 text-red-800 border-red-200 animate-pulse"><XCircle className="h-4 w-4 mr-1" />Observado</Badge>}
                     </div>
                     <span className="text-xs text-gray-500">Vence: {doc.vencimiento}</span>
                     <div className="flex flex-wrap gap-2 mt-2">
@@ -478,4 +482,4 @@ const SolicitudDetalle = () => {
   );
 };
 
-export default SolicitudDetalle; 
+export default SolicitudDetalle;
