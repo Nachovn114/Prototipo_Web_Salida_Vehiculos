@@ -91,6 +91,8 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      
+      {/* Rutas protegidas */}
       <Route element={
         <ProtectedRoute>
           <AuthenticatedLayout />
@@ -107,14 +109,15 @@ function App() {
         <Route path="acerca" element={<Acerca />} />
         <Route path="contacto" element={<Contacto />} />
         <Route path="ayuda" element={<Ayuda />} />
-        <Route 
-          path="admin/registro-actividad" 
-          element={
-            <ProtectedRoute roles={['admin']}>
-              <RegistroActividad />
-            </ProtectedRoute>
-          } 
-        />
+      </Route>
+      
+      {/* Ruta de administración con protección de roles */}
+      <Route element={
+        <ProtectedRoute roles={['admin']}>
+          <MainLayout />
+        </ProtectedRoute>
+      }>
+        <Route path="admin/registro-actividad" element={<RegistroActividad />} />
       </Route>
       
       {/* Redirección para rutas no encontradas */}
