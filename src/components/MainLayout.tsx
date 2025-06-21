@@ -31,51 +31,57 @@ const menuItems = [
     key: '/',
     icon: <DashboardOutlined />,
     label: 'Dashboard',
-    tourId: 'dashboard'
+    tourId: 'dashboard',
+    roles: ['admin', 'conductor', 'inspector', 'aduanero'] // Accesible para todos
   },
   {
     key: '/pre-declaracion',
     icon: <FileText className="h-6 w-6" />,
     label: 'Pre-Declaración',
-    tourId: 'pre-declaration'
+    tourId: 'pre-declaration',
+    roles: ['admin', 'conductor', 'aduanero'] // Accesible para conductores y aduaneros
   },
   {
     key: '/inspecciones',
     icon: <CarOutlined />,
     label: 'Inspecciones',
-    tourId: 'inspections'
+    tourId: 'inspections',
+    roles: ['admin', 'inspector'] // Solo admin e inspectores
   },
   {
     key: '/documentos',
     icon: <FileTextOutlined />,
     label: 'Documentos',
-    tourId: 'documents'
+    tourId: 'documents',
+    roles: ['admin', 'conductor', 'aduanero'] // Accesible para conductores y aduaneros
   },
   {
     key: '/reportes',
     icon: <BarChartOutlined />,
     label: 'Reportes',
     tourId: 'reports',
-    adminOnly: true
+    roles: ['admin'] // Solo admin
   },
   {
     key: '/admin/registro-actividad',
     icon: <Shield className="h-5 w-5" />,
     label: 'Registro de Actividad',
     tourId: 'audit',
-    adminOnly: true
+    roles: ['admin'] // Solo admin
   },
   {
     key: '/calidad',
     icon: <SettingOutlined />,
     label: 'Calidad',
-    tourId: 'quality'
+    tourId: 'quality',
+    roles: ['admin'] // Solo admin
   },
   {
     key: '/ayuda',
     icon: <QuestionCircleOutlined />,
     label: 'Ayuda',
-    tourId: 'help'
+    tourId: 'help',
+    roles: ['admin', 'conductor', 'inspector', 'aduanero'] // Accesible para todos
   },
 ];
 
@@ -155,13 +161,15 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   };
   
   // Obtener rol y nombre de usuario
-  const userRole = localStorage.getItem('userRole') || 'inspector';
+  const userRole = localStorage.getItem('userRole') || 'conductor';
   const userName = {
     conductor: 'Conductor',
     inspector: 'Inspector García',
     aduanero: 'Aduanero Soto',
     admin: 'Administrador',
   }[userRole] || 'Usuario';
+
+  const filteredMenuItems = menuItems.filter(item => item.roles.includes(userRole));
 
   // Función para renderizar el indicador de notificaciones
   const renderNotificationBadge = () => {
@@ -210,7 +218,7 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
             <div className="border-t border-white/15 mb-4" />
             {/* Menú principal */}
             <nav className="flex flex-col gap-2 mb-8" role="navigation" aria-label="Navegación principal">
-              {menuItems.map((item) => (
+              {filteredMenuItems.map((item) => (
                 <button
                   key={item.key}
                   onClick={() => { navigate(item.key); setSidebarOpen(false); }}
@@ -346,7 +354,7 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
               
               {/* Menú principal */}
               <nav className="flex flex-col gap-2 mb-8" role="navigation" aria-label="Navegación principal">
-                {menuItems.map((item) => (
+                {filteredMenuItems.map((item) => (
                   <button
                     key={item.key}
                     onClick={() => { navigate(item.key); setSidebarOpen(false); }}

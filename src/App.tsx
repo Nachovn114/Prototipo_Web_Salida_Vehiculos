@@ -24,7 +24,7 @@ const ProtectedRoute = ({ children, roles = [] }: { children: React.ReactNode, r
 
   useEffect(() => {
     const checkAuth = () => {
-      const userRole = localStorage.getItem('userRole');
+      const userRole = localStorage.getItem('userRole') || 'conductor';
       const isLoginPage = location.pathname === '/login';
       
       // Si no hay usuario, redirigir a login
@@ -42,22 +42,21 @@ const ProtectedRoute = ({ children, roles = [] }: { children: React.ReactNode, r
     checkAuth();
   }, [location, navigate]);
   
-  const userRole = localStorage.getItem('userRole') || 'user';
+  const userRole = localStorage.getItem('userRole') || 'conductor';
+  
+  // Verificar si el usuario tiene los roles necesarios
+  const hasRequiredRole = roles.length === 0 || roles.includes(userRole);
   
   if (isLoading) {
     return <SplashScreen isVisible={true} onComplete={() => {}} />;
   }
   
-  // Si no hay roles definidos, cualquier usuario autenticado puede acceder
-  if (roles.length === 0) return <>{children}</>;
-  
-  // Si el usuario tiene uno de los roles permitidos, mostrar el contenido
-  if (userRole && roles.includes(userRole)) {
-    return <>{children}</>;
+  if (!hasRequiredRole) {
+    // Redirigir al dashboard si no tiene permisos
+    return <Navigate to="/" replace />;
   }
   
-  // Si no tiene permiso, redirigir al dashboard
-  return <Navigate to="/" replace />;
+  return <>{children}</>;
 };
 
 // Componente para el layout principal con autenticación
@@ -112,13 +111,14 @@ function App() {
       </Route>
       
       {/* Ruta de administración con protección de roles */}
-      <Route element={
-        <ProtectedRoute roles={['admin']}>
-          <MainLayout />
-        </ProtectedRoute>
-      }>
-        <Route path="admin/registro-actividad" element={<RegistroActividad />} />
-      </Route>
+      <Route 
+        path="admin/registro-actividad" 
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <RegistroActividad />
+          </ProtectedRoute>
+        } 
+      />
       
       {/* Redirección para rutas no encontradas */}
       <Route path="*" element={<Navigate to="/" replace />} />
