@@ -1,4 +1,4 @@
-export interface FormData {
+export interface ConductorFormData {
   // Datos Personales
   nombre: string;
   apellido: string;
@@ -12,6 +12,7 @@ export interface FormData {
   pais: string;
   telefono: string;
   email: string;
+  comuna: string;
 
   // Datos del Vehículo
   patente: string;
@@ -25,29 +26,28 @@ export interface FormData {
   capacidadCarga: string;
   seguro: File | null;
   revisionTecnica: File | null;
+  permisoCirculacion: File | null;
+  licenciaConducir: File | null;
 
   // Credenciales de Acceso
   nombreUsuario: string;
   contrasena: string;
   confirmarContrasena: string;
   aceptaTerminos: boolean;
-  
-  // Documentación
-  licenciaConducir: File | null;
-  permisoCirculacion: File | null;
+  privacidadAceptada: boolean;
   
   // Estado de la solicitud
   estado: 'pendiente' | 'aprobado' | 'rechazado' | 'observado';
   fechaSolicitud: string;
   
   // Datos adicionales
-  motivoViaje: string;
-  destino: string;
-  tiempoEstimado: string;
-  tieneMercancia: boolean;
+  motivoViaje?: string;
+  destino?: string;
+  tiempoEstimado?: string;
+  tieneMercancia?: boolean;
   tipoMercancia?: string;
   valorMercancia?: number;
   observaciones?: string;
 }
 
-export interface FormErrors extends Partial<Record<keyof FormData, string>> {}
+export type FormErrors = Partial<Record<keyof ConductorFormData, string>>;

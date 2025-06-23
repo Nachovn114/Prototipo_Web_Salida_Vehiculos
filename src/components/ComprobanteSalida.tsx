@@ -16,7 +16,7 @@ interface ComprobanteSalidaProps {
   onClose: () => void;
 }
 
-export function ComprobanteSalida({ data, onClose }: ComprobanteSalidaProps) {
+export default function ComprobanteSalida({ data, onClose }: ComprobanteSalidaProps) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white w-full max-w-4xl rounded-lg shadow-xl overflow-hidden">

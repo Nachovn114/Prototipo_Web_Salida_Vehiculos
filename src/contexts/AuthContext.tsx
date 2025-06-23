@@ -1,117 +1,149 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-type UserRole = 'conductor' | 'inspector' | 'aduanero' | 'admin';
+type UserRole = 'conductor' | 'inspector' | 'administrador' | 'funcionario';
 
-interface User {
+export interface User {
   id: string;
-  email?: string;
-  name?: string;
-  role: UserRole;
-  // Add any additional user fields as needed
+  nombre: string;
+  email: string;
+  rol: UserRole;
+  avatar?: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-  login: (credentials: { email: string; password: string; role: UserRole }) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (userData: any) => Promise<void>;
   logout: () => void;
-  // Add other auth methods as needed
+  loading: boolean;
+  error: string | null;
+  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Check for existing session on initial load
+  // Verificar si hay un usuario autenticado al cargar la aplicación
   useEffect(() => {
     const checkAuth = async () => {
-      try {
-        // Check for stored user session
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          // Aquí iría la lógica para validar el token con el backend
+          // Por ahora simulamos un usuario de prueba
+          setUser({
+            id: '1',
+            nombre: 'Usuario de Prueba',
+            email: 'usuario@ejemplo.com',
+            rol: 'conductor',
+          });
+        } catch (err) {
+          console.error('Error al verificar autenticación:', err);
+          localStorage.removeItem('token');
         }
-      } catch (error) {
-        console.error('Error checking auth status:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
     checkAuth();
   }, []);
 
-  const login = async (credentials: { email: string; password: string; role: UserRole }) => {
+  const login = async (email: string, password: string) => {
     setLoading(true);
+    setError(null);
+    
     try {
-      // Replace this with your actual authentication API call
-      // const response = await api.post('/auth/login', credentials);
+      // Aquí iría la llamada real a la API
+      // const response = await api.post('/auth/login', { email, password });
       
-      // Mock response for now
-      const mockUser: User = {
-        id: '123',
-        email: credentials.email,
-        name: 'Test User',
-        role: credentials.role,
+      // Simulamos una respuesta exitosa
+      const response = {
+        data: {
+          user: {
+            id: '1',
+            nombre: 'Usuario de Prueba',
+            email,
+            rol: 'conductor',
+          },
+          token: 'fake-jwt-token',
+        },
       };
+
+      localStorage.setItem('token', response.data.token);
+      setUser(response.data.user);
+      navigate('/dashboard');
+    } catch (err) {
+      setError('Credenciales inválidas. Por favor, intente nuevamente.');
+      console.error('Error al iniciar sesión:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (userData: any) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Aquí iría la llamada real a la API
+      // const response = await api.post('/auth/register', userData);
       
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      
-      // Redirect based on role
-      switch(credentials.role) {
-        case 'admin':
-          navigate('/admin/dashboard');
-          break;
-        case 'aduanero':
-          navigate('/aduanero/dashboard');
-          break;
-        case 'inspector':
-          navigate('/inspector/dashboard');
-          break;
-        case 'conductor':
-        default:
-          navigate('/conductor/dashboard');
-      }
-    } catch (error) {
-      console.error('Login failed:', error);
-      throw error; // Re-throw to handle in the component
+      // Simulamos una respuesta exitosa
+      const response = {
+        data: {
+          user: {
+            id: '1',
+            nombre: userData.nombre,
+            email: userData.email,
+            rol: 'conductor',
+          },
+          token: 'fake-jwt-token',
+        },
+      };
+
+      localStorage.setItem('token', response.data.token);
+      setUser(response.data.user);
+      navigate('/dashboard');
+    } catch (err) {
+      setError('Error al registrar el usuario. Por favor, intente nuevamente.');
+      console.error('Error al registrar:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
     setUser(null);
-    localStorage.removeItem('user');
     navigate('/login');
   };
 
-  const value = {
-    user,
-    isAuthenticated: !!user,
-    loading,
-    login,
-    logout,
-  };
-
   return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        register,
+        logout,
+        loading,
+        error,
+        isAuthenticated: !!user,
+      }}
+    >
+      {children}
     </AuthContext.Provider>
   );
 };
 
-// Custom hook to use the auth context
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
   }
   return context;
 };
