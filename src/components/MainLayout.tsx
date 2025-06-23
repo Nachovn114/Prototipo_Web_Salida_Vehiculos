@@ -25,6 +25,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import AduanaChatbot from './AduanaChatbot';
 import { AnimatePresence } from 'framer-motion';
 import { FileText } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const menuItems = [
   {
@@ -113,6 +115,7 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const { t, i18n } = useTranslation();
+  const { user, logout } = useAuth();
   
   React.useEffect(() => {
     if (!showNotifications) return;
@@ -245,7 +248,18 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
                     <User className="h-12 w-12 text-white bg-blue-800 rounded-full p-2 shadow-md" aria-hidden="true" />
                   </div>
                   <div className="text-white font-extrabold text-lg tracking-tight drop-shadow text-center">{userName}</div>
-                  <div className="text-xs font-semibold text-blue-100 bg-blue-800/60 px-3 py-1 rounded-full shadow-sm uppercase tracking-widest mt-1" style={{letterSpacing: '0.08em'}}>{userRole.charAt(0).toUpperCase() + userRole.slice(1)}</div>
+                  <div className="text-xs font-semibold text-blue-100 bg-blue-800/60 px-3 py-1 rounded-full shadow-sm uppercase tracking-widest mt-1 mb-3" style={{letterSpacing: '0.08em'}}>
+                    {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+                  </div>
+                  <div className="text-sm text-blue-100 mb-3">{user?.email || 'usuario@ejemplo.cl'}</div>
+                  <Button 
+                    onClick={logout}
+                    variant="outline"
+                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border-white/20 text-white hover:text-white backdrop-blur-sm text-sm px-4 py-2 h-9"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Cerrar Sesión
+                  </Button>
                 </div>
               </div>
               {/* Acciones rápidas ordenadas */}

@@ -1,1062 +1,336 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, User, Key, UserCheck, UserCog, UserPlus, Loader2, X, Mail, UserCircle, HelpCircle, Globe, Info, Wifi, WifiOff, Server, Zap, AlertCircle, CheckCircle as CheckCircleIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
-import FeatureDemo from '../components/FeatureDemo';
-import LoadingScreen from '../components/LoadingScreen';
-import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
+import { User, Search, Shield, Settings, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
-const roles = [
-  { value: 'conductor', label: 'Conductor', icon: <User className="h-5 w-5 mr-2" />, placeholder: '12.345.678-9' },
-  { value: 'inspector', label: 'Inspector', icon: <UserCheck className="h-5 w-5 mr-2" />, placeholder: 'INS-2024' },
-  { value: 'aduanero', label: 'Aduanero', icon: <UserCog className="h-5 w-5 mr-2" />, placeholder: 'ADU-2024' },
-  { value: 'admin', label: 'Administrador', icon: <UserPlus className="h-5 w-5 mr-2" />, placeholder: 'ADMIN-2024' },
-];
+type UserRole = "conductor" | "inspector" | "aduanero" | "admin";
 
 const Login = () => {
-  const { t } = useTranslation();
-  const [rut, setRut] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('conductor');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('');
-  const [showRegister, setShowRegister] = useState(false);
-  const [showFeatureDemo, setShowFeatureDemo] = useState(false);
-  const [showLoadingScreen, setShowLoadingScreen] = useState(false);
+  const { login } = useAuth();
+  const [loginData, setLoginData] = useState({
+    role: 'conductor' as UserRole,
+    identification: '',
+    password: '',
+    rememberMe: false
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
   const navigate = useNavigate();
-  const [systemStatus, setSystemStatus] = useState<'online' | 'offline' | 'checking'>('checking');
 
-  // Estados para el formulario de registro
-  const [registerData, setRegisterData] = useState({
-    fullName: '',
-    email: '',
-    registerRole: 'conductor',
-    registerPassword: '',
-    confirmPassword: ''
-  });
-  const [registerLoading, setRegisterLoading] = useState(false);
-
-  // Estados para validaciones visuales con mensajes de error
-  const [fieldErrors, setFieldErrors] = useState({
-    fullName: '',
-    email: '',
-    registerPassword: '',
-    confirmPassword: ''
-  });
-
-  const selectedRole = roles.find(r => r.value === role);
-
-  // Función para validar campos en tiempo real y devolver mensaje de error
-  const validateField = (field: keyof typeof fieldErrors, value: string) => {
-    let errorMessage = '';
-    
-    switch (field) {
-      case 'fullName':
-        if (!value.trim()) errorMessage = 'El nombre es obligatorio.';
-        else if (value.trim().length < 3) errorMessage = 'Debe tener al menos 3 caracteres.';
-        break;
-      case 'email':
-        if (!value.trim()) errorMessage = 'El email es obligatorio.';
-        else if (!/^\S+@\S+\.\S+$/.test(value)) errorMessage = 'Formato de email inválido.';
-        break;
-      case 'registerPassword':
-        if (!value) errorMessage = 'La contraseña es obligatoria.';
-        else if (value.length < 6) errorMessage = 'Mínimo 6 caracteres.';
-        break;
-      case 'confirmPassword':
-        if (!value) errorMessage = 'La confirmación es obligatoria.';
-        else if (value !== registerData.registerPassword) errorMessage = 'Las contraseñas no coinciden.';
-        break;
-    }
-    
-    setFieldErrors(prev => ({ ...prev, [field]: errorMessage }));
-    return !errorMessage;
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!role) {
-      setError('Por favor selecciona tu rol');
-      return;
-    }
-    
-    if (!rut.trim()) {
-      setError('Por favor ingresa tu identificación');
-      return;
-    }
-    
-    if (!password.trim()) {
-      setError('Por favor ingresa tu contraseña');
-      return;
-    }
-
-    setError('');
-    setLoading(true);
-    
-    // Simulación de verificación de credenciales con animaciones progresivas
-    const steps = [
-      { message: 'Verificando credenciales...', duration: 800 },
-      { message: 'Validando permisos de acceso...', duration: 600 },
-      { message: 'Conectando con servidor institucional...', duration: 700 },
-      { message: 'Cargando perfil de usuario...', duration: 500 },
-      { message: 'Inicializando sistema...', duration: 400 }
-    ];
-
-    for (let i = 0; i < steps.length; i++) {
-      setLoadingMessage(steps[i].message);
-      await new Promise(resolve => setTimeout(resolve, steps[i].duration));
-    }
-
-    // Simulación de éxito
-    toast.success('¡Acceso exitoso!', {
-      description: `Bienvenido ${selectedRole?.label} al Sistema Frontera Digital`,
-      duration: 3000,
-    });
-
-    // Guardar rol en localStorage para simular sesión
-    localStorage.setItem('userRole', role);
-    
-    // Log de debug
-    console.log('Login exitoso:', { role, selectedRole: selectedRole?.label });
-    console.log('Navegando a /');
-
-    setLoading(false);
-    setLoadingMessage('');
-    
-    // Mostrar pantalla de carga
-    setShowLoadingScreen(true);
-  };
-
-  const handleLoadingComplete = () => {
-    setShowLoadingScreen(false);
-    navigate('/');
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validar todos los campos antes de enviar
-    const isFullNameValid = validateField('fullName', registerData.fullName);
-    const isEmailValid = validateField('email', registerData.email);
-    const isPasswordValid = validateField('registerPassword', registerData.registerPassword);
-    const isConfirmPasswordValid = validateField('confirmPassword', registerData.confirmPassword);
-
-    if (!isFullNameValid || !isEmailValid || !isPasswordValid || !isConfirmPasswordValid) {
-      toast.error('Por favor, corrige los errores en el formulario.');
-      return;
-    }
-
-    try {
-      setRegisterLoading(true);
-      
-      // Simulación de proceso de registro
-      toast.promise(new Promise(resolve => setTimeout(resolve, 2000)), {
-        loading: 'Creando tu cuenta...',
-        success: () => {
-          // Guardar datos de registro en localStorage
-          const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-          const newUser = { id: Date.now(), ...registerData, createdAt: new Date().toISOString() };
-          users.push(newUser);
-          localStorage.setItem('registeredUsers', JSON.stringify(users));
-          
-          // Cerrar modal y limpiar formulario
-          setShowRegister(false);
-          setRegisterData({ fullName: '', email: '', registerRole: 'conductor', registerPassword: '', confirmPassword: '' });
-          setFieldErrors({ fullName: '', email: '', registerPassword: '', confirmPassword: '' });
-          
-          return '¡Registro exitoso! Ya puedes iniciar sesión.';
-        },
-        error: 'Error en el registro. Por favor, intenta nuevamente.'
-      });
-      
-    } catch (error) {
-      // El toast.promise ya maneja el error
-    } finally {
-      setRegisterLoading(false);
-    }
-  };
-
-  // Simular verificación de estado del sistema
+  // Verificar el tamaño de la pantalla
   useEffect(() => {
-    const checkSystemStatus = async () => {
-      setSystemStatus('checking');
-      // Simular verificación de conectividad
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setSystemStatus('online');
-      
-      // Mostrar notificación de estado
-      toast.success('Sistema conectado', {
-        description: 'Servidor institucional disponible',
-        duration: 2000,
-      });
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth < 1024);
     };
-
-    checkSystemStatus();
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
+  const roles: Array<{ id: UserRole; label: string; icon: React.ReactElement }> = [
+    { id: 'conductor', label: 'Conductor', icon: <User size={20} /> },
+    { id: 'inspector', label: 'Inspector', icon: <Search size={20} /> },
+    { id: 'aduanero', label: 'Aduanero', icon: <Shield size={20} /> },
+    { id: 'admin', label: 'Administrador', icon: <Settings size={20} /> },
+  ];
+
+  const getInputConfig = () => {
+    switch(loginData.role) {
+      case 'conductor':
+        return {
+          label: 'RUT',
+          placeholder: '12.345.678-9',
+          type: 'text',
+          helpText: 'Ingresa tu RUT con puntos y guión',
+          pattern: '^\\d{1,2}\\.?\\d{3}\\.?\\d{3}[-][0-9Kk]$'
+        };
+      case 'inspector':
+        return {
+          label: 'ID de Inspector',
+          placeholder: 'INS-2025',
+          type: 'text',
+          helpText: 'Ingresa tu ID institucional',
+          pattern: '^INS-\\d{4}$'
+        };
+      case 'aduanero':
+        return {
+          label: 'ID Aduanero',
+          placeholder: 'ADU-7411',
+          type: 'text',
+          helpText: 'Ingresa tu ID funcional',
+          pattern: '^ADU-\\d{4}$'
+        };
+      case 'admin':
+        return {
+          label: 'Correo Institucional',
+          placeholder: 'usuario@aduana.cl',
+          type: 'email',
+          helpText: 'Ingresa tu correo institucional',
+          pattern: '^[a-zA-Z0-9._%+-]+@aduana\\.cl$'
+        };
+      default:
+        return {
+          label: 'Identificación',
+          placeholder: 'Ingresa tu identificación',
+          type: 'text',
+          helpText: '',
+          pattern: '.*'
+        };
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setLoginData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleRoleChange = (roleId: UserRole) => {
+    setLoginData(prev => ({
+      ...prev,
+      role: roleId,
+      identification: '' // Reset identification when changing role
+    }));
+  };
+
+  // Credenciales predefinidas para cada rol
+  const credentials = {
+    conductor: {
+      identification: '12.345.678-9',
+      password: 'conductor123',
+      name: 'Juan Pérez',
+      email: 'jperez@conductor.cl'
+    },
+    inspector: {
+      identification: 'INS-2025',
+      password: 'inspector123',
+      name: 'María González',
+      email: 'mgonzalez@aduana.cl'
+    },
+    aduanero: {
+      identification: 'ADU-7411',
+      password: 'aduanero123',
+      name: 'Carlos Rojas',
+      email: 'crojas@aduana.cl'
+    },
+    admin: {
+      identification: 'admin@aduana.cl',
+      password: 'admin123',
+      name: 'Administrador',
+      email: 'admin@aduana.cl'
+    }
+  };
+
+  // Efecto para rellenar automáticamente las credenciales cuando cambia el rol
+  useEffect(() => {
+    const role = loginData.role as keyof typeof credentials;
+    setLoginData(prev => ({
+      ...prev,
+      identification: credentials[role].identification,
+      password: credentials[role].password
+    }));
+  }, [loginData.role]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const role = loginData.role as keyof typeof credentials;
+      const userCredentials = credentials[role];
+      
+      // Usar el email del usuario para el login, o una cadena vacía si no está definido
+      await login({
+        email: userCredentials.email || '',
+        password: userCredentials.password,
+        role: loginData.role
+      });
+      
+      // La redirección se maneja en el AuthContext
+    } catch (error) {
+      console.error('Error en el inicio de sesión:', error);
+      alert('Ocurrió un error al iniciar sesión. Por favor, intente nuevamente.');
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-200 p-4 sm:p-8">
-      {/* Indicador de estado del sistema */}
-      <motion.div 
-        className="fixed top-4 right-4 z-50"
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3, delay: 0.5 }}
-        style={{ willChange: 'auto' }}
-      >
-        <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-white/20">
-          {systemStatus === 'checking' && (
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              style={{ willChange: 'transform' }}
-            >
-              <Server className="h-4 w-4 text-yellow-500" />
-            </motion.div>
-          )}
-          {systemStatus === 'online' && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              style={{ willChange: 'transform' }}
-            >
-              <Wifi className="h-4 w-4 text-green-500" />
-            </motion.div>
-          )}
-          {systemStatus === 'offline' && (
-            <WifiOff className="h-4 w-4 text-red-500" />
-          )}
-          <span className="text-xs font-medium text-gray-700">
-            {systemStatus === 'checking' && 'Verificando...'}
-            {systemStatus === 'online' && 'Sistema Online'}
-            {systemStatus === 'offline' && 'Sistema Offline'}
-          </span>
-        </div>
-      </motion.div>
+    <div 
+      className="fixed inset-0 flex items-center justify-center p-4 bg-cover bg-center bg-fixed overflow-hidden"
+      style={{
+        backgroundImage: 'url(/images/login-bg.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+      }}>
       
-      {/* Patrón de fondo - optimizado para scroll */}
-      <div 
-        className="absolute inset-0 bg-[url('/assets/pattern.svg')] bg-center opacity-5"
-        aria-hidden="true"
-        style={{ 
-          willChange: 'auto',
-          transform: 'translateZ(0)',
-          backfaceVisibility: 'hidden'
-        }}
-      />
-      
-      {/* Overlay con gradiente - optimizado */}
-      <div 
-        className="absolute inset-0 bg-gradient-to-br from-red-900/20 via-transparent to-red-900/20"
-        aria-hidden="true"
-        style={{ 
-          willChange: 'auto',
-          transform: 'translateZ(0)',
-          backfaceVisibility: 'hidden'
-        }}
-      />
-      
-      {/* Contenido - optimizado para scroll */}
-      <div className="relative z-10 w-full max-w-md px-4" style={{ willChange: 'auto' }}>
-        {/* Logo y título - animación simplificada */}
-        <motion.div 
-          className="flex flex-col items-center mb-6"
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.4 }}
-          style={{ willChange: 'auto' }}
-        >
-          <motion.div 
-            className="bg-white/95 rounded-2xl p-4 shadow-lg mb-4"
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            style={{ willChange: 'transform' }}
-          >
-            <img 
-              src="/assets/frontera-digital-logo.png" 
-              alt="Logo de Frontera Digital"
-              className="h-24 w-24 drop-shadow-lg"
-              style={{ willChange: 'auto' }}
-            />
-          </motion.div>
-          <motion.h1 
-            className="text-3xl font-black text-white mb-2 text-center drop-shadow-lg"
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-            style={{ willChange: 'auto' }}
-          >
-            {t('Bienvenido a Frontera Digital')}
-          </motion.h1>
-          <motion.h2 
-            className="text-xl text-white/90 font-medium text-center drop-shadow"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-            style={{ willChange: 'auto' }}
-          >
-            Sistema oficial de control de salida vehicular
-          </motion.h2>
-        </motion.div>
-
-        {/* Formulario - optimizado para scroll */}
-        <motion.form 
-          onSubmit={handleLogin} 
-          className="bg-white/95 rounded-2xl shadow-xl p-8 space-y-6 border border-white/20"
-          aria-label="Formulario de inicio de sesión"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-          style={{ 
-            willChange: 'auto',
-            transform: 'translateZ(0)',
-            backfaceVisibility: 'hidden'
-          }}
-        >
-          <motion.div 
-            className="flex items-center gap-3 pb-4 border-b border-blue-100"
-            initial={{ x: -10, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.4 }}
-            style={{ willChange: 'auto' }}
-          >
-            <motion.div 
-              className="bg-blue-100 p-3 rounded-xl"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              style={{ willChange: 'transform' }}
-            >
-              <Shield className="h-8 w-8 text-blue-700" aria-hidden="true" />
-            </motion.div>
-            <div>
-              <h2 className="text-2xl font-extrabold text-blue-900 leading-tight">
-                Aduana Chile
-              </h2>
-              <p className="text-sm text-blue-600 font-medium">
-                Portal de Acceso Institucional
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Selector de rol - optimizado */}
-          <motion.div 
-            className="space-y-2"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.5 }}
-            style={{ willChange: 'auto' }}
-          >
-            <div className="flex items-center gap-2">
-              <label className="block text-sm font-medium text-blue-900">
-                Selecciona tu rol
-              </label>
-              <motion.div
-                className="relative group"
-                whileHover={{ scale: 1.05 }}
-                style={{ willChange: 'transform' }}
-              >
-                <HelpCircle className="h-4 w-4 text-blue-500 cursor-help" />
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                  Define tus permisos y acceso al sistema
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                </div>
-              </motion.div>
-            </div>
-            <div 
-              className="grid grid-cols-2 gap-2"
-              role="radiogroup"
-              aria-label="Selección de rol de usuario"
-            >
-              {roles.map((r, index) => (
-                <motion.button
-                  type="button"
-                  key={r.value}
-                  className={`flex items-center px-3 py-2 rounded-xl border-2 transition-all duration-200 ${
-                    role === r.value 
-                      ? 'bg-blue-100 border-blue-500 text-blue-900 font-bold shadow-md' 
-                      : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50'
-                  }`}
-                  onClick={() => setRole(r.value)}
-                  aria-label={`Seleccionar rol: ${r.label}`}
-                  aria-pressed={role === r.value}
-                  role="radio"
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ duration: 0.2, delay: 0.6 + index * 0.05 }}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  style={{ willChange: 'transform' }}
-                >
-                  {r.icon} {r.label}
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Campos de acceso - optimizados */}
-          <motion.div 
-            className="space-y-4"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.7 }}
-            style={{ willChange: 'auto' }}
-          >
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <label className="block text-sm font-medium text-blue-900" htmlFor="rut">
-                  Identificación
-                </label>
-                <motion.div
-                  className="relative group"
-                  whileHover={{ scale: 1.05 }}
-                  style={{ willChange: 'transform' }}
-                >
-                  <HelpCircle className="h-4 w-4 text-blue-500 cursor-help" />
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                    {selectedRole?.helpText || 'Ingresa tu RUT o correo institucional'}
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                  </div>
-                </motion.div>
-              </div>
-              <div className="relative">
-                <input
-                  id="rut"
-                  type="text"
-                  className="w-full border-2 rounded-xl px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200"
-                  value={rut}
-                  onChange={e => setRut(e.target.value)}
-                  placeholder={selectedRole?.placeholder}
-                  autoFocus
-                  aria-label="Ingresa tu identificación"
-                  aria-required="true"
-                  aria-describedby="rut-help"
+      {/* Contenedor principal */}
+      <div className={`relative z-10 w-full max-w-6xl ${isSmallScreen ? 'flex-col h-auto my-auto' : 'flex h-[85vh]'}`}>
+        
+        {/* Columna izquierda - Visual institucional */}
+        <div className={`flex flex-col ${isSmallScreen ? 'w-full py-8' : 'w-[55%] text-white px-8 mt-auto mb-16'}`}>
+          <div className="max-w-md">
+            {/* Contenedor de logo y título en línea */}
+            <div className="flex items-center mb-8">
+              <div className="w-20 h-20 flex-shrink-0 flex items-center justify-center bg-white rounded-2xl shadow-sm mr-6">
+                <img 
+                  src="/assets/frontera-digital-logo.png" 
+                  alt="Frontera Digital" 
+                  className="w-14 h-14 object-contain"
                 />
-                <User className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
               </div>
-              <div id="rut-help" className="text-xs text-gray-500 mt-1">
-                {selectedRole?.helpText || 'Formato: 12.345.678-9 o correo@institucion.cl'}
+              <div>
+                <h1 className="text-3xl font-extrabold leading-tight text-white">
+                  Bienvenido a <br />
+                  <span className="text-amber-400">Frontera Digital</span>
+                </h1>
               </div>
             </div>
             
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <label className="block text-sm font-medium text-blue-900" htmlFor="password">
-                  Contraseña
-                </label>
-                <motion.div
-                  className="relative group"
-                  whileHover={{ scale: 1.05 }}
-                  style={{ willChange: 'transform' }}
-                >
-                  <HelpCircle className="h-4 w-4 text-blue-500 cursor-help" />
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                    Contraseña de acceso al sistema institucional
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                  </div>
-                </motion.div>
-              </div>
-              <div className="relative">
-                <input
-                  id="password"
-                  type="password"
-                  className="w-full border-2 rounded-xl px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  aria-label="Ingresa tu contraseña"
-                  aria-required="true"
-                  aria-describedby="password-help"
-                />
-                <Key className="h-5 w-5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
-              </div>
-              <div id="password-help" className="text-xs text-gray-500 mt-1">
-                Mínimo 8 caracteres, incluir mayúsculas y números
-              </div>
-            </div>
+            {/* Título principal */}
+            <p className="text-base text-white/90 mb-2">
+              Sistema oficial para el control de salida vehicular terrestre
+            </p>
 
-            {/* Opciones adicionales de seguridad */}
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-gray-600 cursor-pointer select-none">
+            <p className="text-sm text-white/70 mb-6">
+              Plataforma segura y moderna para la gestión del tránsito fronterizo Chile – Argentina
+            </p>
+            
+            {/* Estado del sistema */}
+            <div className="inline-flex items-center text-white text-xs bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-sm">
+              <span className="w-2 h-2 rounded-full bg-green-400 mr-2"></span>
+              Sistema en línea
+            </div>
+          </div>
+        </div>
+        
+        {/* Columna derecha - Formulario */}
+        <div className={`bg-white flex flex-col justify-center ${
+          isSmallScreen ? 'w-full' : 'w-[45%] min-w-[380px] max-w-[380px] rounded-2xl border border-gray-200 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)]'
+        }`}>
+          <div className="w-full px-8 py-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-1.5">Iniciar Sesión</h2>
+            <p className="text-gray-600 text-xs mb-6">Ingresa tus credenciales para acceder al sistema</p>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Selector de rol */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-2">Selecciona tu rol</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {roles.map((role) => (
+                    <button
+                      key={role.id}
+                      type="button"
+                      onClick={() => handleRoleChange(role.id)}
+                      className={`flex flex-col items-center justify-center p-1.5 rounded-lg border-2 transition-all text-xs h-[48px] ${
+                        loginData.role === role.id
+                          ? 'border-[#4F46E5] bg-[#4F46E5] text-white shadow-md'
+                          : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className={`${loginData.role === role.id ? 'text-white' : 'text-gray-500'}`}>
+                        {React.cloneElement(role.icon, { size: 16 })}
+                      </span>
+                      <span className="text-[11px]">{role.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Campo de Identificación Dinámico */}
+              <div>
+                <label htmlFor="identification" className="block text-xs font-medium text-gray-700 mb-1">
+                  {getInputConfig().label}
+                </label>
+                <input
+                  type={getInputConfig().type}
+                  id="identification"
+                  name="identification"
+                  value={loginData.identification}
+                  onChange={handleInputChange}
+                  placeholder={getInputConfig().placeholder}
+                  className="w-full h-[42px] px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent text-sm placeholder-gray-400"
+                  pattern={getInputConfig().pattern}
+                  required
+                />
+                {getInputConfig().helpText && (
+                  <p className="mt-1 text-xs text-gray-500">{getInputConfig().helpText}</p>
+                )}
+              </div>
+
+              {/* Campo Contraseña */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="password" className="block text-xs font-medium text-gray-700">Contraseña</label>
+                  <a href="#" className="text-xs text-[#4F46E5] hover:underline">¿Olvidaste tu contraseña?</a>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    value={loginData.password}
+                    onChange={handleInputChange}
+                    className="w-full h-[42px] px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent text-sm"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Recordar credenciales */}
+              <div className="flex items-center">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  aria-label="Recordar sesión"
+                  id="rememberMe"
+                  name="rememberMe"
+                  checked={loginData.rememberMe}
+                  onChange={handleInputChange}
+                  className="h-3.5 w-3.5 text-[#4F46E5] rounded border-gray-300 focus:ring-[#4F46E5]"
                 />
-                Recordar sesión
-              </label>
-              <motion.button
-                type="button"
-                className="text-blue-600 hover:text-blue-700 font-medium transition-colors flex items-center gap-1"
-                onClick={(e) => {
-                  e.preventDefault();
-                  toast.info("Función no disponible en el prototipo", {
-                    description: "Esta es una simulación académica"
-                  });
-                }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                style={{ willChange: 'transform' }}
-              >
-                ¿Olvidaste tu contraseña?
-                <Info className="h-3 w-3" />
-              </motion.button>
-            </div>
-          </motion.div>
-
-          <AnimatePresence mode="wait">
-            {error && (
-              <motion.div 
-                className="bg-red-50 text-red-700 p-3 rounded-lg text-sm font-medium flex items-center gap-2"
-                role="alert"
-                aria-live="polite"
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                transition={{ duration: 0.2 }}
-                style={{ willChange: 'auto' }}
-              >
-                <Shield className="h-4 w-4" aria-hidden="true" />
-                {error}
-              </motion.div>
-            )}
-
-            {loading && loadingMessage && (
-              <motion.div 
-                className="bg-blue-50 text-blue-700 p-3 rounded-lg text-sm font-medium flex items-center gap-2"
-                role="status"
-                aria-live="polite"
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                transition={{ duration: 0.2 }}
-                style={{ willChange: 'auto' }}
-              >
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                {loadingMessage}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <motion.button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70 relative overflow-hidden"
-            aria-label="Iniciar sesión"
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.8 }}
-            style={{ willChange: 'transform' }}
-          >
-            {loading ? (
-              <>
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                  animate={{
-                    x: ['-100%', '100%']
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                  style={{ willChange: 'transform' }}
-                />
-                <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-                Verificando...
-              </>
-            ) : (
-              <>
-                <Shield className="h-5 w-5" aria-hidden="true" />
-                Ingresar al Sistema
-              </>
-            )}
-          </motion.button>
-
-          {/* Enlaces institucionales - optimizados */}
-          <motion.div 
-            className="grid grid-cols-3 gap-4 text-center text-xs text-gray-500"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.9 }}
-            style={{ willChange: 'auto' }}
-          >
-            <a 
-              href="https://www.aduana.cl" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="hover:text-blue-600 transition-colors"
-            >
-              Portal Aduana
-            </a>
-            <motion.button
-              type="button"
-              onClick={() => setShowFeatureDemo(true)}
-              className="hover:text-blue-600 transition-colors flex items-center justify-center gap-1"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              style={{ willChange: 'transform' }}
-            >
-              <Zap className="h-3 w-3" />
-              Funcionalidades
-            </motion.button>
-            <a 
-              href="/contacto" 
-              className="hover:text-blue-600 transition-colors"
-            >
-              Mesa de Ayuda
-            </a>
-          </motion.div>
-
-          {/* Términos y privacidad - optimizados */}
-          <motion.div 
-            className="text-xs text-center space-y-2"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 1.0 }}
-            style={{ willChange: 'auto' }}
-          >
-            <div className="text-gray-500">
-              Al iniciar sesión aceptas nuestros{' '}
-              <a 
-                href="#" 
-                className="text-blue-600 hover:text-blue-700 font-medium underline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  toast.info("Función no disponible en el prototipo", {
-                    description: "Esta es una simulación académica"
-                  });
-                }}
-              >
-                términos y condiciones
-              </a>
-              {' '}y{' '}
-              <a 
-                href="#" 
-                className="text-blue-600 hover:text-blue-700 font-medium underline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  toast.info("Función no disponible en el prototipo", {
-                    description: "Esta es una simulación académica"
-                  });
-                }}
-              >
-                política de privacidad
-              </a>
-            </div>
-            <div className="border-t border-gray-100 pt-4 mt-4">
-              <p>Sistema de simulación para fines académicos</p>
-              <p className="mt-1 text-gray-400">No se almacena información real</p>
-            </div>
-          </motion.div>
-
-          {/* Enlace de registro - optimizado */}
-          <motion.div 
-            className="text-center pt-4 border-t border-gray-100"
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 1.1 }}
-            style={{ willChange: 'auto' }}
-          >
-            <p className="text-sm text-gray-600">
-              ¿No tienes cuenta?{' '}
-              <motion.button
-                type="button"
-                onClick={() => setShowRegister(true)}
-                className="text-blue-600 hover:text-blue-700 font-medium underline"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                style={{ willChange: 'transform' }}
-              >
-                Regístrate aquí
-              </motion.button>
-            </p>
-          </motion.div>
-        </motion.form>
-      </div>
-
-      {/* Footer institucional - optimizado */}
-      <motion.div 
-        className="relative z-10 w-full max-w-md px-4 mt-8"
-        initial={{ y: 15, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3, delay: 1.2 }}
-        style={{ willChange: 'auto' }}
-      >
-        <div className="text-center text-white/80 text-sm">
-          <p className="mb-2">
-            © 2025 Servicio Nacional de Aduanas
-          </p>
-          <p className="text-xs text-white/60">
-            Sistema Frontera Digital - Plataforma de Control Vehicular
-          </p>
-          <div className="flex justify-center gap-4 mt-3 text-xs text-white/60">
-            <span>Versión 1.0.0</span>
-            <span>•</span>
-            <span>Chile - Argentina</span>
-          </div>
-          
-          {/* Selector de idioma */}
-          <motion.div 
-            className="flex justify-center items-center gap-2 mt-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 1.3 }}
-            style={{ willChange: 'auto' }}
-          >
-            <Globe className="h-4 w-4 text-white/60" />
-            <select 
-              className="bg-transparent text-white/80 text-xs border border-white/20 rounded px-2 py-1 focus:outline-none focus:border-white/40"
-              onChange={(e) => {
-                toast.info(`Idioma cambiado a: ${e.target.value}`, {
-                  description: "Función simulada para demostración"
-                });
-              }}
-            >
-              <option value="es">Español</option>
-              <option value="en">English</option>
-              <option value="pt">Português</option>
-            </select>
-          </motion.div>
-        </div>
-      </motion.div>
-
-      {/* Modal de Registro - optimizado para scroll */}
-      <AnimatePresence>
-        {showRegister && (
-          <motion.div 
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            style={{ 
-              willChange: 'auto',
-              transform: 'translateZ(0)',
-              backfaceVisibility: 'hidden'
-            }}
-          >
-            <motion.div 
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
-              style={{ 
-                willChange: 'transform',
-                transform: 'translateZ(0)',
-                backfaceVisibility: 'hidden'
-              }}
-            >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-blue-900">📋 Registrarse</h2>
-                  <motion.button
-                    onClick={() => setShowRegister(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
-                    aria-label="Cerrar modal de registro"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{ willChange: 'transform' }}
-                  >
-                    <X className="h-6 w-6" />
-                  </motion.button>
-                </div>
-
-                <form onSubmit={handleRegister} className="space-y-4">
-                  {/* Campo Nombre completo */}
-                  <div>
-                    <label htmlFor="fullName" className="block text-sm font-medium text-blue-900 mb-1">
-                      Nombre completo
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="fullName"
-                        type="text"
-                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
-                          fieldErrors.fullName
-                            ? 'border-red-500 bg-red-50 focus:ring-red-400'
-                            : registerData.fullName ? 'border-green-500 bg-green-50 focus:ring-green-400' : 'border-gray-300'
-                        }`}
-                        value={registerData.fullName}
-                        onChange={e => {
-                          setRegisterData({...registerData, fullName: e.target.value});
-                          validateField('fullName', e.target.value);
-                        }}
-                        onBlur={e => validateField('fullName', e.target.value)}
-                        placeholder="Ingresa tu nombre completo"
-                        required
-                        aria-invalid={!!fieldErrors.fullName}
-                        aria-describedby="fullName-error"
-                      />
-                      <UserCircle className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <AnimatePresence>
-                        {registerData.fullName && (
-                          <motion.div 
-                            className="absolute right-3 top-1/2 -translate-y-1/2"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                          >
-                            {fieldErrors.fullName ? (
-                              <AlertCircle className="h-5 w-5 text-red-500" />
-                            ) : (
-                              <CheckCircleIcon className="h-5 w-5 text-green-500" />
-                            )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                    <AnimatePresence>
-                      {fieldErrors.fullName && (
-                        <motion.p 
-                          id="fullName-error"
-                          className="text-red-600 text-xs mt-1 flex items-center gap-1"
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -5 }}
-                        >
-                          <AlertCircle className="h-3 w-3" />
-                          {fieldErrors.fullName}
-                        </motion.p>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Campo Email */}
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-blue-900 mb-1">
-                      RUT o correo electrónico
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="email"
-                        type="text"
-                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
-                          fieldErrors.email
-                            ? 'border-red-500 bg-red-50 focus:ring-red-400'
-                            : registerData.email ? 'border-green-500 bg-green-50 focus:ring-green-400' : 'border-gray-300'
-                        }`}
-                        value={registerData.email}
-                        onChange={e => {
-                          setRegisterData({...registerData, email: e.target.value});
-                          validateField('email', e.target.value);
-                        }}
-                        onBlur={e => validateField('email', e.target.value)}
-                        placeholder="usuario@email.com"
-                        required
-                        aria-invalid={!!fieldErrors.email}
-                        aria-describedby="email-error"
-                      />
-                      <Mail className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <AnimatePresence>
-                        {registerData.email && (
-                          <motion.div 
-                            className="absolute right-3 top-1/2 -translate-y-1/2"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                          >
-                            {fieldErrors.email ? (
-                              <AlertCircle className="h-5 w-5 text-red-500" />
-                            ) : (
-                              <CheckCircleIcon className="h-5 w-5 text-green-500" />
-                            )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                    <AnimatePresence>
-                      {fieldErrors.email && (
-                        <motion.p 
-                          id="email-error"
-                          className="text-red-600 text-xs mt-1 flex items-center gap-1"
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -5 }}
-                        >
-                          <AlertCircle className="h-3 w-3" />
-                          {fieldErrors.email}
-                        </motion.p>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Campo Contraseña */}
-                  <div>
-                    <label htmlFor="registerPassword"
-                      className="block text-sm font-medium text-blue-900 mb-1">
-                      Contraseña
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="registerPassword"
-                        type="password"
-                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
-                          fieldErrors.registerPassword
-                            ? 'border-red-500 bg-red-50 focus:ring-red-400'
-                            : registerData.registerPassword ? 'border-green-500 bg-green-50 focus:ring-green-400' : 'border-gray-300'
-                        }`}
-                        value={registerData.registerPassword}
-                        onChange={e => {
-                          setRegisterData({...registerData, registerPassword: e.target.value});
-                          validateField('registerPassword', e.target.value);
-                        }}
-                        onBlur={e => validateField('registerPassword', e.target.value)}
-                        placeholder="••••••••"
-                        required
-                        aria-invalid={!!fieldErrors.registerPassword}
-                        aria-describedby="registerPassword-error"
-                      />
-                      <Key className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <AnimatePresence>
-                        {registerData.registerPassword && (
-                          <motion.div
-                            className="absolute right-3 top-1/2 -translate-y-1/2"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                          >
-                            {fieldErrors.registerPassword ? (
-                              <AlertCircle className="h-5 w-5 text-red-500" />
-                            ) : (
-                              <CheckCircleIcon className="h-5 w-5 text-green-500" />
-                            )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                    <AnimatePresence>
-                      {fieldErrors.registerPassword && (
-                        <motion.p
-                          id="registerPassword-error"
-                          className="text-red-600 text-xs mt-1 flex items-center gap-1"
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -5 }}
-                        >
-                          <AlertCircle className="h-3 w-3" />
-                          {fieldErrors.registerPassword}
-                        </motion.p>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Campo Confirmar Contraseña */}
-                  <div>
-                    <label htmlFor="confirmPassword"
-                      className="block text-sm font-medium text-blue-900 mb-1">
-                      Confirmar contraseña
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="confirmPassword"
-                        type="password"
-                        className={`w-full border-2 rounded-xl px-4 py-2 pl-10 pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
-                          fieldErrors.confirmPassword
-                            ? 'border-red-500 bg-red-50 focus:ring-red-400'
-                            : registerData.confirmPassword && !fieldErrors.confirmPassword ? 'border-green-500 bg-green-50 focus:ring-green-400' : 'border-gray-300'
-                        }`}
-                        value={registerData.confirmPassword}
-                        onChange={e => {
-                          setRegisterData({...registerData, confirmPassword: e.target.value});
-                          validateField('confirmPassword', e.target.value);
-                        }}
-                        onBlur={e => validateField('confirmPassword', e.target.value)}
-                        placeholder="••••••••"
-                        required
-                        aria-invalid={!!fieldErrors.confirmPassword}
-                        aria-describedby="confirmPassword-error"
-                      />
-                      <Key className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                      <AnimatePresence>
-                        {registerData.confirmPassword && (
-                          <motion.div
-                            className="absolute right-3 top-1/2 -translate-y-1/2"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                          >
-                            {fieldErrors.confirmPassword ? (
-                              <AlertCircle className="h-5 w-5 text-red-500" />
-                            ) : (
-                              <CheckCircleIcon className="h-5 w-5 text-green-500" />
-                            )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                    <AnimatePresence>
-                      {fieldErrors.confirmPassword && (
-                        <motion.p
-                          id="confirmPassword-error"
-                          className="text-red-600 text-xs mt-1 flex items-center gap-1"
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -5 }}
-                        >
-                          <AlertCircle className="h-3 w-3" />
-                          {fieldErrors.confirmPassword}
-                        </motion.p>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  <motion.button
-                    type="submit"
-                    disabled={registerLoading}
-                    className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-70"
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    style={{ willChange: 'transform' }}
-                  >
-                    {registerLoading ? (
-                      <>
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        Creando cuenta...
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="h-5 w-5" />
-                        Registrarme
-                      </>
-                    )}
-                  </motion.button>
-                </form>
-
-                <motion.div 
-                  className="text-xs text-gray-500 text-center mt-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.2 }}
-                  style={{ willChange: 'auto' }}
-                >
-                  <p>Al registrarte aceptas nuestros términos y condiciones</p>
-                </motion.div>
+                <label htmlFor="rememberMe" className="ml-2 block text-xs text-gray-700">
+                  Recordar mis credenciales
+                </label>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* Componente de demostración de funcionalidades */}
-      <FeatureDemo 
-        isVisible={showFeatureDemo} 
-        onClose={() => setShowFeatureDemo(false)} 
-      />
+              {/* Botón de inicio de sesión */}
+              <motion.button
+                type="submit"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full bg-[#4F46E5] hover:bg-[#4338CA] text-white font-medium py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 mt-4 text-sm h-[44px]"
+              >
+                Iniciar Sesión
+                <ArrowRight size={16} />
+              </motion.button>
 
-      {/* Componente de pantalla de carga */}
-      <LoadingScreen 
-        isVisible={showLoadingScreen} 
-        onComplete={handleLoadingComplete} 
-      />
+              {/* Enlace de registro */}
+              {loginData.role === 'conductor' && (
+                <div className="text-center pt-2">
+                  <p className="text-xs text-gray-600">
+                    ¿Eres nuevo?{' '}
+                    <Link to="/registro" className="font-medium text-primary hover:underline">
+                      Regístrate aquí
+                    </Link>
+                  </p>
+                </div>
+              )}
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default Login; 
+export default Login;
